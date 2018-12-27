@@ -8,7 +8,7 @@ NandBlock::NandBlock(U32 pagesPerBlock, U32 totalBytesPerPage)
 	_TotalBytesPerPage = totalBytesPerPage;
 
 	_ErasedBuffer = std::unique_ptr<U8[]>(new U8[_TotalBytesPerPage]);
-	memset(_ErasedBuffer.get(), ERASED_PATTERN, _TotalBytesPerPage);
+	std::memset(_ErasedBuffer.get(), ERASED_PATTERN, _TotalBytesPerPage);
 }
 
 void NandBlock::Erase()

@@ -42,6 +42,12 @@
     <ClInclude Include="Sim\Nand\NandHal.h">
       <Filter>Header Files\Nand</Filter>
     </ClInclude>
+    <ClInclude Include="Sim\Framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sim\FrameworkThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sim\Nand\NandBlock.cpp">
@@ -55,6 +61,12 @@
     </ClCompile>
     <ClCompile Include="Sim\Nand\NandHal.cpp">
       <Filter>Source Files\Nand</Filter>
+    </ClCompile>
+    <ClCompile Include="Sim\Framework.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sim\FrameworkThread.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

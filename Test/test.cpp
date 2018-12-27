@@ -1,7 +1,10 @@
 #include "pch.h"
 
+#include <future>
+
 #include "Nand/NandDevice.h"
 #include "Nand/NandHal.h"
+#include "Framework.h"
 
 TEST(NandDeviceTest, Basic) {
 	constexpr U32 blockCount = 64;
@@ -11,13 +14,13 @@ TEST(NandDeviceTest, Basic) {
 	NandDevice nandDevice(blockCount, pagesPerBlock, bytesPerPage);
 
 	U8 pDataToWrite[bytesPerPage];
-	for (auto i(0); i < bytesPerPage; ++i)
+	for (auto i(0); i < sizeof(pDataToWrite); ++i)
 	{
 		pDataToWrite[i] = i % 255;
 	}
 	U8 pDataRead[bytesPerPage];
 	U8 pErasedBuffer[bytesPerPage];
-	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, bytesPerPage);
+	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
 
 	tBlockInChip block;
 	block._ = 0;
@@ -28,7 +31,7 @@ TEST(NandDeviceTest, Basic) {
 		for (; page._ < pagesPerBlock; ++page._)
 		{
 			nandDevice.WritePage(block, page, pDataToWrite);
-
+			
 			nandDevice.ReadPage(block, page, pDataRead);
 			auto result = std::memcmp(pDataToWrite, pDataRead, bytesPerPage);
 			ASSERT_EQ(0, result);
@@ -47,7 +50,7 @@ TEST(NandDeviceTest, Basic) {
 TEST(NandHalTest, Basic) {
 	constexpr U8 chips = 2;
 	constexpr U32 blocks = 64;
-	constexpr U32 pages = 128;
+	constexpr U32 pages = 256;
 	constexpr U32 bytes = 8192;
 
 	NandHal nandHal;
@@ -55,13 +58,13 @@ TEST(NandHalTest, Basic) {
 	nandHal.Init();
 
 	U8 pDataToWrite[bytes];
-	for (auto i(0); i < bytes; ++i)
+	for (auto i(0); i < sizeof(pDataToWrite); ++i)
 	{
 		pDataToWrite[i] = i % 255;
 	}
 	U8 pDataRead[bytes];
 	U8 pErasedBuffer[bytes];
-	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, bytes);
+	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
 
 	tChip chip;
 	chip._ = 0;
@@ -76,6 +79,7 @@ TEST(NandHalTest, Basic) {
 			for (; page._ < pages; ++page._)
 			{
 				nandHal.WritePage(chip, block, page, pDataToWrite);
+
 				nandHal.ReadPage(chip, block, page, pDataRead);
 				auto result = std::memcmp(pDataToWrite, pDataRead, bytes);
 				ASSERT_EQ(0, result);
@@ -90,4 +94,14 @@ TEST(NandHalTest, Basic) {
 			}
 		}
 	}
+}
+
+TEST(SimFramework, Basic)
+{
+	Framework framework;
+	auto fwFuture = std::async(std::launch::async, &(Framework::Run), &framework);
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	framework.PushMessage(Framework::Message::Exit);
 }

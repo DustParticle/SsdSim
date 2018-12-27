@@ -3,9 +3,10 @@
 
 #include <vector>
 
+#include "FrameworkThread.h"
 #include "Nand/NandDevice.h"
 
-class NandHal
+class NandHal : public FrameworkThread
 {
 public:
 	void PreInit(U8 chipCount, U32 blocksPerChip, U32 pagesPerBlock, U32 bytesPerPage);
@@ -17,6 +18,9 @@ public:
 	void WritePage(tChip chip, tBlockInChip block, tPageInBlock page, const U8* const pInData);
 
 	void EraseBlock(tChip chip, tBlockInChip block);
+
+protected:
+	virtual void Run() override;
 
 private:
 	U8 _ChipCount;

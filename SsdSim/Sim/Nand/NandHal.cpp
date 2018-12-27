@@ -33,3 +33,20 @@ void NandHal::EraseBlock(tChip chip, tBlockInChip block)
 {
 	_NandDevices[chip._].EraseBlock(block);
 }
+
+void NandHal::Run()
+{
+	//For now, hardcode NAND specifications
+	//Later they will be "scanned"
+	constexpr U8 chips = 1;
+	constexpr U32 blocks = 128;
+	constexpr U32 pages = 256;
+	constexpr U32 bytes = 8192;
+	PreInit(chips, blocks, pages, bytes);
+
+	while (false == IsStopRequested())
+	{
+		//Later will add processing
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+}
