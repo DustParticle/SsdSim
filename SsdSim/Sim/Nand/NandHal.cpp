@@ -1,9 +1,10 @@
 #include "Nand/NandHal.h"
 
-void NandHal::PreInit(U8 chipCount, U32 blocksPerPage, U32 pagesPerBlock, U32 bytesPerPage)
+void NandHal::PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerPage, U32 pagesPerBlock, U32 bytesPerPage)
 {
-	_ChipCount = chipCount;
-	_BlocksPerChip = blocksPerPage;
+	_ChannelCount = channelCount;
+	_DeviceCount = deviceCount;
+	_BlocksPerDevice = blocksPerPage;
 	_PagesPerBlock = pagesPerBlock;
 	_BytesPerPage = bytesPerPage;
 }
@@ -13,36 +14,39 @@ void NandHal::Init()
 	//Normally in hardware implementation we would query each chip 
 	//Here we rely on PreInit to get configuration
 
-	for (U8 i(0); i < _ChipCount; ++i)
+	for (U8 i(0); i < _ChannelCount; ++i)
 	{
-		_NandDevices.push_back(std::move(NandDevice(_BlocksPerChip, _PagesPerBlock, _BytesPerPage)));
+		NandChannel nandChannel;
+		nandChannel.Init(_DeviceCount, _BlocksPerDevice, _PagesPerBlock, _BytesPerPage);
+		_NandChannels.push_back(std::move(nandChannel));
 	}
 }
 
-void NandHal::ReadPage(tChip chip, tBlockInChip block, tPageInBlock page, U8* const pOutData)
+void NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData)
 {
-	_NandDevices[chip._].ReadPage(block, page, pOutData);
+	_NandChannels[channel._][device._].ReadPage(block, page, pOutData);
 }
 
-void NandHal::WritePage(tChip chip, tBlockInChip block, tPageInBlock page, const U8* const pInData)
+void NandHal::WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const U8* const pInData)
 {
-	_NandDevices[chip._].WritePage(block, page, pInData);
+	_NandChannels[channel._][device._].WritePage(block, page, pInData);
 }
 
-void NandHal::EraseBlock(tChip chip, tBlockInChip block)
+void NandHal::EraseBlock(tChannel channel, tDeviceInChannel device, tBlockInDevice block)
 {
-	_NandDevices[chip._].EraseBlock(block);
+	_NandChannels[channel._][device._].EraseBlock(block);
 }
 
 void NandHal::Run()
 {
 	//For now, hardcode NAND specifications
 	//Later they will be "scanned"
+	constexpr U8 channels = 4;
 	constexpr U8 chips = 1;
 	constexpr U32 blocks = 128;
 	constexpr U32 pages = 256;
 	constexpr U32 bytes = 8192;
-	PreInit(chips, blocks, pages, bytes);
+	PreInit(channels, chips, blocks, pages, bytes);
 
 	while (false == IsStopRequested())
 	{

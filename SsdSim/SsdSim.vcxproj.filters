@@ -48,6 +48,9 @@
     <ClInclude Include="Sim\FrameworkThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sim\Nand\NandChannel.h">
+      <Filter>Header Files\Nand</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sim\Nand\NandBlock.cpp">
@@ -67,6 +70,9 @@
     </ClCompile>
     <ClCompile Include="Sim\FrameworkThread.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sim\Nand\NandChannel.cpp">
+      <Filter>Source Files\Nand</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -24,6 +24,7 @@
     <ClInclude Include="Sim\Framework.h" />
     <ClInclude Include="Sim\FrameworkThread.h" />
     <ClInclude Include="Sim\Nand\NandBlock.h" />
+    <ClInclude Include="Sim\Nand\NandChannel.h" />
     <ClInclude Include="Sim\Nand\NandDevice.h" />
     <ClInclude Include="Sim\Nand\NandDeviceDesc.h" />
     <ClInclude Include="Sim\Nand\NandHal.h" />
@@ -32,6 +33,7 @@
     <ClCompile Include="Sim\Framework.cpp" />
     <ClCompile Include="Sim\FrameworkThread.cpp" />
     <ClCompile Include="Sim\Nand\NandBlock.cpp" />
+    <ClCompile Include="Sim\Nand\NandChannel.cpp" />
     <ClCompile Include="Sim\Nand\NandDevice.cpp" />
     <ClCompile Include="Sim\Nand\NandDeviceDesc.cpp" />
     <ClCompile Include="Sim\Nand\NandHal.cpp" />
