@@ -11,8 +11,8 @@ void NandHal::PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerPage, U32 pa
 
 void NandHal::Init()
 {
-	//Normally in hardware implementation we would query each chip 
-	//Here we rely on PreInit to get configuration
+	//Normally in hardware implementation we would query each device
+	//Here we rely on PreInit
 
 	for (U8 i(0); i < _ChannelCount; ++i)
 	{
@@ -39,15 +39,6 @@ void NandHal::EraseBlock(tChannel channel, tDeviceInChannel device, tBlockInDevi
 
 void NandHal::Run()
 {
-	//For now, hardcode NAND specifications
-	//Later they will be "scanned"
-	constexpr U8 channels = 4;
-	constexpr U8 chips = 1;
-	constexpr U32 blocks = 128;
-	constexpr U32 pages = 256;
-	constexpr U32 bytes = 8192;
-	PreInit(channels, chips, blocks, pages, bytes);
-
 	while (false == IsStopRequested())
 	{
 		//Later will add processing
