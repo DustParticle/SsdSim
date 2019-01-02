@@ -155,11 +155,15 @@ TEST(NandHalTest, BasicCommandQueue)
 			if (++commandDesc.Channel._ >= channels)
 			{
 				commandDesc.Channel._ = 0;
-				if (++commandDesc.Page._ >= pages)
+				if (++commandDesc.Device._ >= devices)
 				{
-					commandDesc.Page._ = 0;
-					assert(commandDesc.Block._ < blocks);	//let's not go pass this boundary
-					++commandDesc.Block._;
+					commandDesc.Device._ = 0;
+					if (++commandDesc.Page._ >= pages)
+					{
+						commandDesc.Page._ = 0;
+						assert(commandDesc.Block._ < blocks);	//let's not go pass this boundary
+						++commandDesc.Block._;
+					}
 				}
 			}
 		}
