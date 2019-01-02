@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include <future>
+#include <array>
 
 #include "Nand/NandDevice.h"
 #include "Nand/NandHal.h"
@@ -102,6 +103,73 @@ TEST(NandHalTest, Basic) {
 	}
 }
 
+TEST(NandHalTest, BasicCommandQueue)
+{
+	constexpr U8 channels = 4;
+	constexpr U8 devices = 2;
+	constexpr U32 blocks = 64;
+	constexpr U32 pages = 256;
+	constexpr U32 bytes = 8192;
+	constexpr U8 bufferCount = channels * 4;
+	constexpr U32 commandCount = channels * devices * blocks * pages;
+
+	std::array<U8[bytes], bufferCount> writeBuffers;
+	for (auto buffer : writeBuffers)
+	{
+		for (auto i(0); i < bytes; ++i)
+		{
+			buffer[i] = i % 255;
+		}
+	}
+
+	std::array<U8[bytes], bufferCount> readBuffers;
+
+	U8 pErasedBuffer[bytes];
+	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
+	
+	NandHal nandHal;
+	nandHal.PreInit(channels, devices, blocks, pages, bytes);
+	nandHal.Init();
+
+	std::future<void> nandHalFuture;
+
+	nandHalFuture = std::async(std::launch::async, &NandHal::operator(), &nandHal);
+
+	NandHal::CommandDesc commandDesc;
+	commandDesc.Channel._ = 0;
+	commandDesc.Device._ = 0;
+	commandDesc.Block._ = 0;
+	commandDesc.Page._ = 0;
+	for (auto c(0); c < commandCount;)
+	{
+		for (auto i(0); i < bufferCount; ++i, ++c)
+		{
+			commandDesc.Operation = NandHal::CommandDesc::Op::WRITE;
+			commandDesc.Buffer = writeBuffers[i];
+			nandHal.QueueCommand(commandDesc);
+
+			commandDesc.Operation = NandHal::CommandDesc::Op::READ;
+			commandDesc.Buffer = readBuffers[i];
+			nandHal.QueueCommand(commandDesc);
+
+			if (++commandDesc.Channel._ >= channels)
+			{
+				commandDesc.Channel._ = 0;
+				if (++commandDesc.Page._ >= pages)
+				{
+					commandDesc.Page._ = 0;
+					assert(commandDesc.Block._ < blocks);	//let's not go pass this boundary
+					++commandDesc.Block._;
+				}
+			}
+		}
+
+		while (false == nandHal.IsCommandQueueEmpty());
+	}
+
+	nandHal.Stop();
+}
+
 TEST(SimFramework, Basic)
 {
 	Framework framework;
@@ -111,3 +179,4 @@ TEST(SimFramework, Basic)
 
 	framework.PushMessage(Framework::Message::Exit);
 }
+

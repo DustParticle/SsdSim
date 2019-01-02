@@ -2,6 +2,10 @@
 #define __NandHal_h__
 
 #include <vector>
+#include <queue>
+#include <memory>
+
+#include "boost/lockfree/spsc_queue.hpp"
 
 #include "FrameworkThread.h"
 #include "Nand/NandChannel.h"
@@ -9,9 +13,37 @@
 class NandHal : public FrameworkThread
 {
 public:
-	//NOTE: With current design, we only support homogeneous NAND device configuration (i.e. all the NAND devices are the same).
+	NandHal();
+
+	//NOTE: With current design, we only support homogeneous NAND device configuration (i.e. all the NAND devices are the same).\
+	//PreInit is for simulation system only (i.e. there would be no equipvalent on target)
 	void PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerDevice, U32 pagesPerBlock, U32 bytesPerPage);
+
+	
+public:
 	void Init();
+
+public:
+	struct CommandDesc
+	{
+		enum class Op
+		{
+			READ,
+			WRITE,
+			ERASE
+		};
+
+		Op	Operation;
+		tChannel Channel;
+		tDeviceInChannel Device;
+		tBlockInDevice Block;
+		tPageInBlock Page;
+		U8* Buffer;
+	};
+
+	void QueueCommand(const CommandDesc& command);
+
+	bool IsCommandQueueEmpty() const;
 
 public:
 	void ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData);
@@ -32,6 +64,8 @@ private:
 
 private:
 	std::vector<NandChannel> _NandChannels;
+
+	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;
 };
 
 #endif
