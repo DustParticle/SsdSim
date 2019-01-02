@@ -177,7 +177,7 @@ TEST(NandHalTest, BasicCommandQueue)
 TEST(SimFramework, Basic)
 {
 	Framework framework;
-	auto fwFuture = std::async(std::launch::async, &(Framework::Run), &framework);
+	auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 

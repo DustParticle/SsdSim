@@ -19,6 +19,9 @@ public:
 	void PushMessage(const Message& message);
 
 public:
+	void operator()();
+
+private:
 	void Run();
 
 private:

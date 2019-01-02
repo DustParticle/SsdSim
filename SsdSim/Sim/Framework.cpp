@@ -18,7 +18,7 @@ void Framework::PushMessage(const Message& message)
 	_Messages.push(message);
 }
 
-void Framework::Run()
+void Framework::operator()()
 {
 	std::future<void> nandHal;
 
@@ -34,23 +34,27 @@ void Framework::Run()
 			}break;
 			case State::Run:
 			{
-				if (false == _Messages.empty())
-				{
-					auto message = _Messages.front();
-					_Messages.pop();
-
-					switch (message)
-					{
-						case Message::Exit:
-						{
-							_State = State::Exit;
-						}break;
-					}
-				}
-				
+				Run();
 			}break;
 		}
 	}
 
 	_NandHal.Stop();
+}
+
+void Framework::Run()
+{
+	if (false == _Messages.empty())
+	{
+		auto message = _Messages.front();
+		_Messages.pop();
+
+		switch (message)
+		{
+		case Message::Exit:
+		{
+			_State = State::Exit;
+		}break;
+		}
+	}
 }
