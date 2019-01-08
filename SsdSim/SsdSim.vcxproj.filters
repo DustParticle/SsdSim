@@ -51,6 +51,18 @@
     <ClInclude Include="Sim\Nand\NandChannel.h">
       <Filter>Header Files\Nand</Filter>
     </ClInclude>
+    <ClInclude Include="Sim\Ipc\Constant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sim\Ipc\Message.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sim\Ipc\MessageClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sim\Ipc\MessageServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sim\Nand\NandBlock.cpp">
@@ -73,6 +85,12 @@
     </ClCompile>
     <ClCompile Include="Sim\Nand\NandChannel.cpp">
       <Filter>Source Files\Nand</Filter>
+    </ClCompile>
+    <ClCompile Include="Sim\Ipc\MessageClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sim\Ipc\MessageServer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

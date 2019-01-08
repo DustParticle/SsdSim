@@ -2,10 +2,13 @@
 
 #include <future>
 #include <array>
+#include <chrono>
 
+#include "gtest-cout.h"
 #include "Nand/NandDevice.h"
 #include "Nand/NandHal.h"
 #include "Framework.h"
+#include "Ipc/MessageClient.h"
 
 TEST(NandDeviceTest, Basic) {
 	constexpr U32 blockCount = 64;
@@ -181,6 +184,97 @@ TEST(SimFramework, Basic)
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-	framework.PushMessage(Framework::Message::Exit);
+    std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
+    ASSERT_NE(nullptr, client);
+
+    Message *message = client->AllocateMessage(Message::Type::Exit);
+    client->Push(message);
 }
 
+TEST(SimFramework, Benchmark)
+{
+    constexpr U32 loopCount = 10000;
+
+    Framework framework;
+    auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
+    ASSERT_NE(nullptr, client);
+
+    using namespace std::chrono;
+    milliseconds startMs = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+    for (U32 i = 0; i < loopCount; ++i)
+    {
+        Message *message = client->AllocateMessage(Message::Type::NOP);
+        client->Push(message);
+    }
+    milliseconds endMs = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+
+    while (loopCount != framework._NopCount)
+    {
+        // Do nothing
+    }
+
+    GOUT(loopCount << " NOPs took " << (endMs.count() - startMs.count()) << " ms to process");
+
+    Message *message = client->AllocateMessage(Message::Type::Exit);
+    client->Push(message);
+}
+
+TEST(MessagingSystem, MessageWithPayload)
+{
+    constexpr char name[] = "Test";
+    constexpr U32 size = 10 * 1024 * 1024;
+    constexpr U32 loopCount = 10;
+    constexpr U32 payloadSize = 100;
+
+    std::shared_ptr<MessageServer> server = std::make_shared<MessageServer>(name, size);
+    ASSERT_NE(nullptr, server);
+
+    std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(name);
+    ASSERT_NE(nullptr, client);
+
+    U8 count;
+
+    // Send message
+    count = 0;
+    for (U32 i = 0; i < loopCount; ++i)
+    {
+        Message *message = client->AllocateMessage(Message::Type::NOP, payloadSize);
+        ASSERT_NE(nullptr, message);
+
+        U8* payload = (U8*)message->_Payload;
+        for (U32 j = 0; j < payloadSize; ++j)
+        {
+            payload[j] = count;
+            ++count;
+        }
+        client->Push(message);
+    }
+
+    // Verify
+    count = 0;
+    for (U32 i = 0; i < loopCount; ++i)
+    {
+        if (server->HasMessage())
+        {
+            Message *message = server->Pop();
+            ASSERT_EQ(Message::Type::NOP, message->_Type);
+            ASSERT_EQ(payloadSize, message->_PayloadSize);
+
+            U8* payload = (U8*)message->_Payload;
+            for (U32 j = 0; j < payloadSize; ++j)
+            {
+                ASSERT_EQ(count, payload[j]);
+                ++count;
+            }
+            server->DeallocateMessage(message);
+        }
+        else
+        {
+            ASSERT_FALSE(true);
+        }
+    }
+}

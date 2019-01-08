@@ -1,7 +1,11 @@
 #include "Framework.h"
+#include "Ipc/Message.h"
+
+constexpr U32 SSDSIM_IPC_SIZE = 10 * 1024 * 1024;
 
 Framework::Framework() :
-	_State(State::Start)
+    _State(State::Start),
+    _NopCount(0)
 {
 	//For now, hardcode NAND specifications
 	//Later they will be loaded from configuration
@@ -11,11 +15,8 @@ Framework::Framework() :
 	constexpr U32 pages = 256;
 	constexpr U32 bytes = 8192;
 	_NandHal.PreInit(channels, devices, blocks, pages, bytes);
-}
 
-void Framework::PushMessage(const Message& message)
-{
-	_Messages.push(message);
+    _MessageServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
 }
 
 void Framework::operator()()
@@ -31,30 +32,33 @@ void Framework::operator()()
 				nandHal = std::async(std::launch::async, &NandHal::operator(), &_NandHal);
 
 				_State = State::Run;
-			}break;
+			} break;
+
 			case State::Run:
 			{
-				Run();
-			}break;
+				if (true == _MessageServer->HasMessage())
+				{
+					Message* message = _MessageServer->Pop();
+
+					switch (message->_Type)
+					{
+                        case Message::Type::NOP:
+                        {
+                            // Do nothing
+                            ++_NopCount;
+                        } break;
+
+                        case Message::Type::Exit:
+						{
+							_State = State::Exit;
+						} break;
+					}
+
+                    _MessageServer->DeallocateMessage(message);
+				}
+			} break;
 		}
 	}
 
 	_NandHal.Stop();
-}
-
-void Framework::Run()
-{
-	if (false == _Messages.empty())
-	{
-		auto message = _Messages.front();
-		_Messages.pop();
-
-		switch (message)
-		{
-		case Message::Exit:
-		{
-			_State = State::Exit;
-		}break;
-		}
-	}
 }

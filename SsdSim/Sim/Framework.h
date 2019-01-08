@@ -4,6 +4,9 @@
 #include <queue>
 
 #include "Nand/NandHal.h"
+#include "Ipc/MessageServer.h"
+
+constexpr char SSDSIM_IPC_NAME[] = "SsdSim";
 
 class Framework
 {
@@ -11,18 +14,7 @@ public:
 	Framework();
 
 public:
-	enum class Message
-	{
-		Exit
-	};
-
-	void PushMessage(const Message& message);
-
-public:
 	void operator()();
-
-private:
-	void Run();
 
 private:
 	enum class State
@@ -35,10 +27,11 @@ private:
 	State _State;
 
 private:
-	std::queue<Message> _Messages;
-
-private:
+    std::shared_ptr<MessageServer> _MessageServer;
 	NandHal _NandHal;
+
+public:
+    U32 _NopCount;
 };
 
 #endif
