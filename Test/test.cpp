@@ -10,6 +10,14 @@
 #include "Framework.h"
 #include "Ipc/MessageClient.h"
 
+Message* allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, const SimFrameworkCommand::Code &code, const U32 &bufferSize = 0)
+{
+    Message *message = client->AllocateMessage(Message::Type::SIM_FRAMEWORK_COMMAND, sizeof(SimFrameworkCommand) + bufferSize);
+    SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
+    command->_Code = code;
+    return message;
+}
+
 TEST(NandDeviceTest, Basic) {
 	constexpr U32 blockCount = 64;
 	constexpr U32 pagesPerBlock = 256;
@@ -187,7 +195,7 @@ TEST(SimFramework, Basic)
     std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
     ASSERT_NE(nullptr, client);
 
-    Message *message = client->AllocateMessage(Message::Type::Exit);
+    Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
     client->Push(message);
 }
 
@@ -207,7 +215,8 @@ TEST(SimFramework, Benchmark)
     milliseconds startMs = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     for (U32 i = 0; i < loopCount; ++i)
     {
-        Message *message = client->AllocateMessage(Message::Type::NOP);
+        Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop);
+
         client->Push(message);
     }
     milliseconds endMs = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
@@ -219,16 +228,16 @@ TEST(SimFramework, Benchmark)
 
     GOUT(loopCount << " NOPs took " << (endMs.count() - startMs.count()) << " ms to process");
 
-    Message *message = client->AllocateMessage(Message::Type::Exit);
+    Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
     client->Push(message);
 }
 
-TEST(MessagingSystem, MessageWithPayload)
+TEST(MessagingSystem, NopMessageWithBuffer)
 {
     constexpr char name[] = "Test";
     constexpr U32 size = 10 * 1024 * 1024;
     constexpr U32 loopCount = 10;
-    constexpr U32 payloadSize = 100;
+    constexpr U32 bufferSize = 100;
 
     std::shared_ptr<MessageServer> server = std::make_shared<MessageServer>(name, size);
     ASSERT_NE(nullptr, server);
@@ -242,13 +251,13 @@ TEST(MessagingSystem, MessageWithPayload)
     count = 0;
     for (U32 i = 0; i < loopCount; ++i)
     {
-        Message *message = client->AllocateMessage(Message::Type::NOP, payloadSize);
+        Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, bufferSize);
         ASSERT_NE(nullptr, message);
 
-        U8* payload = (U8*)message->_Payload;
-        for (U32 j = 0; j < payloadSize; ++j)
+        U8* buffer = (U8*)message->_Payload + sizeof(SimFrameworkCommand);
+        for (U32 j = 0; j < bufferSize; ++j)
         {
-            payload[j] = count;
+            buffer[j] = count;
             ++count;
         }
         client->Push(message);
@@ -261,13 +270,16 @@ TEST(MessagingSystem, MessageWithPayload)
         if (server->HasMessage())
         {
             Message *message = server->Pop();
-            ASSERT_EQ(Message::Type::NOP, message->_Type);
-            ASSERT_EQ(payloadSize, message->_PayloadSize);
+            ASSERT_EQ(Message::Type::SIM_FRAMEWORK_COMMAND, message->_Type);
+            ASSERT_EQ(sizeof(SimFrameworkCommand) + bufferSize, message->_PayloadSize);
 
-            U8* payload = (U8*)message->_Payload;
-            for (U32 j = 0; j < payloadSize; ++j)
+            SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
+            ASSERT_EQ(SimFrameworkCommand::Code::Nop, command->_Code);
+
+            U8* buffer = (U8*)message->_Payload + sizeof(SimFrameworkCommand);
+            for (U32 j = 0; j < bufferSize; ++j)
             {
-                ASSERT_EQ(count, payload[j]);
+                ASSERT_EQ(count, buffer[j]);
                 ++count;
             }
             server->DeallocateMessage(message);

@@ -8,6 +8,19 @@
 
 constexpr char SSDSIM_IPC_NAME[] = "SsdSim";
 
+class SimFrameworkCommand
+{
+public:
+    enum class Code
+    {
+        Nop,
+        Exit
+    };
+
+public:
+    Code _Code;
+};
+
 class Framework
 {
 public:
@@ -15,6 +28,9 @@ public:
 
 public:
 	void operator()();
+
+private:
+    void handleSimFrameworkCommand(SimFrameworkCommand *command);
 
 private:
 	enum class State

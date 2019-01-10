@@ -42,16 +42,11 @@ void Framework::operator()()
 
 					switch (message->_Type)
 					{
-                        case Message::Type::NOP:
+                        case Message::Type::SIM_FRAMEWORK_COMMAND:
                         {
-                            // Do nothing
-                            ++_NopCount;
+                            SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
+                            handleSimFrameworkCommand(command);
                         } break;
-
-                        case Message::Type::Exit:
-						{
-							_State = State::Exit;
-						} break;
 					}
 
                     _MessageServer->DeallocateMessage(message);
@@ -61,4 +56,21 @@ void Framework::operator()()
 	}
 
 	_NandHal.Stop();
+}
+
+void Framework::handleSimFrameworkCommand(SimFrameworkCommand *command)
+{
+    switch (command->_Code)
+    {
+        case SimFrameworkCommand::Code::Nop:
+        {
+            // Do nothing
+            ++_NopCount;
+        } break;
+
+        case SimFrameworkCommand::Code::Exit:
+        {
+            _State = State::Exit;
+        } break;
+    }
 }

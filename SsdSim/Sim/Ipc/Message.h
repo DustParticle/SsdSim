@@ -12,8 +12,7 @@ struct Message
 {
     enum class Type
     {
-        NOP,
-        Exit
+        SIM_FRAMEWORK_COMMAND
     };
 
 
