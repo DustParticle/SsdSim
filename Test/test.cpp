@@ -10,9 +10,10 @@
 #include "Framework.h"
 #include "Ipc/MessageClient.h"
 
-Message* allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, const SimFrameworkCommand::Code &code, const U32 &bufferSize = 0)
+Message* allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, const SimFrameworkCommand::Code &code,
+    const Message::Type &type = Message::Type::SIM_FRAMEWORK_COMMAND, const U32 &bufferSize = 0)
 {
-    Message *message = client->AllocateMessage(Message::Type::SIM_FRAMEWORK_COMMAND, sizeof(SimFrameworkCommand) + bufferSize);
+    Message *message = client->AllocateMessage(type, sizeof(SimFrameworkCommand) + bufferSize);
     SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
     command->_Code = code;
     return message;
@@ -251,7 +252,7 @@ TEST(MessagingSystem, NopMessageWithBuffer)
     count = 0;
     for (U32 i = 0; i < loopCount; ++i)
     {
-        Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, bufferSize);
+        Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, Message::Type::SIM_FRAMEWORK_COMMAND, bufferSize);
         ASSERT_NE(nullptr, message);
 
         U8* buffer = (U8*)message->_Payload + sizeof(SimFrameworkCommand);
@@ -267,26 +268,53 @@ TEST(MessagingSystem, NopMessageWithBuffer)
     count = 0;
     for (U32 i = 0; i < loopCount; ++i)
     {
-        if (server->HasMessage())
-        {
-            Message *message = server->Pop();
-            ASSERT_EQ(Message::Type::SIM_FRAMEWORK_COMMAND, message->_Type);
-            ASSERT_EQ(sizeof(SimFrameworkCommand) + bufferSize, message->_PayloadSize);
+        ASSERT_TRUE(server->HasMessage());
+        Message *message = server->Pop();
+        ASSERT_EQ(Message::Type::SIM_FRAMEWORK_COMMAND, message->_Type);
+        ASSERT_EQ(sizeof(SimFrameworkCommand) + bufferSize, message->_PayloadSize);
 
-            SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
-            ASSERT_EQ(SimFrameworkCommand::Code::Nop, command->_Code);
+        SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
+        ASSERT_EQ(SimFrameworkCommand::Code::Nop, command->_Code);
 
-            U8* buffer = (U8*)message->_Payload + sizeof(SimFrameworkCommand);
-            for (U32 j = 0; j < bufferSize; ++j)
-            {
-                ASSERT_EQ(count, buffer[j]);
-                ++count;
-            }
-            server->DeallocateMessage(message);
-        }
-        else
+        U8* buffer = (U8*)message->_Payload + sizeof(SimFrameworkCommand);
+        for (U32 j = 0; j < bufferSize; ++j)
         {
-            ASSERT_FALSE(true);
+            ASSERT_EQ(count, buffer[j]);
+            ++count;
         }
+        server->DeallocateMessage(message);
     }
+}
+
+TEST(MessagingSystem, NopMessageWithResponse)
+{
+    constexpr char name[] = "Test";
+    constexpr U32 size = 10 * 1024 * 1024;
+
+    std::shared_ptr<MessageServer> server = std::make_shared<MessageServer>(name, size);
+    ASSERT_NE(nullptr, server);
+
+    std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(name);
+    ASSERT_NE(nullptr, client);
+
+    /* Send message without response */
+    Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop);
+    ASSERT_NE(nullptr, message);
+    client->Push(message);
+    ASSERT_TRUE(server->HasMessage());
+    Message *popMessage = server->Pop();
+    ASSERT_FALSE(server->PushResponse(popMessage));        // Don't allow to response message without response flag
+    ASSERT_TRUE(server->DeallocateMessage(popMessage));    // Allow to deallocate message
+
+    /* Send message with response */
+    Message *messageWithResponse = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, Message::Type::SIM_FRAMEWORK_COMMAND_WITH_RESPONSE);
+    ASSERT_NE(nullptr, messageWithResponse);
+    client->Push(messageWithResponse);
+    ASSERT_TRUE(server->HasMessage());
+    Message *popMessageWithResponse = server->Pop();
+    ASSERT_FALSE(server->DeallocateMessage(popMessageWithResponse));   // Don't allow to deallocate message with response flag
+    ASSERT_TRUE(server->PushResponse(popMessageWithResponse));         // Allow to response message
+    ASSERT_TRUE(client->HasResponse());                                // Should have response
+    Message *responseMessage = client->PopResponse();
+    client->DeallocateMessage(responseMessage);
 }

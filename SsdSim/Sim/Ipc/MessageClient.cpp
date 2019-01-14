@@ -17,6 +17,8 @@ MessageClient::MessageClient(const char* serverName)
     _Lock = _ManagedShm->find<bool>(LOCK).first;
     _Counter = _ManagedShm->find<U32>(COUNTER).first;
     _Queue = _ManagedShm->find<deque<U32>>(QUEUE).first;
+    _ResponseQueueLock = _ManagedShm->find<bool>(RESPONSE_QUEUE_LOCK).first;
+    _ResponseQueue = _ManagedShm->find<deque<U32>>(RESPONSE_QUEUE).first;
 }
 
 MessageClient::~MessageClient()
@@ -25,10 +27,6 @@ MessageClient::~MessageClient()
 
 Message* MessageClient::AllocateMessage(Message::Type type, const U32 &payloadSize)
 {
-    std::ostringstream stringStream;
-    stringStream << MESSAGE;
-    stringStream << *_Counter;
-
     void* payload = nullptr;
     boost::interprocess::managed_shared_memory::handle_t handle = 0;
     if (payloadSize)
@@ -37,7 +35,8 @@ Message* MessageClient::AllocateMessage(Message::Type type, const U32 &payloadSi
         handle = _ManagedShm->get_handle_from_address(payload);
     }
 
-    Message* message = _ManagedShm->construct<Message>(stringStream.str().c_str())();
+    std::string messageName = GetMessageName(*_Counter);
+    Message* message = _ManagedShm->construct<Message>(messageName.c_str())();
     message->_Id = *_Counter;
     message->_Type = type;
     message->_PayloadSize = payloadSize;
@@ -50,7 +49,25 @@ Message* MessageClient::AllocateMessage(Message::Type type, const U32 &payloadSi
 
 void MessageClient::Push(Message* message)
 {
-    *_Lock = true;
-    _Queue->push_back(message->_Id);
-    *_Lock = false;
+    DoPush(_Lock, _Queue, message);
+}
+
+bool MessageClient::HasResponse()
+{
+    if (*_ResponseQueueLock)
+    {
+        return false;
+    }
+
+    return !_ResponseQueue->empty();
+}
+
+Message* MessageClient::PopResponse()
+{
+    return DoPop(_ResponseQueueLock, _ResponseQueue);
+}
+
+void MessageClient::DeallocateMessage(Message* message)
+{
+    MessageBaseService::DoDeallocateMessage(message);
 }

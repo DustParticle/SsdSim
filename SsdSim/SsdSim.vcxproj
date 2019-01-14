@@ -25,6 +25,7 @@
     <ClInclude Include="Sim\FrameworkThread.h" />
     <ClInclude Include="Sim\Ipc\Constant.h" />
     <ClInclude Include="Sim\Ipc\Message.h" />
+    <ClInclude Include="Sim\Ipc\MessageBaseService.h" />
     <ClInclude Include="Sim\Ipc\MessageClient.h" />
     <ClInclude Include="Sim\Ipc\MessageServer.h" />
     <ClInclude Include="Sim\Nand\NandBlock.h" />
@@ -36,6 +37,7 @@
   <ItemGroup>
     <ClCompile Include="Sim\Framework.cpp" />
     <ClCompile Include="Sim\FrameworkThread.cpp" />
+    <ClCompile Include="Sim\Ipc\MessageBaseService.cpp" />
     <ClCompile Include="Sim\Ipc\MessageClient.cpp" />
     <ClCompile Include="Sim\Ipc\MessageServer.cpp" />
     <ClCompile Include="Sim\Nand\NandBlock.cpp" />

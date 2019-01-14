@@ -6,23 +6,19 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/containers/deque.hpp>
 
+#include "MessageBaseService.h"
 #include "Message.h"
 
 using namespace boost::interprocess;
 
-class MessageServer
+class MessageServer : MessageBaseService
 {
-private: 
-    std::unique_ptr<managed_shared_memory> _ManagedShm;
-    bool *_Lock;
-    U32 *_Counter;
-    deque<U32> *_Queue;
-
 public:
     MessageServer(const char* serverName, const U32 &size);
     bool HasMessage();
     Message* Pop();
-    void DeallocateMessage(Message* message);
+    bool PushResponse(Message* message);
+    bool DeallocateMessage(Message* message);
 };
 
 #endif

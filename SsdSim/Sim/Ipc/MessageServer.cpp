@@ -8,6 +8,8 @@ MessageServer::MessageServer(const char* serverName, const U32 &size)
     _Lock = _ManagedShm->construct<bool>(LOCK)(false);
     _Counter = _ManagedShm->construct<U32>(COUNTER)(0);
     _Queue = _ManagedShm->construct<deque<U32>>(QUEUE)();
+    _ResponseQueueLock = _ManagedShm->construct<bool>(RESPONSE_QUEUE_LOCK)(false);
+    _ResponseQueue = _ManagedShm->construct<deque<U32>>(RESPONSE_QUEUE)();
 }
 
 bool MessageServer::HasMessage()
@@ -22,46 +24,27 @@ bool MessageServer::HasMessage()
 
 Message* MessageServer::Pop()
 {
-    if (*_Lock)
-    {
-        return nullptr;
-    }
-
-    if (_Queue->empty())
-    {
-        return nullptr;
-    }
-
-    int id = _Queue->front();
-    _Queue->pop_front();
-
-    std::ostringstream stringStream;
-    stringStream << MESSAGE;
-    stringStream << id;
-
-    auto message = _ManagedShm->find<Message>(stringStream.str().c_str());
-    if (message.first)
-    {
-        if (message.first->_PayloadSize)
-        {
-            message.first->_Payload = _ManagedShm->get_address_from_handle(message.first->_PayloadHandle);
-        }
-        return message.first;
-    }
-
-    return nullptr;
+    return DoPop(_Lock, _Queue);
 }
 
-void MessageServer::DeallocateMessage(Message* message)
+bool MessageServer::PushResponse(Message* message)
 {
-    if (message->_PayloadSize)
+    if (((U16)message->_Type & RESPONSE_TYPE_FLAG) == 0)
     {
-        _ManagedShm->deallocate(message->_Payload);
+        return false;
     }
 
-    std::ostringstream stringStream;
-    stringStream << MESSAGE;
-    stringStream << message->_Id;
-    _ManagedShm->destroy<Message>(stringStream.str().c_str());
+    DoPush(_ResponseQueueLock, _ResponseQueue, message);
+    return true;
 }
 
+bool MessageServer::DeallocateMessage(Message* message)
+{
+    if (((U16)message->_Type & RESPONSE_TYPE_FLAG))
+    {
+        return false;
+    }
+
+    MessageBaseService::DoDeallocateMessage(message);
+    return true;
+}
