@@ -11,9 +11,9 @@
 #include "Ipc/MessageClient.h"
 
 Message* allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, const SimFrameworkCommand::Code &code,
-    const Message::Type &type = Message::Type::SIM_FRAMEWORK_COMMAND, const U32 &bufferSize = 0)
+    const U32 &bufferSize = 0, const bool &expectsResponse = false)
 {
-    Message *message = client->AllocateMessage(type, sizeof(SimFrameworkCommand) + bufferSize);
+    Message *message = client->AllocateMessage(Message::Type::SIM_FRAMEWORK_COMMAND, sizeof(SimFrameworkCommand) + bufferSize, expectsResponse);
     SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
     command->_Code = code;
     return message;
@@ -252,7 +252,7 @@ TEST(MessagingSystem, NopMessageWithBuffer)
     count = 0;
     for (U32 i = 0; i < loopCount; ++i)
     {
-        Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, Message::Type::SIM_FRAMEWORK_COMMAND, bufferSize);
+        Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, bufferSize);
         ASSERT_NE(nullptr, message);
 
         U8* buffer = (U8*)message->_Payload + sizeof(SimFrameworkCommand);
@@ -307,7 +307,7 @@ TEST(MessagingSystem, NopMessageWithResponse)
     ASSERT_TRUE(server->DeallocateMessage(popMessage));    // Allow to deallocate message
 
     /* Send message with response */
-    Message *messageWithResponse = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, Message::Type::SIM_FRAMEWORK_COMMAND_WITH_RESPONSE);
+    Message *messageWithResponse = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, 0, true);
     ASSERT_NE(nullptr, messageWithResponse);
     client->Push(messageWithResponse);
     ASSERT_TRUE(server->HasMessage());

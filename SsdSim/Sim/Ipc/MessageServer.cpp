@@ -29,7 +29,7 @@ Message* MessageServer::Pop()
 
 bool MessageServer::PushResponse(Message* message)
 {
-    if (((U16)message->_Type & RESPONSE_TYPE_FLAG) == 0)
+    if (!message->_ExpectsResponse)
     {
         return false;
     }
@@ -40,7 +40,7 @@ bool MessageServer::PushResponse(Message* message)
 
 bool MessageServer::DeallocateMessage(Message* message)
 {
-    if (((U16)message->_Type & RESPONSE_TYPE_FLAG))
+    if (message->_ExpectsResponse)
     {
         return false;
     }

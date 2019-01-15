@@ -5,14 +5,11 @@
 
 #include "Common/BasicTypes.h"
 
-constexpr U16 RESPONSE_TYPE_FLAG = 1 << 15;
-
 struct Message
 {
     enum class Type
     {
-        SIM_FRAMEWORK_COMMAND = 1,
-        SIM_FRAMEWORK_COMMAND_WITH_RESPONSE = 2 | RESPONSE_TYPE_FLAG,
+        SIM_FRAMEWORK_COMMAND
     };
 
 
@@ -24,6 +21,7 @@ public:
 private:
     boost::interprocess::managed_shared_memory::handle_t _PayloadHandle;
     U32 _Id;
+    bool _ExpectsResponse;
 
     friend class MessageBaseService;
     friend class MessageServer;

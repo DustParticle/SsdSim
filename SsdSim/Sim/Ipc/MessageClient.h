@@ -16,7 +16,7 @@ public:
     MessageClient(const char* serverName);
     ~MessageClient();
 
-    Message* AllocateMessage(Message::Type type, const U32 &payloadSize = 0);
+    Message* AllocateMessage(Message::Type type, const U32 &payloadSize = 0, const bool &expectsResponse = false);
     void Push(Message* message);
     bool HasResponse();
     Message* PopResponse();
