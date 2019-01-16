@@ -27,24 +27,22 @@ Message* MessageServer::Pop()
     return DoPop(_Lock, _Queue);
 }
 
-bool MessageServer::PushResponse(Message* message)
+void MessageServer::PushResponse(Message* message)
 {
     if (!message->_ExpectsResponse)
     {
-        return false;
+        throw "This message doesn't need respond";
     }
 
     DoPush(_ResponseQueueLock, _ResponseQueue, message);
-    return true;
 }
 
-bool MessageServer::DeallocateMessage(Message* message)
+void MessageServer::DeallocateMessage(Message* message)
 {
     if (message->_ExpectsResponse)
     {
-        return false;
+        throw "This message needs respond";
     }
 
     MessageBaseService::DoDeallocateMessage(message);
-    return true;
 }

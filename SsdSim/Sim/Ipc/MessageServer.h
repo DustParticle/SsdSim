@@ -17,8 +17,8 @@ public:
     MessageServer(const char* serverName, const U32 &size);
     bool HasMessage();
     Message* Pop();
-    bool PushResponse(Message* message);
-    bool DeallocateMessage(Message* message);
+    void PushResponse(Message* message);
+    void DeallocateMessage(Message* message);
 };
 
 #endif

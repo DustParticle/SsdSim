@@ -1,6 +1,47 @@
 #include "MessageBaseService.h"
 #include "Constant.h"
 
+Message* MessageBaseService::DoAllocateMessage(Message::Type type, const U32 &payloadSize, const bool &expectsResponse)
+{
+    void* payload = nullptr;
+    boost::interprocess::managed_shared_memory::handle_t handle = 0;
+    if (payloadSize)
+    {
+        payload = _ManagedShm->allocate(payloadSize, std::nothrow);
+        handle = _ManagedShm->get_handle_from_address(payload);
+    }
+
+    std::string messageName = GetMessageName(*_Counter);
+    Message* message = _ManagedShm->construct<Message>(messageName.c_str())();
+    message->_Id = *_Counter;
+    message->_Type = type;
+    message->_PayloadSize = payloadSize;
+    message->_PayloadHandle = handle;
+    message->_Payload = payload;
+    message->_ExpectsResponse = expectsResponse;
+    (*_Counter)++;
+
+    return message;
+}
+
+void MessageBaseService::DoDeallocateMessage(Message* message)
+{
+    if (message->_PayloadSize)
+    {
+        _ManagedShm->deallocate(message->_Payload);
+    }
+
+    std::string messageName = GetMessageName(message->_Id);
+    _ManagedShm->destroy<Message>(messageName.c_str());
+}
+
+void MessageBaseService::DoPush(bool* lock, deque<U32>* queue, Message* message)
+{
+    *lock = true;
+    queue->push_back(message->_Id);
+    *lock = false;
+}
+
 Message* MessageBaseService::DoPop(bool* lock, deque<U32>* queue)
 {
     if (*lock)
@@ -26,26 +67,10 @@ Message* MessageBaseService::DoPop(bool* lock, deque<U32>* queue)
         }
         return message.first;
     }
-
-    return nullptr;
-}
-
-void MessageBaseService::DoDeallocateMessage(Message* message)
-{
-    if (message->_PayloadSize)
-    {
-        _ManagedShm->deallocate(message->_Payload);
-    }
-
-    std::string messageName = GetMessageName(message->_Id);
-    _ManagedShm->destroy<Message>(messageName.c_str());
-}
-
-void MessageBaseService::DoPush(bool* lock, deque<U32>* queue, Message* message)
-{
-    *lock = true;
-    queue->push_back(message->_Id);
-    *lock = false;
+    
+    std::stringstream ss;
+    ss << "Cannot find message with id " << id;
+    throw ss.str();
 }
 
 std::string MessageBaseService::GetMessageName(const U32 &id)

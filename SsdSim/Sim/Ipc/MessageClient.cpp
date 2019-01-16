@@ -27,25 +27,7 @@ MessageClient::~MessageClient()
 
 Message* MessageClient::AllocateMessage(Message::Type type, const U32 &payloadSize, const bool &expectsResponse)
 {
-    void* payload = nullptr;
-    boost::interprocess::managed_shared_memory::handle_t handle = 0;
-    if (payloadSize)
-    {
-        payload = _ManagedShm->allocate(payloadSize, std::nothrow);
-        handle = _ManagedShm->get_handle_from_address(payload);
-    }
-
-    std::string messageName = GetMessageName(*_Counter);
-    Message* message = _ManagedShm->construct<Message>(messageName.c_str())();
-    message->_Id = *_Counter;
-    message->_Type = type;
-    message->_PayloadSize = payloadSize;
-    message->_PayloadHandle = handle;
-    message->_Payload = payload;
-    message->_ExpectsResponse = expectsResponse;
-    (*_Counter)++;
-
-    return message;
+    return DoAllocateMessage(type, payloadSize, expectsResponse);
 }
 
 void MessageClient::Push(Message* message)

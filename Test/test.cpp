@@ -303,8 +303,8 @@ TEST(MessagingSystem, NopMessageWithResponse)
     client->Push(message);
     ASSERT_TRUE(server->HasMessage());
     Message *popMessage = server->Pop();
-    ASSERT_FALSE(server->PushResponse(popMessage));        // Don't allow to response message without response flag
-    ASSERT_TRUE(server->DeallocateMessage(popMessage));    // Allow to deallocate message
+    ASSERT_ANY_THROW(server->PushResponse(popMessage));             // Don't allow to response message without response flag
+    ASSERT_NO_THROW(server->DeallocateMessage(popMessage));         // Allow to deallocate message
 
     /* Send message with response */
     Message *messageWithResponse = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Nop, 0, true);
@@ -312,9 +312,9 @@ TEST(MessagingSystem, NopMessageWithResponse)
     client->Push(messageWithResponse);
     ASSERT_TRUE(server->HasMessage());
     Message *popMessageWithResponse = server->Pop();
-    ASSERT_FALSE(server->DeallocateMessage(popMessageWithResponse));   // Don't allow to deallocate message with response flag
-    ASSERT_TRUE(server->PushResponse(popMessageWithResponse));         // Allow to response message
-    ASSERT_TRUE(client->HasResponse());                                // Should have response
+    ASSERT_ANY_THROW(server->DeallocateMessage(popMessageWithResponse));    // Don't allow to deallocate message with response flag
+    ASSERT_NO_THROW(server->PushResponse(popMessageWithResponse));          // Allow to response message
+    ASSERT_TRUE(client->HasResponse());                                     // Should have response
     Message *responseMessage = client->PopResponse();
     client->DeallocateMessage(responseMessage);
 }
