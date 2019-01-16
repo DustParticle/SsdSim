@@ -29,7 +29,7 @@ Message* MessageServer::Pop()
 
 void MessageServer::PushResponse(Message* message)
 {
-    if (!message->_ExpectsResponse)
+    if (!message->ExpectsResponse())
     {
         throw "This message doesn't need respond";
     }
@@ -39,7 +39,7 @@ void MessageServer::PushResponse(Message* message)
 
 void MessageServer::DeallocateMessage(Message* message)
 {
-    if (message->_ExpectsResponse)
+    if (message->ExpectsResponse())
     {
         throw "This message needs respond";
     }

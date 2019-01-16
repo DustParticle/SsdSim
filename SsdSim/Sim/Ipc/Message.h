@@ -12,6 +12,8 @@ struct Message
         SIM_FRAMEWORK_COMMAND
     };
 
+public:
+	bool ExpectsResponse() { return _ExpectsResponse; }
 
 public:
     Type _Type;
@@ -24,8 +26,6 @@ private:
     bool _ExpectsResponse;
 
     friend class MessageBaseService;
-    friend class MessageServer;
-    friend class MessageClient;
 };
 
 #endif
