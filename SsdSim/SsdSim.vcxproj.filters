@@ -72,6 +72,9 @@
     <ClInclude Include="Sim\Ipc\MessageBaseService.h">
       <Filter>Header Files\Ipc</Filter>
     </ClInclude>
+    <ClInclude Include="Sim\FirmwareCore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sim\Nand\NandBlock.cpp">
@@ -103,6 +106,9 @@
     </ClCompile>
     <ClCompile Include="Sim\Ipc\MessageBaseService.cpp">
       <Filter>Source Files\Ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="Sim\FirmwareCore.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

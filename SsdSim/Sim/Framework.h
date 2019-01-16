@@ -4,6 +4,7 @@
 #include <queue>
 
 #include "Nand/NandHal.h"
+#include "FirmwareCore.h"
 #include "Ipc/MessageServer.h"
 
 constexpr char SSDSIM_IPC_NAME[] = "SsdSim";
@@ -45,6 +46,7 @@ private:
 private:
     std::shared_ptr<MessageServer> _MessageServer;
 	NandHal _NandHal;
+	FirmwareCore _FirmwareCore;
 
 public:
     U32 _NopCount;

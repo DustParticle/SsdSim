@@ -54,31 +54,28 @@ void NandHal::EraseBlock(tChannel channel, tDeviceInChannel device, tBlockInDevi
 
 void NandHal::Run()
 {
-	while (false == IsStopRequested())
+	if (_CommandQueue->empty() == false)
 	{
-		if (_CommandQueue->empty() == false)
+		CommandDesc& command = _CommandQueue->front();
+		switch (command.Operation)
 		{
-			CommandDesc& command = _CommandQueue->front();
-			switch (command.Operation)
+			case CommandDesc::Op::READ:
 			{
-				case CommandDesc::Op::READ:
-				{
-					ReadPage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
-				}break;
-				case CommandDesc::Op::WRITE:
-				{
-					WritePage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
-				}break;
-				case CommandDesc::Op::ERASE:
-				{
-					EraseBlock(command.Channel, command.Device, command.Block);
-				}break;
-			}
-			_CommandQueue->pop();
+				ReadPage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
+			}break;
+			case CommandDesc::Op::WRITE:
+			{
+				WritePage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
+			}break;
+			case CommandDesc::Op::ERASE:
+			{
+				EraseBlock(command.Channel, command.Device, command.Block);
+			}break;
 		}
-		else
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
+		_CommandQueue->pop();
+	}
+	else
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 }

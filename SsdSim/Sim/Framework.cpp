@@ -1,4 +1,6 @@
 #include "Framework.h"
+
+#include "FirmwareCore.h"
 #include "Ipc/Message.h"
 
 constexpr U32 SSDSIM_IPC_SIZE = 10 * 1024 * 1024;
@@ -22,6 +24,7 @@ Framework::Framework() :
 void Framework::operator()()
 {
 	std::future<void> nandHal;
+	std::future<void> firmwareMain;
 
 	while (State::Exit != _State)
 	{
@@ -30,6 +33,7 @@ void Framework::operator()()
 			case State::Start:
 			{
 				nandHal = std::async(std::launch::async, &NandHal::operator(), &_NandHal);
+				firmwareMain = std::async(std::launch::async, &FirmwareCore::operator(), &_FirmwareCore);
 
 				_State = State::Run;
 			} break;
@@ -55,6 +59,7 @@ void Framework::operator()()
 		}
 	}
 
+	_FirmwareCore.Stop();
 	_NandHal.Stop();
 }
 

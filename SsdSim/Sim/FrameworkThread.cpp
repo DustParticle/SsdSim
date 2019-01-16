@@ -8,7 +8,10 @@ FrameworkThread::FrameworkThread() :
 
 void FrameworkThread::operator()()
 {
-	Run();
+	while (false == IsStopRequested())
+	{
+		Run();
+	}
 }
 
 void FrameworkThread::Stop()
