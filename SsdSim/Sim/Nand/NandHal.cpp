@@ -1,35 +1,81 @@
 #include "Nand/NandHal.h"
 
-void NandHal::PreInit(U8 chipCount, U32 blocksPerPage, U32 pagesPerBlock, U32 bytesPerPage)
+NandHal::NandHal()
 {
-	_ChipCount = chipCount;
-	_BlocksPerChip = blocksPerPage;
+	_CommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>>(new boost::lockfree::spsc_queue<CommandDesc>{ 1024 });
+}
+
+void NandHal::PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerPage, U32 pagesPerBlock, U32 bytesPerPage)
+{
+	_ChannelCount = channelCount;
+	_DeviceCount = deviceCount;
+	_BlocksPerDevice = blocksPerPage;
 	_PagesPerBlock = pagesPerBlock;
 	_BytesPerPage = bytesPerPage;
 }
 
 void NandHal::Init()
 {
-	//Normally in hardware implementation we would query each chip 
-	//Here we rely on PreInit to get configuration
+	//Normally in hardware implementation we would query each device
+	//Here we rely on PreInit
 
-	for (U8 i(0); i < _ChipCount; ++i)
+	for (U8 i(0); i < _ChannelCount; ++i)
 	{
-		_NandDevices.push_back(std::move(NandDevice(_BlocksPerChip, _PagesPerBlock, _BytesPerPage)));
+		NandChannel nandChannel;
+		nandChannel.Init(_DeviceCount, _BlocksPerDevice, _PagesPerBlock, _BytesPerPage);
+		_NandChannels.push_back(std::move(nandChannel));
 	}
 }
 
-void NandHal::ReadPage(tChip chip, tBlockInChip block, tPageInBlock page, U8* const pOutData)
+void NandHal::QueueCommand(const CommandDesc& command)
 {
-	_NandDevices[chip._].ReadPage(block, page, pOutData);
+	_CommandQueue->push(command);
 }
 
-void NandHal::WritePage(tChip chip, tBlockInChip block, tPageInBlock page, const U8* const pInData)
+bool NandHal::IsCommandQueueEmpty() const
 {
-	_NandDevices[chip._].WritePage(block, page, pInData);
+	return _CommandQueue->empty();
 }
 
-void NandHal::EraseBlock(tChip chip, tBlockInChip block)
+void NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData)
 {
-	_NandDevices[chip._].EraseBlock(block);
+	_NandChannels[channel._][device._].ReadPage(block, page, pOutData);
+}
+
+void NandHal::WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const U8* const pInData)
+{
+	_NandChannels[channel._][device._].WritePage(block, page, pInData);
+}
+
+void NandHal::EraseBlock(tChannel channel, tDeviceInChannel device, tBlockInDevice block)
+{
+	_NandChannels[channel._][device._].EraseBlock(block);
+}
+
+void NandHal::Run()
+{
+	if (_CommandQueue->empty() == false)
+	{
+		CommandDesc& command = _CommandQueue->front();
+		switch (command.Operation)
+		{
+			case CommandDesc::Op::READ:
+			{
+				ReadPage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
+			}break;
+			case CommandDesc::Op::WRITE:
+			{
+				WritePage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
+			}break;
+			case CommandDesc::Op::ERASE:
+			{
+				EraseBlock(command.Channel, command.Device, command.Block);
+			}break;
+		}
+		_CommandQueue->pop();
+	}
+	else
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 }

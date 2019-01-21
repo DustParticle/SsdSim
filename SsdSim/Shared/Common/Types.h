@@ -3,12 +3,17 @@
 
 #include "Common/BasicTypes.h"
 
-struct tChip
+struct tChannel
 {
 	U8 _;
 };
 
-struct tBlockInChip
+struct tDeviceInChannel
+{
+	U8 _;
+};
+
+struct tBlockInDevice
 {
 	U16 _;
 };

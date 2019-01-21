@@ -14,11 +14,11 @@ public:
 	NandDevice(NandDevice&& rhs) = default;
 
 public:
-	void ReadPage(tBlockInChip block, tPageInBlock page, U8* const pOutData);
+	void ReadPage(tBlockInDevice block, tPageInBlock page, U8* const pOutData);
 
-	void WritePage(tBlockInChip block, tPageInBlock page, const U8* const pInData);
+	void WritePage(tBlockInDevice block, tPageInBlock page, const U8* const pInData);
 
-	void EraseBlock(tBlockInChip block);
+	void EraseBlock(tBlockInDevice block);
 
 private:
 	std::unique_ptr<NandDeviceDesc> _Desc;
