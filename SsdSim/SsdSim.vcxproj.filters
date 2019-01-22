@@ -75,6 +75,9 @@
     <ClInclude Include="Sim\FirmwareCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sim\JSONParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sim\Nand\NandBlock.cpp">
@@ -110,8 +113,12 @@
     <ClCompile Include="Sim\FirmwareCore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Sim\JSONParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Sim\NandSpecs.json" />
   </ItemGroup>
 </Project>

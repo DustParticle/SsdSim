@@ -29,6 +29,7 @@
     <ClInclude Include="Sim\Ipc\MessageBaseService.h" />
     <ClInclude Include="Sim\Ipc\MessageClient.h" />
     <ClInclude Include="Sim\Ipc\MessageServer.h" />
+    <ClInclude Include="Sim\JSONParser.h" />
     <ClInclude Include="Sim\Nand\NandBlock.h" />
     <ClInclude Include="Sim\Nand\NandChannel.h" />
     <ClInclude Include="Sim\Nand\NandDevice.h" />
@@ -42,6 +43,7 @@
     <ClCompile Include="Sim\Ipc\MessageBaseService.cpp" />
     <ClCompile Include="Sim\Ipc\MessageClient.cpp" />
     <ClCompile Include="Sim\Ipc\MessageServer.cpp" />
+    <ClCompile Include="Sim\JSONParser.cpp" />
     <ClCompile Include="Sim\Nand\NandBlock.cpp" />
     <ClCompile Include="Sim\Nand\NandChannel.cpp" />
     <ClCompile Include="Sim\Nand\NandDevice.cpp" />
@@ -50,12 +52,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Sim\NandSpecs.json" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{1580BBB1-46A6-4587-AE15-66622E937248}</ProjectGuid>
     <RootNamespace>SsdSim</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -129,7 +132,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)packages/boost.1.68.0.0/lib/native/include;$(ProjectDir)Sim;$(ProjectDir)Shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)packages/rapidjson.temprelease.0.0.2.20/build/native/include;$(SolutionDir)packages/boost.1.68.0.0/lib/native/include;$(ProjectDir)Sim;$(ProjectDir)Shared</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -208,6 +211,7 @@
     <Import Project="..\packages\boost_wserialization-vc141.1.68.0.0\build\boost_wserialization-vc141.targets" Condition="Exists('..\packages\boost_wserialization-vc141.1.68.0.0\build\boost_wserialization-vc141.targets')" />
     <Import Project="..\packages\boost_zlib-vc141.1.68.0.0\build\boost_zlib-vc141.targets" Condition="Exists('..\packages\boost_zlib-vc141.1.68.0.0\build\boost_zlib-vc141.targets')" />
     <Import Project="..\packages\boost-vc141.1.68.0.0\build\boost-vc141.targets" Condition="Exists('..\packages\boost-vc141.1.68.0.0\build\boost-vc141.targets')" />
+    <Import Project="..\packages\rapidjson.temprelease.0.0.2.20\build\native\rapidjson.temprelease.targets" Condition="Exists('..\packages\rapidjson.temprelease.0.0.2.20\build\native\rapidjson.temprelease.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -256,5 +260,6 @@
     <Error Condition="!Exists('..\packages\boost_wserialization-vc141.1.68.0.0\build\boost_wserialization-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_wserialization-vc141.1.68.0.0\build\boost_wserialization-vc141.targets'))" />
     <Error Condition="!Exists('..\packages\boost_zlib-vc141.1.68.0.0\build\boost_zlib-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_zlib-vc141.1.68.0.0\build\boost_zlib-vc141.targets'))" />
     <Error Condition="!Exists('..\packages\boost-vc141.1.68.0.0\build\boost-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost-vc141.1.68.0.0\build\boost-vc141.targets'))" />
+    <Error Condition="!Exists('..\packages\rapidjson.temprelease.0.0.2.20\build\native\rapidjson.temprelease.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rapidjson.temprelease.0.0.2.20\build\native\rapidjson.temprelease.targets'))" />
   </Target>
 </Project>

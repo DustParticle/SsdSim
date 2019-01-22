@@ -5,20 +5,12 @@
 
 constexpr U32 SSDSIM_IPC_SIZE = 10 * 1024 * 1024;
 
-Framework::Framework() :
-    _State(State::Start),
-    _NopCount(0)
+Framework::Framework(const std::string& name) :
+	_State(State::Start),
+	_NopCount(0)
 {
-	//For now, hardcode NAND specifications
-	//Later they will be loaded from configuration
-	constexpr U8 channels = 4;
-	constexpr U8 devices = 1;
-	constexpr U32 blocks = 128;
-	constexpr U32 pages = 256;
-	constexpr U32 bytes = 8192;
-	_NandHal.PreInit(channels, devices, blocks, pages, bytes);
-
-    _MessageServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
+	_NandHal.PreInit(name);
+	_MessageServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
 }
 
 void Framework::operator()()

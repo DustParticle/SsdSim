@@ -25,7 +25,7 @@ public:
 class Framework
 {
 public:
-	Framework();
+	Framework(const std::string& name);
 
 public:
 	void operator()();
