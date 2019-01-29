@@ -21,19 +21,9 @@ Message* allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, cons
     return message;
 }
 
-bool shellExecute(const char *pFile, const char *pArgs, SHELLEXECUTEINFO & ShExecInfo)
+TEST(LoadConfigFile, Basic)
 {
-	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-	ShExecInfo.hwnd = NULL;
-	ShExecInfo.lpVerb = NULL;
-	ShExecInfo.lpFile = pFile;
-	ShExecInfo.lpParameters = pArgs;
-	ShExecInfo.lpDirectory = NULL;
-	ShExecInfo.nShow = SW_SHOW;
-	ShExecInfo.hInstApp = NULL;
-
-	return ShellExecuteEx(&ShExecInfo);
+	EXPECT_NO_THROW(Framework framework("Nandconfig/nandspec.json"));
 }
 
 TEST(NandDeviceTest, Basic) {
@@ -205,9 +195,8 @@ TEST(NandHalTest, BasicCommandQueue)
 
 TEST(SimFramework, Basic)
 {
-	//Start the framework
-	SHELLEXECUTEINFO ShExecInfo = { 0 };
-	ASSERT_NE(false, shellExecute("SsdSim.exe", "--nandspec nandspec.json", ShExecInfo));
+	Framework framework("Nandconfig/nandspec.json");
+	auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -216,19 +205,13 @@ TEST(SimFramework, Basic)
 
     Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
     client->Push(message);
-
-	if (ShExecInfo.hProcess)
-	{
-		WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
-		CloseHandle(ShExecInfo.hProcess);
-	}
 }
 
 TEST(SimFramework, Benchmark)
 {
     constexpr U32 loopCount = 10000;
 
-    Framework framework("nandspec.json");
+	Framework framework("Nandconfig/nandspec.json");
     auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));

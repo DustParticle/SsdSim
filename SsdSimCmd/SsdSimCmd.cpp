@@ -1,7 +1,6 @@
 // SsdSimCmd.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include "pch.h"
 #include <iostream>
 
 #include <future>
@@ -47,6 +46,7 @@ int main(int argc, const char*argv[])
 			catch (const ParserError &parser)
 			{
 				std::cerr << "Parser has failed!" << '\n';
+				return false;
 			}
 		}
 		notify(vm);
@@ -57,4 +57,6 @@ int main(int argc, const char*argv[])
 	{
 		std::cerr << ex.what() << '\n';
 	}
+
+	return true;
 }

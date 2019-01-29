@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClCompile Include="test.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="SsdSimCmdTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gtest-cout.h" />

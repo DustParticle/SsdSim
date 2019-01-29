@@ -25,7 +25,7 @@ public:
 class Framework
 {
 public:
-	Framework(const std::string& name);
+	Framework(const std::string& nandConfigFilename);
 
 public:
 	void operator()();

@@ -14,20 +14,6 @@ void NandHal::PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerPage, U32 pa
 	_PagesPerBlock = pagesPerBlock;
 	_BytesPerPage = bytesPerPage;
 }
-void NandHal::PreInit(const std::string& configFile)
-{
-	JSONParser parser(configFile);
-	if (!parser.Open())
-	{
-		throw(ParserError::FileFailed);
-	}
-
-	_ChannelCount = parser.GetValueInt("channel");
-	_DeviceCount = parser.GetValueInt("devices");
-	_BlocksPerDevice = parser.GetValueInt("block");
-	_PagesPerBlock = parser.GetValueInt("pages");
-	_BytesPerPage = parser.GetValueInt("bytes");
-}
 
 void NandHal::Init()
 {
