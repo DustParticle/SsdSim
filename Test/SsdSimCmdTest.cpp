@@ -42,13 +42,14 @@ TEST(A_SsdSimCmdExecute, Basic)
 {
 	//Start the framework
 	SHELLEXECUTEINFO ShExecInfo = { 0 };
-	ASSERT_TRUE(shellExecute("SsdSim.exe", "--nandspec nandspec.json", ShExecInfo));
+	ASSERT_TRUE(shellExecute("SsdSim.exe", "--nandspec Nandconfig/nandspec.json", ShExecInfo));
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	DWORD exitCode = 0;
 	ASSERT_TRUE(GetExitCodeProcess(ShExecInfo.hProcess, &exitCode));
 	ASSERT_EQ(STILL_ACTIVE, exitCode);
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 	std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
 	ASSERT_NE(nullptr, client);
@@ -58,7 +59,7 @@ TEST(A_SsdSimCmdExecute, Basic)
 
 	if (ShExecInfo.hProcess)
 	{
-		WaitForSingleObject(ShExecInfo.hProcess, INFINITE);
+		WaitForSingleObject(ShExecInfo.hProcess, 1000);
 		CloseHandle(ShExecInfo.hProcess);
 	}
 }

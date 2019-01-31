@@ -14,6 +14,9 @@
     <None Include="Nandconfig\nandspec.json">
       <Filter>Nandconfig</Filter>
     </None>
+    <None Include="Nandconfig\nandbadvalue.json">
+      <Filter>Nandconfig</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Nandconfig">

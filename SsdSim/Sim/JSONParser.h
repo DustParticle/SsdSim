@@ -11,10 +11,11 @@
 #include "Common/Types.h"
 
 
-enum class ParserError
+enum class Error
 {
-	ErrorNone = 0,
+	ErrorNone = 2,
 	FileOpenFailed,
+	ReturnValueInvalid,
 
 	AttributeInvalid,
 	AttributeIsNotObject,
@@ -28,12 +29,13 @@ enum class ParserError
 class JSONParser
 {
 public:
-	JSONParser(const std::string& jsonFilename);
+	JSONParser(const std::string& filename);
 	bool Open();
 
-	bool GetValueBool(std::string memberValue);
-	const char* GetValueString(std::string memberValue);
-	int GetValueInt(const std::string memberValue);
+	static std::string ErrorToString(Error err);
+	bool GetValueBool(std::string &memberValue);
+	const char* GetValueString(std::string &memberValue);
+	int GetValueInt(const std::string &memberValue);
 
 	int GetValueIntForAttribute(const std::string &attributes, const std::string &memberValue);
 

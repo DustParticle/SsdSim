@@ -20,7 +20,7 @@
 
 using namespace boost::program_options;
 
-int main(int argc, const char*argv[])
+bool parser_command_line(int argc, const char*argv[], std::string& nandspecFilename)
 {
 	try
 	{
@@ -37,17 +37,12 @@ int main(int argc, const char*argv[])
 		store(parse_command_line(argc, argv, generalOptions), vm);
 		if (vm.count("nandspec"))
 		{
-			try 
-			{
-				Framework framework(vm["nandspec"].as<std::string>());
-				//Start framework
-				framework.operator()();
-			}
-			catch (const ParserError &parser)
-			{
-				std::cerr << "Parser has failed!" << '\n';
-				return false;
-			}
+			nandspecFilename = vm["nandspec"].as<std::string>();
+		}
+		else
+		{
+			std::cout << "nandspec is required!";
+			return false;
 		}
 		notify(vm);
 		if (vm.count("help"))
@@ -56,7 +51,36 @@ int main(int argc, const char*argv[])
 	catch (const error &ex)
 	{
 		std::cerr << ex.what() << '\n';
+		return false;
 	}
-
 	return true;
 }
+
+
+int main(int argc, const char*argv[])
+{
+	std::string nandspecFilename = "";
+
+	if (parser_command_line(argc, argv, nandspecFilename))
+	{
+		if (!nandspecFilename.empty())
+		{
+
+			try
+			{
+				Framework framework;
+				framework.init(nandspecFilename);
+				//Start framework
+				framework.operator()();
+			}
+			catch (const Error &parser)
+			{
+				std::cerr << "Parser has failed! Error: " << JSONParser::ErrorToString(parser) << '\n';
+				return static_cast<int>(parser);
+			}
+		}
+	}
+	return 0;
+}
+
+

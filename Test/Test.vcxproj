@@ -55,6 +55,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Nandconfig\nandbadvalue.json" />
     <None Include="Nandconfig\nandspec.json" />
     <None Include="packages.config" />
   </ItemGroup>
@@ -133,14 +134,14 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SolutionDir)SsdSim/Sim;$(SolutionDir)SsdSim/Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)packages/rapidjson.temprelease.0.0.2.20/build/native/include;$(SolutionDir)SsdSim/Sim;$(SolutionDir)SsdSim/Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>XCOPY /D /Y "$(ProjectDir)Nandconfig" "$(SolutionDir)$(Platform)\$(Configuration)\Nandconfig"</Command>
+      <Command>XCOPY /Y /D  "$(ProjectDir)Nandconfig" "$(SolutionDir)$(Platform)\$(Configuration)\Nandconfig"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
