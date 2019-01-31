@@ -25,35 +25,35 @@ bool JSONParser::Open()
 	return true;
 }
 
-bool JSONParser::GetValueBool(std::string &memberValue)
+bool JSONParser::GetValueBool(const std::string &memberValue)
 {
 	if (!m_Document->HasMember(memberValue.c_str()))
 	{
-		throw Error::MemberValueInvalid;
+		throw Exception(Error::MemberValueInvalid);
 	}
 
 	Value::MemberIterator memberValueItr = m_Document->FindMember(memberValue.c_str());
 
 	if (!memberValueItr->value.IsBool())
 	{
-		throw Error::MemberValueIsNotBool;
+		throw Exception(Error::MemberValueIsNotBool);
 	}
 
 	return memberValueItr->value.GetBool();
 }
 
-const char* JSONParser::GetValueString(std::string &memberValue)
+const char* JSONParser::GetValueString(const std::string &memberValue)
 {
 	if (!m_Document->HasMember(memberValue.c_str()))
 	{
-		throw Error::MemberValueInvalid;
+		throw Exception(Error::MemberValueInvalid);
 	}
 
 	Value::MemberIterator memberValueItr = m_Document->FindMember(memberValue.c_str());
 
 	if (!memberValueItr->value.IsString())
 	{
-		throw Error::MemberValueIsNotSring;
+		throw Exception(Error::MemberValueIsNotSring);
 	}
 
 	return memberValueItr->value.GetString();
@@ -63,13 +63,13 @@ int JSONParser::GetValueInt(const std::string &memberValue)
 {
 	if (!m_Document->HasMember(memberValue.c_str()))
 	{
-		throw Error::MemberValueInvalid;
+		throw Exception(Error::MemberValueInvalid);
 	}
 	Value::MemberIterator memberValueItr = m_Document->FindMember(memberValue.c_str());
 
 	if (!memberValueItr->value.IsInt())
 	{
-		throw Error::MemverValueIsNotInt;
+		throw Exception(Error::MemverValueIsNotInt);
 	}
 
 	return memberValueItr->value.GetInt();
@@ -79,34 +79,34 @@ int JSONParser::GetValueIntForAttribute(const std::string &attributes, const std
 {
 	if (!m_Document->HasMember(attributes.c_str()))
 	{
-		throw Error::AttributeInvalid;
+		throw Exception(Error::AttributeInvalid);
 	}
 
 	Value::MemberIterator memberAttributeItr = m_Document->FindMember(attributes.c_str());
 	
 	if (!memberAttributeItr->value.IsObject())
 	{
-		throw Error::AttributeIsNotObject;
+		throw Exception(Error::AttributeIsNotObject);
 	}
 
 	if (!memberAttributeItr->value.HasMember(memberValue.c_str()))
 	{
-		throw Error::MemberValueInvalid;
+		throw Exception(Error::MemberValueInvalid);
 	}
 
 	Value::ConstMemberIterator memberValueItr = memberAttributeItr->value.FindMember(memberValue.c_str());
 
 	if (!memberValueItr->value.IsInt())
 	{
-		throw Error::MemverValueIsNotInt;
+		throw Exception(Error::MemverValueIsNotInt);
 	}
 
 	return memberValueItr->value.GetInt();
 }
 
-std::string JSONParser::ErrorToString(Error err)
+const char * JSONParser::Exception::what() const throw ()
 {
-	std::string strErr;
+	const char *strErr = nullptr;
 	switch (err)
 	{
 	case Error::FileOpenFailed:

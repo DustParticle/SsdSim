@@ -26,7 +26,14 @@ TEST(LoadConfigFile, Basic)
 {
 	Framework framework;
 
-	EXPECT_NO_THROW(framework.init("Nandconfig/nandspec.json"));
+	try
+	{
+		framework.init("Nandconfig/nandspec.json");
+	}
+	catch (const JSONParser::Exception &parser)
+	{
+		FAIL() << "Exception: " << parser.what();
+	}
 }
 
 TEST(LoadConfigFile, Negative)
@@ -36,16 +43,16 @@ TEST(LoadConfigFile, Negative)
 	{
 		Framework framework;
 		framework.init("Nandconfig/nandbadvalue.json");
-		FAIL(...);
+		FAIL();
 	}
-	catch (const Error &parser)
+	catch (const JSONParser::Exception &parser)
 	{
-		SUCCEED(...);
-		ASSERT_EQ(Error::ReturnValueInvalid, parser);
+		SUCCEED();
+		ASSERT_STREQ("ReturnValueInvalid", parser.what());
 	}
 	catch (...)
 	{
-		FAIL(...);
+		FAIL();
 	}
 }
 

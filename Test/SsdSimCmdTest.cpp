@@ -59,7 +59,7 @@ TEST(A_SsdSimCmdExecute, Basic)
 
 	if (ShExecInfo.hProcess)
 	{
-		WaitForSingleObject(ShExecInfo.hProcess, 1000);
+		ASSERT_NE(WAIT_TIMEOUT, WaitForSingleObject(ShExecInfo.hProcess, 5000));
 		CloseHandle(ShExecInfo.hProcess);
 	}
 }

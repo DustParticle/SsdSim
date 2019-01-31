@@ -19,23 +19,23 @@ void Framework::init(const std::string& configFileName)
 	JSONParser parser(configFileName);
 	if (!parser.Open())
 	{
-		throw(Error::FileOpenFailed);
+		throw JSONParser::Exception(JSONParser::Error::FileOpenFailed);
 	}
 
 	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "channels");
-	U8 channels = (retValue >= 0) ? retValue : throw Error::ReturnValueInvalid;
+	U8 channels = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
 
 	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "devices");
-	U8 devices = (retValue >= 0) ? retValue : throw Error::ReturnValueInvalid;
+	U8 devices = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
 
 	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "blocks");
-	U32 blocks = (retValue >= 0) ? retValue : throw Error::ReturnValueInvalid;
+	U32 blocks = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
 
 	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "pages");
-	U32 pages = (retValue >= 0) ? retValue : throw Error::ReturnValueInvalid;
+	U32 pages = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
 
 	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "bytes");
-	U32 bytes = (retValue >= 0) ? retValue : throw Error::ReturnValueInvalid;
+	U32 bytes = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
 
 	_NandHal.PreInit(channels, devices, blocks, pages, bytes);
 	_MessageServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);

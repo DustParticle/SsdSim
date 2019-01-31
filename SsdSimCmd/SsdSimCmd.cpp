@@ -73,13 +73,14 @@ int main(int argc, const char*argv[])
 				//Start framework
 				framework.operator()();
 			}
-			catch (const Error &parser)
+			catch (const JSONParser::Exception &parser)
 			{
-				std::cerr << "Parser has failed! Error: " << JSONParser::ErrorToString(parser) << '\n';
-				return static_cast<int>(parser);
+				std::cerr << "Parser has failed! Error: " << parser.what() << '\n';
+				return -1;
 			}
 		}
 	}
+
 	return 0;
 }
 
