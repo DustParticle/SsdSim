@@ -1,38 +1,32 @@
 #include "JSONParser.h"
 
 #include <fstream>
+#include <rapidjson/istreamwrapper.h>
 
 using namespace rapidjson;
 
-JSONParser::JSONParser(const std::string& filename) : sJsonName(filename)
+void JSONParser::Parse(const std::string& filename)
 {
-}
-
-bool JSONParser::Open()
-{
-	std::ifstream ifs(sJsonName);
+	std::ifstream ifs(filename);
 
 	if (!ifs.is_open())
 	{
-		return false;
+		throw JSONParser::Exception(JSONParser::Error::FileOpenFailed);
 	}
 
 	rapidjson::IStreamWrapper isw(ifs);
 
-	m_Document = std::make_shared<rapidjson::Document>();
-	m_Document->ParseStream(isw);
-
-	return true;
+	_Document.ParseStream(isw);
 }
 
 bool JSONParser::GetValueBool(const std::string &memberValue)
 {
-	if (!m_Document->HasMember(memberValue.c_str()))
+	if (!_Document.HasMember(memberValue.c_str()))
 	{
 		throw Exception(Error::MemberValueInvalid);
 	}
 
-	Value::MemberIterator memberValueItr = m_Document->FindMember(memberValue.c_str());
+	Value::MemberIterator memberValueItr = _Document.FindMember(memberValue.c_str());
 
 	if (!memberValueItr->value.IsBool())
 	{
@@ -44,12 +38,12 @@ bool JSONParser::GetValueBool(const std::string &memberValue)
 
 const char* JSONParser::GetValueString(const std::string &memberValue)
 {
-	if (!m_Document->HasMember(memberValue.c_str()))
+	if (!_Document.HasMember(memberValue.c_str()))
 	{
 		throw Exception(Error::MemberValueInvalid);
 	}
 
-	Value::MemberIterator memberValueItr = m_Document->FindMember(memberValue.c_str());
+	Value::MemberIterator memberValueItr = _Document.FindMember(memberValue.c_str());
 
 	if (!memberValueItr->value.IsString())
 	{
@@ -61,11 +55,11 @@ const char* JSONParser::GetValueString(const std::string &memberValue)
 
 int JSONParser::GetValueInt(const std::string &memberValue)
 {
-	if (!m_Document->HasMember(memberValue.c_str()))
+	if (!_Document.HasMember(memberValue.c_str()))
 	{
 		throw Exception(Error::MemberValueInvalid);
 	}
-	Value::MemberIterator memberValueItr = m_Document->FindMember(memberValue.c_str());
+	Value::MemberIterator memberValueItr = _Document.FindMember(memberValue.c_str());
 
 	if (!memberValueItr->value.IsInt())
 	{
@@ -77,12 +71,12 @@ int JSONParser::GetValueInt(const std::string &memberValue)
 
 int JSONParser::GetValueIntForAttribute(const std::string &attributes, const std::string &memberValue)
 {
-	if (!m_Document->HasMember(attributes.c_str()))
+	if (!_Document.HasMember(attributes.c_str()))
 	{
 		throw Exception(Error::AttributeInvalid);
 	}
 
-	Value::MemberIterator memberAttributeItr = m_Document->FindMember(attributes.c_str());
+	Value::MemberIterator memberAttributeItr = _Document.FindMember(attributes.c_str());
 	
 	if (!memberAttributeItr->value.IsObject())
 	{

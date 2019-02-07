@@ -13,7 +13,6 @@
 #include "Ipc/MessageClient.h"
 
 
-
 Message* _allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, const SimFrameworkCommand::Code &code,
 	const U32 &bufferSize = 0, const bool &expectsResponse = false)
 {

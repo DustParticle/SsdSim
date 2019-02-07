@@ -16,7 +16,6 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include "JSONParser.h"
 
 using namespace boost::program_options;
 
@@ -69,13 +68,13 @@ int main(int argc, const char*argv[])
 			try
 			{
 				Framework framework;
-				framework.init(nandspecFilename);
+				framework.Init(nandspecFilename);
 				//Start framework
 				framework.operator()();
 			}
-			catch (const JSONParser::Exception &parser)
+			catch (...)
 			{
-				std::cerr << "Parser has failed! Error: " << parser.what() << '\n';
+				//TODO: catch specific exceptions
 				return -1;
 			}
 		}

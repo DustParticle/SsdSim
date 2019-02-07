@@ -8,3 +8,4 @@ SsdSimCmd/x64
 SsdSimCmd/SsdSimCmd.vcxproj.user
 x64/
 packages/
+Win32/

@@ -26,13 +26,13 @@ class Framework
 {
 public:
 	Framework();
-	void init(const std::string& nandConfigFilename);
+	void Init(const std::string& nandConfigFilename);
 
 public:
 	void operator()();
 
 private:
-    void handleSimFrameworkCommand(SimFrameworkCommand *command);
+    void HandleSimFrameworkCommand(SimFrameworkCommand *command);
 
 private:
 	enum class State

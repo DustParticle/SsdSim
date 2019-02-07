@@ -13,14 +13,13 @@ Framework::Framework() :
 
 }
 
-void Framework::init(const std::string& configFileName)
+void Framework::Init(const std::string& configFileName)
 {
 	int retValue;
-	JSONParser parser(configFileName);
-	if (!parser.Open())
-	{
-		throw JSONParser::Exception(JSONParser::Error::FileOpenFailed);
-	}
+	JSONParser parser;
+	parser.Parse(configFileName);
+	//TODO: will do a catch a throw here
+	
 
 	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "channels");
 	U8 channels = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
@@ -69,7 +68,7 @@ void Framework::operator()()
                         case Message::Type::SIM_FRAMEWORK_COMMAND:
                         {
                             SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
-                            handleSimFrameworkCommand(command);
+                            HandleSimFrameworkCommand(command);
                         } break;
 					}
 
@@ -83,7 +82,7 @@ void Framework::operator()()
 	_NandHal.Stop();
 }
 
-void Framework::handleSimFrameworkCommand(SimFrameworkCommand *command)
+void Framework::HandleSimFrameworkCommand(SimFrameworkCommand *command)
 {
     switch (command->_Code)
     {

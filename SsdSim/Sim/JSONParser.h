@@ -5,15 +5,10 @@
 #include <cstdio>
 #include <exception>
 
-#include <rapidjson/prettywriter.h>
 #include <rapidjson/document.h>
-#include <rapidjson/istreamwrapper.h>
 #include <rapidjson/writer.h>
+
 #include "Common/Types.h"
-
-
-
-
 
 class JSONParser
 {
@@ -45,8 +40,7 @@ public:
 	};
 
 public:
-	JSONParser(const std::string& filename);
-	bool Open();
+	void Parse(const std::string& filename);
 
 	bool GetValueBool(const std::string &memberValue);
 	const char* GetValueString(const std::string &memberValue);
@@ -55,8 +49,7 @@ public:
 	int GetValueIntForAttribute(const std::string &attributes, const std::string &memberValue);
 
 private:
-	std::string sJsonName;
-	std::shared_ptr<rapidjson::Document> m_Document;
+	rapidjson::Document _Document;
 };
 
 #endif

@@ -11,7 +11,6 @@
 #include "Nand/NandHal.h"
 #include "Framework.h"
 #include "Ipc/MessageClient.h"
-#include "JSONParser.h"
 
 Message* allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, const SimFrameworkCommand::Code &code,
     const U32 &bufferSize = 0, const bool &expectsResponse = false)
@@ -26,34 +25,14 @@ TEST(LoadConfigFile, Basic)
 {
 	Framework framework;
 
-	try
-	{
-		framework.init("Nandconfig/nandspec.json");
-	}
-	catch (const JSONParser::Exception &parser)
-	{
-		FAIL() << "Exception: " << parser.what();
-	}
+	EXPECT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
 }
 
 TEST(LoadConfigFile, Negative)
 {
-	//Expect throw an exception
-	try
-	{
-		Framework framework;
-		framework.init("Nandconfig/nandbadvalue.json");
-		FAIL();
-	}
-	catch (const JSONParser::Exception &parser)
-	{
-		SUCCEED();
-		ASSERT_STREQ("ReturnValueInvalid", parser.what());
-	}
-	catch (...)
-	{
-		FAIL();
-	}
+	Framework framework;
+	ASSERT_ANY_THROW(framework.Init("Nandconfig/nandbadvalue.json"));
+	//TODO: we will expect to throw specific exceptions here.
 }
 
 TEST(NandDeviceTest, Basic) {
@@ -226,7 +205,7 @@ TEST(NandHalTest, BasicCommandQueue)
 TEST(SimFramework, Basic)
 {
 	Framework framework;
-	EXPECT_NO_THROW(framework.init("Nandconfig/nandspec.json"));
+	EXPECT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
 	
 	auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
 
@@ -244,7 +223,7 @@ TEST(SimFramework, Benchmark)
     constexpr U32 loopCount = 10000;
 
 	Framework framework;
-	EXPECT_NO_THROW(framework.init("Nandconfig/nandspec.json"));
+	EXPECT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
     auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
