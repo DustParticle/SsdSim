@@ -6,7 +6,6 @@
 #include <exception>
 
 #include <rapidjson/document.h>
-#include <rapidjson/writer.h>
 
 #include "Common/Types.h"
 

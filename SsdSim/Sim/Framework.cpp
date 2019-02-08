@@ -17,27 +17,98 @@ void Framework::Init(const std::string& configFileName)
 {
 	int retValue;
 	JSONParser parser;
-	parser.Parse(configFileName);
-	//TODO: will do a catch a throw here
+	try
+	{
+		parser.Parse(configFileName);
+	}
+	catch (...)
+	{
+		throw (std::string("Failed to parse ") + configFileName);
+	}
+
+	SetupNandHal(parser);
 	
+	_MessageServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
+}
 
-	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "channels");
-	U8 channels = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
+void Framework::SetupNandHal(JSONParser& parser)
+{
+	auto validateValue = [](int value, int min, int max, const std::string& name)
+	{
+		if ((min <= value) && (value <= max))
+		{
+			return value;
+		}
 
-	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "devices");
-	U8 devices = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
+		std::ostringstream ss;
+		ss << name << " value of " << value << " is out of range. Expected to be between [" << min << ", " << max << "]";
+		throw ss.str();
+		return 0;
+	};
 
-	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "blocks");
-	U32 blocks = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
+	int retValue;
 
-	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "pages");
-	U32 pages = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
+	try
+	{
+		retValue = parser.GetValueIntForAttribute("NandHalPreInit", "channels");
+	}
+	catch (JSONParser::Exception e)
+	{
+		throw (std::string("Failed to parse \'channels\' value. Expecting an \'int\'"));
+	}
+	constexpr U8 maxChannelsValue = 8;
+	constexpr U8 minChannelsValue = 1;
+	U8 channels = validateValue(retValue, minChannelsValue, maxChannelsValue, "channels");
 
-	retValue = parser.GetValueIntForAttribute("NandHalPreInit", "bytes");
-	U32 bytes = (retValue >= 0) ? retValue : throw JSONParser::Exception(JSONParser::Error::ReturnValueInvalid);
+	try
+	{
+		retValue = parser.GetValueIntForAttribute("NandHalPreInit", "devices");
+	}
+	catch (JSONParser::Exception e)
+	{
+		throw (std::string("Failed to parse \'devices\' value. Expecting an \'int\'"));
+	}
+	constexpr U8 maxDevicesValue = 8;
+	constexpr U8 minDevicesValue = 1;
+	U8 devices = validateValue(retValue, minDevicesValue, maxDevicesValue, "devices");
+
+	try
+	{
+		retValue = parser.GetValueIntForAttribute("NandHalPreInit", "blocks");
+	}
+	catch (JSONParser::Exception e)
+	{
+		throw (std::string("Failed to parse \'blocks\' value. Expecting an \'int\'"));
+	}
+	constexpr U32 maxBlocksValue = 32 * 1024;
+	constexpr U32 minBlocksValue = 128;
+	U32 blocks = validateValue(retValue, minBlocksValue, maxBlocksValue, "blocks");
+
+	try
+	{
+		retValue = parser.GetValueIntForAttribute("NandHalPreInit", "pages");
+	}
+	catch (JSONParser::Exception e)
+	{
+		throw (std::string("Failed to parse \'pages\' value. Expecting an \'int\'"));
+	}
+	constexpr U32 maxPagesValue = 512;
+	constexpr U32 minPagesValue = 32;
+	U32 pages = validateValue(retValue, minPagesValue, maxPagesValue, "pages");
+
+	try
+	{
+		retValue = parser.GetValueIntForAttribute("NandHalPreInit", "bytes");
+	}
+	catch (JSONParser::Exception e)
+	{
+		throw (std::string("Failed to parse \'bytes\' value. Expecting an \'int\'"));
+	}
+	constexpr U32 maxBytesValue = 16 * 1024;
+	constexpr U32 minBytesValue = 4 * 1024;
+	U32 bytes = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
 	_NandHal.PreInit(channels, devices, blocks, pages, bytes);
-	_MessageServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
 }
 
 void Framework::operator()()

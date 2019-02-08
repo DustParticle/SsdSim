@@ -7,6 +7,8 @@
 #include "FirmwareCore.h"
 #include "Ipc/MessageServer.h"
 
+class JSONParser;
+
 constexpr char SSDSIM_IPC_NAME[] = "SsdSim";
 
 class SimFrameworkCommand
@@ -32,6 +34,7 @@ public:
 	void operator()();
 
 private:
+    void SetupNandHal(JSONParser& parser);
     void HandleSimFrameworkCommand(SimFrameworkCommand *command);
 
 private:

@@ -25,14 +25,31 @@ TEST(LoadConfigFile, Basic)
 {
 	Framework framework;
 
-	EXPECT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
+	try
+	{
+		framework.Init("Nandconfig/nandspec.json");
+	}
+	catch (...)
+	{
+		//TODO: display specific exception for informative test report
+		FAIL();
+	}
 }
 
 TEST(LoadConfigFile, Negative)
 {
-	Framework framework;
-	ASSERT_ANY_THROW(framework.Init("Nandconfig/nandbadvalue.json"));
-	//TODO: we will expect to throw specific exceptions here.
+	//Expect throw an exception
+	try
+	{
+		Framework framework;
+		framework.Init("Nandconfig/nandbadvalue.json");
+		FAIL();
+	}
+	//TODO: modify framework to throw specific exceptions
+	catch (...)
+	{
+		
+	}
 }
 
 TEST(NandDeviceTest, Basic) {
