@@ -23,7 +23,7 @@ void Framework::Init(const std::string& configFileName)
 	}
 	catch (...)
 	{
-		throw (std::string("Failed to parse ") + configFileName);
+		throw Exception("Failed to parse " + configFileName);
 	}
 
 	SetupNandHal(parser);
@@ -42,7 +42,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 
 		std::ostringstream ss;
 		ss << name << " value of " << value << " is out of range. Expected to be between [" << min << ", " << max << "]";
-		throw ss.str();
+		throw Exception(ss.str());
 		return 0;
 	};
 
@@ -54,7 +54,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	catch (JSONParser::Exception e)
 	{
-		throw (std::string("Failed to parse \'channels\' value. Expecting an \'int\'"));
+		throw Exception("Failed to parse \'channels\' value. Expecting an \'int\'");
 	}
 	constexpr U8 maxChannelsValue = 8;
 	constexpr U8 minChannelsValue = 1;
@@ -66,7 +66,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	catch (JSONParser::Exception e)
 	{
-		throw (std::string("Failed to parse \'devices\' value. Expecting an \'int\'"));
+		throw Exception("Failed to parse \'devices\' value. Expecting an \'int\'");
 	}
 	constexpr U8 maxDevicesValue = 8;
 	constexpr U8 minDevicesValue = 1;
@@ -78,7 +78,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	catch (JSONParser::Exception e)
 	{
-		throw (std::string("Failed to parse \'blocks\' value. Expecting an \'int\'"));
+		throw Exception("Failed to parse \'blocks\' value. Expecting an \'int\'");
 	}
 	constexpr U32 maxBlocksValue = 32 * 1024;
 	constexpr U32 minBlocksValue = 128;
@@ -90,7 +90,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	catch (JSONParser::Exception e)
 	{
-		throw (std::string("Failed to parse \'pages\' value. Expecting an \'int\'"));
+		throw Exception("Failed to parse \'pages\' value. Expecting an \'int\'");
 	}
 	constexpr U32 maxPagesValue = 512;
 	constexpr U32 minPagesValue = 32;
@@ -102,7 +102,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	catch (JSONParser::Exception e)
 	{
-		throw (std::string("Failed to parse \'bytes\' value. Expecting an \'int\'"));
+		throw Exception("Failed to parse \'bytes\' value. Expecting an \'int\'");
 	}
 	constexpr U32 maxBytesValue = 16 * 1024;
 	constexpr U32 minBytesValue = 4 * 1024;

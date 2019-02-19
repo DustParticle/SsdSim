@@ -72,9 +72,9 @@ int main(int argc, const char*argv[])
 				//Start framework
 				framework.operator()();
 			}
-			catch (...)
+			catch (const Framework::Exception &err)
 			{
-				//TODO: catch specific exceptions
+				std::cout << err.what();
 				return -1;
 			}
 		}

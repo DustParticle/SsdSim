@@ -29,10 +29,9 @@ TEST(LoadConfigFile, Basic)
 	{
 		framework.Init("Nandconfig/nandspec.json");
 	}
-	catch (...)
+	catch (const Framework::Exception &err)
 	{
-		//TODO: display specific exception for informative test report
-		FAIL();
+		FAIL() << err.what();
 	}
 }
 
@@ -45,10 +44,13 @@ TEST(LoadConfigFile, Negative)
 		framework.Init("Nandconfig/nandbadvalue.json");
 		FAIL();
 	}
-	//TODO: modify framework to throw specific exceptions
+	catch (const Framework::Exception err)
+	{
+		SUCCEED();
+	}
 	catch (...)
 	{
-		
+		FAIL();
 	}
 }
 
@@ -222,8 +224,15 @@ TEST(NandHalTest, BasicCommandQueue)
 TEST(SimFramework, Basic)
 {
 	Framework framework;
-	EXPECT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
-	
+	try
+	{
+		framework.Init("Nandconfig/nandspec.json");
+	}
+	catch (const Framework::Exception &err)
+	{
+		FAIL() << err.what();
+	}
+
 	auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -240,7 +249,15 @@ TEST(SimFramework, Benchmark)
     constexpr U32 loopCount = 10000;
 
 	Framework framework;
-	EXPECT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
+	try
+	{
+		framework.Init("Nandconfig/nandspec.json");
+	}
+	catch (const Framework::Exception &err)
+	{
+		FAIL() << err.what();
+	}
+
     auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));

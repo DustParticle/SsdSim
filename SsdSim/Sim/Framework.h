@@ -2,6 +2,7 @@
 #define __Framework_h__
 
 #include <queue>
+#include <exception>
 
 #include "Nand/NandHal.h"
 #include "FirmwareCore.h"
@@ -26,6 +27,16 @@ public:
 
 class Framework
 {
+public:
+	class Exception : public std::exception
+	{
+	public:
+		Exception(std::string errMesg) : _ErrMesg(errMesg) {}
+		const char* what() const noexcept { return _ErrMesg.c_str(); }
+	private:
+		std::string _ErrMesg;
+	};
+
 public:
 	Framework();
 	void Init(const std::string& nandConfigFilename);
