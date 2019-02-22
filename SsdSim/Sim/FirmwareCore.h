@@ -8,6 +8,12 @@ class FirmwareCore : public FrameworkThread
 {
 protected:
 	virtual void Run() override;
+
+public:
+    void SetExecute(std::function<void()> execute);
+
+private:
+    std::function<void()> _Execute;
 };
 
 #endif

@@ -1,6 +1,11 @@
 #include "FirmwareCore.h"
 
+void FirmwareCore::SetExecute(std::function<void()> execute)
+{
+    _Execute = execute;
+}
+
 void FirmwareCore::Run()
 {
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    _Execute();
 }

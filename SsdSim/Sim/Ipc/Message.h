@@ -9,7 +9,8 @@ struct Message
 {
     enum class Type
     {
-        SIM_FRAMEWORK_COMMAND
+        SIM_FRAMEWORK_COMMAND,
+        CUSTOM_PROTOCOL_COMMAND
     };
 
 public:
