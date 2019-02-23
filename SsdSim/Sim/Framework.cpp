@@ -4,6 +4,8 @@
 #include "Ipc/Message.h"
 #include "JSONParser.h"
 
+#include "CustomProtocolCommand.h"
+
 constexpr U32 SSDSIM_IPC_SIZE = 10 * 1024 * 1024;
 
 Framework::Framework() :
@@ -140,6 +142,13 @@ void Framework::operator()()
                         {
                             SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
                             HandleSimFrameworkCommand(command);
+                        } break;
+
+                        case Message::Type::CUSTOM_PROTOCOL_COMMAND:
+                        {
+                            // TODO: clone the command to new memory region. Handle the data transfer if need.
+                            CustomProtocolCommand *command = (CustomProtocolCommand*)message->_Payload;
+                            _FirmwareCore._InterfaceQueues->CustomProtocolCommandQueue.push(command);
                         } break;
 					}
 

@@ -22,12 +22,6 @@
     <Filter Include="Source Files\Nand">
       <UniqueIdentifier>{393d426e-faa1-4484-bad3-6c4537ca84af}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Ipc">
-      <UniqueIdentifier>{772e34de-de7e-4896-89b5-3cc2447a6640}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Ipc">
-      <UniqueIdentifier>{1a53a15b-28ae-4bfc-813a-82fdaeaa691e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sim\Common\BasicTypes.h">
@@ -57,21 +51,6 @@
     <ClInclude Include="Sim\Nand\NandChannel.h">
       <Filter>Header Files\Nand</Filter>
     </ClInclude>
-    <ClInclude Include="Sim\Ipc\Message.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
-    <ClInclude Include="Sim\Ipc\MessageServer.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
-    <ClInclude Include="Sim\Ipc\MessageClient.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
-    <ClInclude Include="Sim\Ipc\Constant.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
-    <ClInclude Include="Sim\Ipc\MessageBaseService.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
     <ClInclude Include="Sim\FirmwareCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -100,15 +79,6 @@
     </ClCompile>
     <ClCompile Include="Sim\Nand\NandChannel.cpp">
       <Filter>Source Files\Nand</Filter>
-    </ClCompile>
-    <ClCompile Include="Sim\Ipc\MessageServer.cpp">
-      <Filter>Source Files\Ipc</Filter>
-    </ClCompile>
-    <ClCompile Include="Sim\Ipc\MessageClient.cpp">
-      <Filter>Source Files\Ipc</Filter>
-    </ClCompile>
-    <ClCompile Include="Sim\Ipc\MessageBaseService.cpp">
-      <Filter>Source Files\Ipc</Filter>
     </ClCompile>
     <ClCompile Include="Sim\FirmwareCore.cpp">
       <Filter>Source Files</Filter>

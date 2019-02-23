@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{bb1f7316-0da7-4e97-a8a5-68ac7244c888}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Ipc">
+      <UniqueIdentifier>{6a39fac7-c807-4085-ba7b-f45f43e435c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Ipc">
+      <UniqueIdentifier>{e9352421-4dc5-4476-bdb0-6c5a76451c00}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common\BasicTypes.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Ipc\Constant.h">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="Ipc\Message.h">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="Ipc\MessageBaseService.h">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="Ipc\MessageClient.h">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="Ipc\MessageServer.h">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomProtocolCommand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceQueues.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Ipc\MessageServer.cpp">
+      <Filter>Source Files\Ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="Ipc\MessageClient.cpp">
+      <Filter>Source Files\Ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="Ipc\MessageBaseService.cpp">
+      <Filter>Source Files\Ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceQueues.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>

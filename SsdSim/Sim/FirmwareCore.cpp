@@ -1,11 +1,16 @@
 #include "FirmwareCore.h"
 
-void FirmwareCore::SetExecute(std::function<void()> execute)
+FirmwareCore::FirmwareCore()
+{
+    _InterfaceQueues = std::shared_ptr<InterfaceQueues>(new InterfaceQueues());
+}
+
+void FirmwareCore::SetExecute(std::function<void(std::shared_ptr<InterfaceQueues>)> execute)
 {
     _Execute = execute;
 }
 
 void FirmwareCore::Run()
 {
-    _Execute();
+    _Execute(this->_InterfaceQueues);
 }

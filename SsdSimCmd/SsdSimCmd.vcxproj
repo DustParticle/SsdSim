@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{EA6F0722-40C5-4996-8409-A629DE7E555C}</ProjectGuid>
     <RootNamespace>SsdSimCmd</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -96,7 +96,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)SsdSim/Shared;$(SolutionDir)SsdSim/Sim;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SsdSim\Shared;$(SolutionDir)SsdSim\Sim;$(SolutionDir)MessageSystem;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -148,6 +149,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MessageSystem\MessageSystem.vcxproj">
+      <Project>{b8b91276-9bf5-4d26-9460-0c0750dd0998}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\SsdSim\SsdSim.vcxproj">
       <Project>{1580bbb1-46a6-4587-ae15-66622e937248}</Project>
     </ProjectReference>
