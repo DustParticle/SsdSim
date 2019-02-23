@@ -12,7 +12,7 @@ protected:
 
 public:
     FirmwareCore();
-    void SetExecute(std::function<void(std::shared_ptr<InterfaceQueues>)> execute);
+    bool SetExecute(std::string Filename);
 
 public:
     std::shared_ptr<InterfaceQueues> _InterfaceQueues;

@@ -31,6 +31,8 @@ void Framework::Init(const std::string& configFileName)
 	SetupNandHal(parser);
 	
 	_MessageServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
+
+    _FirmwareCore.SetExecute(".\\RomCode.dll");
 }
 
 void Framework::SetupNandHal(JSONParser& parser)
