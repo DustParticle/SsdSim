@@ -35,14 +35,14 @@ void MessageBaseService::DoDeallocateMessage(Message* message)
     _ManagedShm->destroy<Message>(messageName.c_str());
 }
 
-void MessageBaseService::DoPush(bool* lock, deque<U32>* queue, Message* message)
+void MessageBaseService::DoPush(bool* lock, deque<MessageId>* &queue, Message* message)
 {
     *lock = true;
     queue->push_back(message->_Id);
     *lock = false;
 }
 
-Message* MessageBaseService::DoPop(bool* lock, deque<U32>* queue)
+Message* MessageBaseService::DoPop(bool* lock, deque<MessageId>* &queue)
 {
     if (*lock)
     {
@@ -54,9 +54,14 @@ Message* MessageBaseService::DoPop(bool* lock, deque<U32>* queue)
         return nullptr;
     }
 
-    U32 id = queue->front();
+    MessageId id = queue->front();
     queue->pop_front();
 
+    return GetMessage(id);
+}
+
+Message* MessageBaseService::GetMessage(const MessageId &id)
+{
     std::string messageName = GetMessageName(id);
     auto message = _ManagedShm->find<Message>(messageName.c_str());
     if (message.first)
@@ -67,13 +72,13 @@ Message* MessageBaseService::DoPop(bool* lock, deque<U32>* queue)
         }
         return message.first;
     }
-    
+
     std::stringstream ss;
     ss << "Cannot find message with id " << id;
     throw ss.str();
 }
 
-std::string MessageBaseService::GetMessageName(const U32 &id)
+std::string MessageBaseService::GetMessageName(const MessageId &id)
 {
     std::ostringstream stringStream;
     stringStream << MESSAGE;

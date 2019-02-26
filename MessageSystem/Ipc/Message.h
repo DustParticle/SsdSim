@@ -5,6 +5,8 @@
 
 #include "Common/BasicTypes.h"
 
+typedef U32 MessageId;
+
 struct Message
 {
     enum class Type
@@ -15,6 +17,7 @@ struct Message
 
 public:
 	bool ExpectsResponse() { return _ExpectsResponse; }
+    MessageId Id() { return _Id; }
 
 public:
     Type _Type;
@@ -23,7 +26,7 @@ public:
 
 private:
     boost::interprocess::managed_shared_memory::handle_t _PayloadHandle;
-    U32 _Id;
+    MessageId _Id;
     bool _ExpectsResponse;
 
     friend class MessageBaseService;

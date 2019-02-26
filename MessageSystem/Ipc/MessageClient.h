@@ -21,6 +21,7 @@ public:
     bool HasResponse();
     Message* PopResponse();
     void DeallocateMessage(Message* message);
+    Message * GetMessage(const MessageId &id);
 };
 
 #endif

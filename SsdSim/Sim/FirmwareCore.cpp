@@ -1,29 +1,36 @@
-#include <windows.h>
-
 #include "FirmwareCore.h"
 
-#include "InterfaceQueues.h"
+#include <windows.h>
+
+// TODO: fix this declaration. Cannot add to header file because of causing JSON build error
+HMODULE _DllInstance;
 
 FirmwareCore::FirmwareCore() : _Execute(nullptr)
 {
-    _InterfaceQueues = std::shared_ptr<InterfaceQueues>(new InterfaceQueues());
+    _DllInstance = 0;
 }
 
-typedef void(__stdcall *f_execute)(std::shared_ptr<InterfaceQueues> InterfaceQueues);
+typedef void(__stdcall *f_execute)();
 
 bool FirmwareCore::SetExecute(std::string Filename)
 {
-    HINSTANCE hGetProcIDDLL = LoadLibrary(Filename.c_str());
+    if (_DllInstance)
+    {
+        FreeLibrary(_DllInstance);
+    }
 
-    if (!hGetProcIDDLL)
+    _DllInstance = LoadLibrary(Filename.c_str());
+
+    if (!_DllInstance)
     {
         return false;
     }
 
     // resolve function address here
-    auto execute = (f_execute)GetProcAddress(hGetProcIDDLL, "Execute");
+    auto execute = (f_execute)GetProcAddress(_DllInstance, "Execute");
     if (!execute)
     {
+        FreeLibrary(_DllInstance);
         return false;
     }
 
@@ -35,6 +42,14 @@ void FirmwareCore::Run()
 {
     if (_Execute)
     {
-        _Execute(this->_InterfaceQueues);
+        _Execute();
+    }
+}
+
+void FirmwareCore::Unload()
+{
+    if (_DllInstance)
+    {
+        FreeLibrary(_DllInstance);
     }
 }

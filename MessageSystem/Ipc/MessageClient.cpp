@@ -15,10 +15,10 @@ MessageClient::MessageClient(const char* serverName)
 
     _ManagedShm = std::unique_ptr<managed_shared_memory>(sharedMemory);
     _Lock = _ManagedShm->find<bool>(LOCK).first;
-    _Counter = _ManagedShm->find<U32>(COUNTER).first;
-    _Queue = _ManagedShm->find<deque<U32>>(QUEUE).first;
+    _Counter = _ManagedShm->find<MessageId>(COUNTER).first;
+    _Queue = _ManagedShm->find<deque<MessageId>>(QUEUE).first;
     _ResponseQueueLock = _ManagedShm->find<bool>(RESPONSE_QUEUE_LOCK).first;
-    _ResponseQueue = _ManagedShm->find<deque<U32>>(RESPONSE_QUEUE).first;
+    _ResponseQueue = _ManagedShm->find<deque<MessageId>>(RESPONSE_QUEUE).first;
 }
 
 MessageClient::~MessageClient()
@@ -53,4 +53,9 @@ Message* MessageClient::PopResponse()
 void MessageClient::DeallocateMessage(Message* message)
 {
     MessageBaseService::DoDeallocateMessage(message);
+}
+
+Message* MessageClient::GetMessage(const MessageId &id)
+{
+    return MessageBaseService::GetMessage(id);
 }

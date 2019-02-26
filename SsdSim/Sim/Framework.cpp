@@ -1,23 +1,19 @@
 #include "Framework.h"
 
+#include "JSONParser.h"
 #include "FirmwareCore.h"
 #include "Ipc/Message.h"
-#include "JSONParser.h"
-
-#include "CustomProtocolCommand.h"
+#include "ServerNames.h"
 
 constexpr U32 SSDSIM_IPC_SIZE = 10 * 1024 * 1024;
 
 Framework::Framework() :
-	_State(State::Start),
-	_NopCount(0)
+	_State(State::Start)
 {
-
 }
 
 void Framework::Init(const std::string& configFileName)
 {
-	int retValue;
 	JSONParser parser;
 	try
 	{
@@ -30,9 +26,10 @@ void Framework::Init(const std::string& configFileName)
 
 	SetupNandHal(parser);
 	
-	_MessageServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
+    _SimServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, 1024);
+    _ProtocolServer = std::make_shared<MessageServer>(PROTOCOL_IPC_NAME, SSDSIM_IPC_SIZE);
 
-    _FirmwareCore.SetExecute(".\\RomCode.dll");
+    _FirmwareCore.SetExecute(".\\TestCode.dll");
 }
 
 void Framework::SetupNandHal(JSONParser& parser)
@@ -47,7 +44,6 @@ void Framework::SetupNandHal(JSONParser& parser)
 		std::ostringstream ss;
 		ss << name << " value of " << value << " is out of range. Expected to be between [" << min << ", " << max << "]";
 		throw Exception(ss.str());
-		return 0;
 	};
 
 	int retValue;
@@ -134,9 +130,9 @@ void Framework::operator()()
 
 			case State::Run:
 			{
-				if (true == _MessageServer->HasMessage())
+				if (true == _SimServer->HasMessage())
 				{
-					Message* message = _MessageServer->Pop();
+					Message* message = _SimServer->Pop();
 
 					switch (message->_Type)
 					{
@@ -145,16 +141,9 @@ void Framework::operator()()
                             SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
                             HandleSimFrameworkCommand(command);
                         } break;
-
-                        case Message::Type::CUSTOM_PROTOCOL_COMMAND:
-                        {
-                            // TODO: clone the command to new memory region. Handle the data transfer if need.
-                            CustomProtocolCommand *command = (CustomProtocolCommand*)message->_Payload;
-                            _FirmwareCore._InterfaceQueues->CustomProtocolCommandQueue.push(command);
-                        } break;
 					}
 
-                    _MessageServer->DeallocateMessage(message);
+                    _SimServer->DeallocateMessage(message);
 				}
 			} break;
 		}
@@ -162,18 +151,14 @@ void Framework::operator()()
 
 	_FirmwareCore.Stop();
 	_NandHal.Stop();
+
+    _FirmwareCore.Unload();
 }
 
 void Framework::HandleSimFrameworkCommand(SimFrameworkCommand *command)
 {
     switch (command->_Code)
     {
-        case SimFrameworkCommand::Code::Nop:
-        {
-            // Do nothing
-            ++_NopCount;
-        } break;
-
         case SimFrameworkCommand::Code::Exit:
         {
             _State = State::Exit;

@@ -22,6 +22,12 @@
     <Filter Include="Source Files\Ipc">
       <UniqueIdentifier>{e9352421-4dc5-4476-bdb0-6c5a76451c00}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Interfaces">
+      <UniqueIdentifier>{9d3db95c-cb7f-48ff-8f29-f0588f39d9ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Interfaces">
+      <UniqueIdentifier>{dfc0095e-7d1c-475b-a639-b9b23da66777}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\BasicTypes.h">
@@ -42,11 +48,14 @@
     <ClInclude Include="Ipc\MessageServer.h">
       <Filter>Header Files\Ipc</Filter>
     </ClInclude>
-    <ClInclude Include="CustomProtocolCommand.h">
+    <ClInclude Include="Interfaces\CustomProtocolInterface.h">
+      <Filter>Header Files\Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerNames.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="InterfaceQueues.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Interfaces\CustomProtocolCommand.h">
+      <Filter>Header Files\Interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -59,8 +68,8 @@
     <ClCompile Include="Ipc\MessageBaseService.cpp">
       <Filter>Source Files\Ipc</Filter>
     </ClCompile>
-    <ClCompile Include="InterfaceQueues.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Interfaces\CustomProtocolInterface.cpp">
+      <Filter>Source Files\Interfaces</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

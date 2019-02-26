@@ -56,6 +56,9 @@ bool parser_command_line(int argc, const char*argv[], std::string& nandspecFilen
 }
 
 
+#include "Interfaces/CustomProtocolCommand.h"
+#include "ServerNames.h"
+
 int main(int argc, const char*argv[])
 {
 	std::string nandspecFilename = "";
@@ -69,6 +72,13 @@ int main(int argc, const char*argv[])
 			{
 				Framework framework;
 				framework.Init(nandspecFilename);
+
+                MessageClient client1(PROTOCOL_IPC_NAME);
+                Message *msg = client1.AllocateMessage(Message::Type::CUSTOM_PROTOCOL_COMMAND, sizeof(CustomProtocolCommand));
+                CustomProtocolCommand *abc = (CustomProtocolCommand*)msg->_Payload;
+                abc->Command = CustomProtocolCommand::CommandCode::BenchmarkEnd;
+                client1.Push(msg);
+
 				//Start framework
 				framework.operator()();
 			}

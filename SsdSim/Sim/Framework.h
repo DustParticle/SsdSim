@@ -10,14 +10,11 @@
 
 class JSONParser;
 
-constexpr char SSDSIM_IPC_NAME[] = "SsdSim";
-
 class SimFrameworkCommand
 {
 public:
     enum class Code
     {
-        Nop,
         Exit
     };
 
@@ -59,12 +56,10 @@ private:
 	State _State;
 
 private:
-    std::shared_ptr<MessageServer> _MessageServer;
+    std::shared_ptr<MessageServer> _SimServer;
+    std::shared_ptr<MessageServer> _ProtocolServer;
 	NandHal _NandHal;
 	FirmwareCore _FirmwareCore;
-
-public:
-    U32 _NopCount;
 };
 
 #endif
