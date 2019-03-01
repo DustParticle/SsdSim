@@ -11,12 +11,16 @@ protected:
 
 public:
     FirmwareCore();
+    void Init();
     bool SetExecute(std::string Filename);
     void Unload();
-    bool SetCallbackForRomCode();
+
+private:
+    void SwapExecute();
 
 private:
     std::function<void()> _Execute;
+    std::function<void()> _NewExecute;
 };
 
 #endif

@@ -5,8 +5,6 @@
 #include "Ipc/Message.h"
 #include "ServerNames.h"
 
-constexpr U32 SSDSIM_IPC_SIZE = 10 * 1024 * 1024;
-
 Framework::Framework() :
 	_State(State::Start)
 {
@@ -26,11 +24,8 @@ void Framework::Init(const std::string& configFileName)
 
 	SetupNandHal(parser);
 	
-    _SimServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, 1024);
-    _ProtocolServer = std::make_shared<MessageServer>(PROTOCOL_IPC_NAME, SSDSIM_IPC_SIZE);
-
-    _FirmwareCore.SetExecute(".\\TestCode.dll");
-    _FirmwareCore.SetCallbackForRomCode();
+    _SimServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
+    _ProtocolServer = std::make_shared<MessageServer>(PROTOCOL_IPC_NAME, PROTOCOL_IPC_SIZE);
 }
 
 void Framework::SetupNandHal(JSONParser& parser)
@@ -117,7 +112,9 @@ void Framework::operator()()
 	std::future<void> nandHal;
 	std::future<void> firmwareMain;
 
-	while (State::Exit != _State)
+    _FirmwareCore.Init();
+
+    while (State::Exit != _State)
 	{
 		switch (_State)
 		{

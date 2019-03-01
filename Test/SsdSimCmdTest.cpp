@@ -37,27 +37,27 @@ bool shellExecute(const char *pFile, const char *pArgs, SHELLEXECUTEINFO & ShExe
 	return ShellExecuteEx(&ShExecInfo);
 }
 
-//TEST(A_SsdSimCmdExecute, Basic)
-//{
-//	//Start the framework
-//	SHELLEXECUTEINFO ShExecInfo = { 0 };
-//	ASSERT_TRUE(shellExecute("SsdSim.exe", "--nandspec Nandconfig/nandspec.json", ShExecInfo));
-//
-//	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//
-//	DWORD exitCode = 0;
-//	ASSERT_TRUE(GetExitCodeProcess(ShExecInfo.hProcess, &exitCode));
-//	ASSERT_EQ(STILL_ACTIVE, exitCode);
-//
-//	std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
-//	ASSERT_NE(nullptr, client);
-//
-//	Message *message = _allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
-//	client->Push(message);
-//
-//	if (ShExecInfo.hProcess)
-//	{
-//		ASSERT_NE(WAIT_TIMEOUT, WaitForSingleObject(ShExecInfo.hProcess, 5000));
-//		CloseHandle(ShExecInfo.hProcess);
-//	}
-//}
+TEST(A_SsdSimCmdExecute, Basic)
+{
+	//Start the framework
+	SHELLEXECUTEINFO ShExecInfo = { 0 };
+	ASSERT_TRUE(shellExecute("SsdSim.exe", "--nandspec Nandconfig/nandspec.json", ShExecInfo));
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+	DWORD exitCode = 0;
+	ASSERT_TRUE(GetExitCodeProcess(ShExecInfo.hProcess, &exitCode));
+	ASSERT_EQ(STILL_ACTIVE, exitCode);
+
+	std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
+	ASSERT_NE(nullptr, client);
+
+	Message *message = _allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
+	client->Push(message);
+
+	if (ShExecInfo.hProcess)
+	{
+		ASSERT_NE(WAIT_TIMEOUT, WaitForSingleObject(ShExecInfo.hProcess, 5000));
+		CloseHandle(ShExecInfo.hProcess);
+	}
+}
