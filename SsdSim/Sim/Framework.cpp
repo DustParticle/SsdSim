@@ -30,6 +30,7 @@ void Framework::Init(const std::string& configFileName)
     _ProtocolServer = std::make_shared<MessageServer>(PROTOCOL_IPC_NAME, SSDSIM_IPC_SIZE);
 
     _FirmwareCore.SetExecute(".\\TestCode.dll");
+    _FirmwareCore.SetCallbackForRomCode();
 }
 
 void Framework::SetupNandHal(JSONParser& parser)

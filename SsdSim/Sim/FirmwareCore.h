@@ -13,6 +13,7 @@ public:
     FirmwareCore();
     bool SetExecute(std::string Filename);
     void Unload();
+    bool SetCallbackForRomCode();
 
 private:
     std::function<void()> _Execute;
