@@ -15,9 +15,9 @@ FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr)
     _NewDllInstance = NULL;
 }
 
-void FirmwareCore::Init()
+void FirmwareCore::Init(std::string Filename)
 {
-    SetExecute(".\\RomCode.dll");
+    SetExecute(Filename);
 
     // resolve function address here
     auto execute = (fExecuteCallback)GetProcAddress(_NewDllInstance, "SetExecuteCallback");

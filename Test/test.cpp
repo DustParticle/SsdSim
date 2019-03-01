@@ -35,14 +35,14 @@ Message* allocateCustomProtocolCommand(std::shared_ptr<MessageClient> client, co
 TEST(LoadConfigFile, Basic)
 {
 	Framework framework;
-    ASSERT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
+    ASSERT_NO_THROW(framework.Init("Hardwareconfig/hardwarespec.json"));
 }
 
 TEST(LoadConfigFile, Negative)
 {
 	//Expect throw an exception
     Framework framework;
-    ASSERT_ANY_THROW(framework.Init("Nandconfig/nandbadvalue.json"));
+    ASSERT_ANY_THROW(framework.Init("Hardwareconfig/hardwarebadvalue.json"));
 }
 
 TEST(NandDeviceTest, Basic) {
@@ -215,7 +215,7 @@ TEST(NandHalTest, BasicCommandQueue)
 TEST(SimFramework, Basic)
 {
 	Framework framework;
-    ASSERT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
+    ASSERT_NO_THROW(framework.Init("Hardwareconfig/hardwarespec.json"));
 
 	auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
 
@@ -233,7 +233,7 @@ TEST(SimFramework, Benchmark)
     constexpr U32 loopCount = 10;
 
 	Framework framework;
-    ASSERT_NO_THROW(framework.Init("Nandconfig/nandspec.json"));
+    ASSERT_NO_THROW(framework.Init("Hardwareconfig/hardwarespec.json"));
 
     auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));

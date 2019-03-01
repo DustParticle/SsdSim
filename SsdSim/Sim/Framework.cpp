@@ -23,7 +23,8 @@ void Framework::Init(const std::string& configFileName)
 	}
 
 	SetupNandHal(parser);
-	
+	GetFirmwareCoreInfo(parser);
+
     _SimServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
     _ProtocolServer = std::make_shared<MessageServer>(PROTOCOL_IPC_NAME, PROTOCOL_IPC_SIZE);
 }
@@ -107,12 +108,24 @@ void Framework::SetupNandHal(JSONParser& parser)
 	_NandHal.PreInit(channels, devices, blocks, pages, bytes);
 }
 
+void Framework::GetFirmwareCoreInfo(JSONParser& parser)
+{
+	try
+	{
+		this->_RomCodePath = parser.GetValueStringForAttribute("RomCode", "path");
+	}
+	catch (JSONParser::Exception e)
+	{
+		throw Exception("Failed to parse \'rom code path\' value. Expecting an \'string\'");
+	}
+}
+
 void Framework::operator()()
 {
 	std::future<void> nandHal;
 	std::future<void> firmwareMain;
 
-    _FirmwareCore.Init();
+	_FirmwareCore.Init(this->_RomCodePath);
 
     while (State::Exit != _State)
 	{

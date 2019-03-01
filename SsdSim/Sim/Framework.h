@@ -3,6 +3,7 @@
 
 #include <queue>
 #include <exception>
+#include <string>
 
 #include "Nand/NandHal.h"
 #include "FirmwareCore.h"
@@ -43,6 +44,7 @@ public:
 
 private:
     void SetupNandHal(JSONParser& parser);
+    void GetFirmwareCoreInfo(JSONParser& parser);
     void HandleSimFrameworkCommand(SimFrameworkCommand *command);
 
 private:
@@ -60,6 +62,7 @@ private:
     std::shared_ptr<MessageServer> _ProtocolServer;
 	NandHal _NandHal;
 	FirmwareCore _FirmwareCore;
+	std::string _RomCodePath;
 };
 
 #endif
