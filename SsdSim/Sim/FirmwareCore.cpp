@@ -71,6 +71,7 @@ bool FirmwareCore::SetCallbackForRomCode()
         return false;
     }
 
-    std::function<bool(std::string)> func = std::bind(&FirmwareCore::SetExecute, this);
+    std::function<bool(std::string)> func = std::bind(&FirmwareCore::SetExecute, this, _1);
     execute(func);
+    return true;
 }
