@@ -61,7 +61,7 @@ TEST(A_SsdSimCmdExecute, Basic)
 	if (ShExecInfo.hProcess)
 	{
 		std::cout << "Waiting for process termination." << std::endl;
-		ASSERT_NE(WAIT_TIMEOUT, WaitForSingleObject(ShExecInfo.hProcess, 5000));
+		ASSERT_NE(WAIT_TIMEOUT, WaitForSingleObject(ShExecInfo.hProcess, 10000));
 		CloseHandle(ShExecInfo.hProcess);
 	}
 }
