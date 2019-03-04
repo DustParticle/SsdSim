@@ -98,6 +98,35 @@ int JSONParser::GetValueIntForAttribute(const std::string &attributes, const std
 	return memberValueItr->value.GetInt();
 }
 
+const char* JSONParser::GetValueStringForAttribute(const std::string &attributes, const std::string &memberValue)
+{
+	if (!_Document.HasMember(attributes.c_str()))
+	{
+		throw Exception(Error::AttributeInvalid);
+	}
+
+	Value::MemberIterator memberAttributeItr = _Document.FindMember(attributes.c_str());
+
+	if (!memberAttributeItr->value.IsObject())
+	{
+		throw Exception(Error::AttributeIsNotObject);
+	}
+
+	if (!memberAttributeItr->value.HasMember(memberValue.c_str()))
+	{
+		throw Exception(Error::MemberValueInvalid);
+	}
+
+	Value::ConstMemberIterator memberValueItr = memberAttributeItr->value.FindMember(memberValue.c_str());
+
+	if (!memberValueItr->value.IsString())
+	{
+		throw Exception(Error::MemberValueIsNotSring);
+	}
+
+	return memberValueItr->value.GetString();
+}
+
 const char * JSONParser::Exception::what() const throw ()
 {
 	const char *strErr = nullptr;

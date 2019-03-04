@@ -46,6 +46,7 @@ public:
 	int GetValueInt(const std::string &memberValue);
 
 	int GetValueIntForAttribute(const std::string &attributes, const std::string &memberValue);
+	const char* GetValueStringForAttribute(const std::string &attributes, const std::string &memberValue);
 
 private:
 	rapidjson::Document _Document;

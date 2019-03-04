@@ -42,7 +42,7 @@ TEST(A_SsdSimCmdExecute, Basic)
 	//Start the framework
 	std::cout << "Starting shell execute for SsdSim.exe." << std::endl;
 	SHELLEXECUTEINFO ShExecInfo = { 0 };
-	ASSERT_TRUE(shellExecute("SsdSim.exe", "--nandspec Nandconfig/nandspec.json", ShExecInfo));
+	ASSERT_TRUE(shellExecute("SsdSim.exe", "--hardwarespec Hardwareconfig/hardwarespec.json", ShExecInfo));
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 

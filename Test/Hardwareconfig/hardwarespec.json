@@ -5,5 +5,8 @@
     "blocks": 128,
     "pages": 256,
     "bytes": 8192
+  },
+  "RomCode": {
+	"path": ".\\RomCode.dll"
   }
 }
