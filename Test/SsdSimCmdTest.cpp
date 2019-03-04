@@ -40,11 +40,13 @@ bool shellExecute(const char *pFile, const char *pArgs, SHELLEXECUTEINFO & ShExe
 TEST(A_SsdSimCmdExecute, Basic)
 {
 	//Start the framework
+	std::cout << "Starting shell execute for SsdSim.exe." << std::endl;
 	SHELLEXECUTEINFO ShExecInfo = { 0 };
 	ASSERT_TRUE(shellExecute("SsdSim.exe", "--nandspec Nandconfig/nandspec.json", ShExecInfo));
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
+	std::cout << "Verifying process active." << std::endl;
 	DWORD exitCode = 0;
 	ASSERT_TRUE(GetExitCodeProcess(ShExecInfo.hProcess, &exitCode));
 	ASSERT_EQ(STILL_ACTIVE, exitCode);
@@ -52,11 +54,13 @@ TEST(A_SsdSimCmdExecute, Basic)
 	std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
 	ASSERT_NE(nullptr, client);
 
+	std::cout << "Sending exit command." << std::endl;
 	Message *message = _allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
 	client->Push(message);
 
 	if (ShExecInfo.hProcess)
 	{
+		std::cout << "Waiting for process termination." << std::endl;
 		ASSERT_NE(WAIT_TIMEOUT, WaitForSingleObject(ShExecInfo.hProcess, 5000));
 		CloseHandle(ShExecInfo.hProcess);
 	}
