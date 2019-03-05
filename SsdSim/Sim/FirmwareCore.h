@@ -11,7 +11,6 @@ protected:
 
 public:
     FirmwareCore();
-    void Init(std::string Filename);
     bool SetExecute(std::string Filename);
     void Unload();
 

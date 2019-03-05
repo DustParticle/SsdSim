@@ -15,23 +15,6 @@ FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr)
     _NewDllInstance = NULL;
 }
 
-void FirmwareCore::Init(std::string Filename)
-{
-    SetExecute(Filename);
-
-    // resolve function address here
-    auto execute = (fExecuteCallback)GetProcAddress(_NewDllInstance, "SetExecuteCallback");
-    if (!execute)
-    {
-        return;
-    }
-
-    std::function<bool(std::string)> func = std::bind(&FirmwareCore::SetExecute, this, std::placeholders::_1);
-    execute(func);
-
-    SwapExecute();
-}
-
 bool FirmwareCore::SetExecute(std::string Filename)
 {
     _NewDllInstance = LoadLibrary(Filename.c_str());
@@ -47,6 +30,14 @@ bool FirmwareCore::SetExecute(std::string Filename)
     {
         FreeLibrary(_NewDllInstance);
         return false;
+    }
+
+    // search the SetExecuteCall and set
+    auto setExecuteCallback = (fExecuteCallback)GetProcAddress(_NewDllInstance, "SetExecuteCallback");
+    if (setExecuteCallback)
+    {
+        std::function<bool(std::string)> func = std::bind(&FirmwareCore::SetExecute, this, std::placeholders::_1);
+        setExecuteCallback(func);
     }
 
     _NewExecute = execute;

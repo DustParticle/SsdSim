@@ -125,7 +125,8 @@ void Framework::operator()()
 	std::future<void> nandHal;
 	std::future<void> firmwareMain;
 
-	_FirmwareCore.Init(this->_RomCodePath);
+    // Load ROM
+	_FirmwareCore.SetExecute(this->_RomCodePath);
 
     while (State::Exit != _State)
 	{
