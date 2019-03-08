@@ -1,9 +1,9 @@
 #include "CustomProtocolInterface.h"
 
-#include "MessageServer.h"
+#include "MessageServer.hpp"
 #include "ServerNames.h"
 
-MessageServer _MessageServer(PROTOCOL_IPC_NAME);
+MessageServer<CustomProtocolCommand> _MessageServer(PROTOCOL_IPC_NAME);
 
 bool CustomProtocolInterface::HasCommand()
 {
@@ -12,26 +12,10 @@ bool CustomProtocolInterface::HasCommand()
 
 CustomProtocolCommand* CustomProtocolInterface::GetCommand()
 {
-    Message* msg = _MessageServer.Pop();
+    Message<CustomProtocolCommand>* msg = _MessageServer.Pop();
     if (msg)
     {
-        if (msg->_Type == Message::Type::CUSTOM_PROTOCOL_COMMAND)
-        {
-            CustomProtocolCommand* command = (CustomProtocolCommand*)msg->_Payload;
-            command->MessageId = msg->Id();
-            return command;
-        }
-        else
-        {
-            if (msg->ExpectsResponse())
-            {
-                _MessageServer.PushResponse(msg);
-            }
-            else
-            {
-                _MessageServer.DeallocateMessage(msg);
-            }
-        }
+        return &msg->_Data;
     }
 
     return nullptr;
@@ -39,7 +23,7 @@ CustomProtocolCommand* CustomProtocolInterface::GetCommand()
 
 void CustomProtocolInterface::SubmitResponse(CustomProtocolCommand *command)
 {
-    Message *message = _MessageServer.GetMessage(command->MessageId);
+    Message<CustomProtocolCommand> *message = _MessageServer.GetMessage(command->MessageId);
     if (message->ExpectsResponse())
     {
         _MessageServer.PushResponse(message);

@@ -7,20 +7,15 @@
 
 typedef U32 MessageId;
 
+template<typename TData>
 struct Message
 {
-    enum class Type
-    {
-        SIM_FRAMEWORK_COMMAND,
-        CUSTOM_PROTOCOL_COMMAND
-    };
-
 public:
 	bool ExpectsResponse() { return _ExpectsResponse; }
     MessageId Id() { return _Id; }
 
 public:
-    Type _Type;
+    TData _Data;
     void* _Payload;
     U32 _PayloadSize;
 
@@ -29,7 +24,7 @@ private:
     MessageId _Id;
     bool _ExpectsResponse;
 
-    friend class MessageBaseService;
+    template<typename TData> friend class MessageBaseService;
 };
 
 #endif

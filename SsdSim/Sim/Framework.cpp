@@ -2,8 +2,9 @@
 
 #include "JSONParser.h"
 #include "FirmwareCore.h"
-#include "Ipc/Message.h"
+#include "Ipc/Message.hpp"
 #include "ServerNames.h"
+#include "Interfaces/CustomProtocolCommand.h"
 
 Framework::Framework() :
 	_State(State::Start)
@@ -25,8 +26,8 @@ void Framework::Init(const std::string& configFileName)
 	SetupNandHal(parser);
 	GetFirmwareCoreInfo(parser);
 
-    _SimServer = std::make_shared<MessageServer>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
-    _ProtocolServer = std::make_shared<MessageServer>(PROTOCOL_IPC_NAME, PROTOCOL_IPC_SIZE);
+    _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(SSDSIM_IPC_NAME, SSDSIM_IPC_SIZE);
+    _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(PROTOCOL_IPC_NAME, PROTOCOL_IPC_SIZE);
 }
 
 void Framework::SetupNandHal(JSONParser& parser)
@@ -144,14 +145,13 @@ void Framework::operator()()
 			{
 				if (true == _SimServer->HasMessage())
 				{
-					Message* message = _SimServer->Pop();
+                    Message<SimFrameworkCommand>* message = _SimServer->Pop();
 
-					switch (message->_Type)
+					switch (message->_Data._Code)
 					{
-                        case Message::Type::SIM_FRAMEWORK_COMMAND:
+                        case SimFrameworkCommand::Code::Exit:
                         {
-                            SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
-                            HandleSimFrameworkCommand(command);
+                            _State = State::Exit;
                         } break;
 					}
 
@@ -165,15 +165,4 @@ void Framework::operator()()
 	_NandHal.Stop();
 
     _FirmwareCore.Unload();
-}
-
-void Framework::HandleSimFrameworkCommand(SimFrameworkCommand *command)
-{
-    switch (command->_Code)
-    {
-        case SimFrameworkCommand::Code::Exit:
-        {
-            _State = State::Exit;
-        } break;
-    }
 }

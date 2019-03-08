@@ -15,9 +15,10 @@ extern "C"
         if (_CustomProtocolInterface->HasCommand())
         {
             CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
+
             switch (command->Command)
             {
-                case CustomProtocolCommand::CommandCode::DownloadAndExecute:
+                case CustomProtocolCommand::Code::DownloadAndExecute:
                 {
                     // Do download and execute
                     U32 size = sizeof(command->Payload.DownloadAndExecute.CodeName);

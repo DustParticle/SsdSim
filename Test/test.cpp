@@ -10,23 +10,22 @@
 #include "Nand/NandDevice.h"
 #include "Nand/NandHal.h"
 #include "Framework.h"
-#include "Ipc/MessageClient.h"
+#include "Ipc/MessageClient.hpp"
 #include "ServerNames.h"
 #include "Interfaces/CustomProtocolCommand.h"
 
-Message* allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, const SimFrameworkCommand::Code &code)
+Message<SimFrameworkCommand>* allocateSimFrameworkCommand(std::shared_ptr<MessageClient<SimFrameworkCommand>> client, const SimFrameworkCommand::Code &code)
 {
-    Message *message = client->AllocateMessage(Message::Type::SIM_FRAMEWORK_COMMAND, sizeof(SimFrameworkCommand), false);
+    Message<SimFrameworkCommand> *message = client->AllocateMessage(sizeof(SimFrameworkCommand), false);
     SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
     command->_Code = code;
     return message;
 }
 
-Message* allocateCustomProtocolCommand(std::shared_ptr<MessageClient> client, const CustomProtocolCommand::CommandCode &code,
+Message<CustomProtocolCommand>* allocateCustomProtocolCommand(std::shared_ptr<MessageClient<CustomProtocolCommand>> client, const CustomProtocolCommand::Code &code,
     const U32 &bufferSize = 0, const bool &expectsResponse = false)
 {
-    Message *message = client->AllocateMessage(Message::Type::CUSTOM_PROTOCOL_COMMAND, 
-        sizeof(CustomProtocolCommand) + bufferSize, expectsResponse);
+    Message<CustomProtocolCommand> *message = client->AllocateMessage(sizeof(CustomProtocolCommand) + bufferSize, expectsResponse);
     CustomProtocolCommand *command = (CustomProtocolCommand*)message->_Payload;
     command->Command = code;
     return message;
@@ -221,10 +220,10 @@ TEST(SimFramework, Basic)
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
+    std::shared_ptr<MessageClient<SimFrameworkCommand>> client = std::make_shared<MessageClient<SimFrameworkCommand>>(SSDSIM_IPC_NAME);
     ASSERT_NE(nullptr, client);
 
-    Message *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
+    Message<SimFrameworkCommand> *message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
     client->Push(message);
 }
 
@@ -238,14 +237,14 @@ TEST(SimFramework, Benchmark)
     auto fwFuture = std::async(std::launch::async, &(Framework::operator()), &framework);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    std::shared_ptr<MessageClient> protocolClient = std::make_shared<MessageClient>(PROTOCOL_IPC_NAME);
+    std::shared_ptr<MessageClient<CustomProtocolCommand>> protocolClient = std::make_shared<MessageClient<CustomProtocolCommand>>(PROTOCOL_IPC_NAME);
     ASSERT_NE(nullptr, protocolClient);
 
-    Message *message;
+    Message<CustomProtocolCommand> *message;
     CustomProtocolCommand *command;
 
     // Request to load RomCode
-    message = allocateCustomProtocolCommand(protocolClient, CustomProtocolCommand::CommandCode::DownloadAndExecute, 0, true);
+    message = allocateCustomProtocolCommand(protocolClient, CustomProtocolCommand::Code::DownloadAndExecute, 0, true);
     command = (CustomProtocolCommand*)message->_Payload;
     memcpy(command->Payload.DownloadAndExecute.CodeName, ".\\TestCode.dll", sizeof(".\\TestCode.dll"));
     protocolClient->Push(message);
@@ -257,25 +256,24 @@ TEST(SimFramework, Benchmark)
     }
 
     message = protocolClient->PopResponse();
-    ASSERT_EQ(Message::Type::CUSTOM_PROTOCOL_COMMAND, message->_Type);
-    command = (CustomProtocolCommand*)message->_Payload;
-    ASSERT_EQ(CustomProtocolCommand::CommandCode::DownloadAndExecute, command->Command);
+    command = &message->_Data;
+    ASSERT_EQ(CustomProtocolCommand::Code::DownloadAndExecute, command->Command);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     // Start benchmark
-    message = allocateCustomProtocolCommand(protocolClient, CustomProtocolCommand::CommandCode::BenchmarkStart);
+    message = allocateCustomProtocolCommand(protocolClient, CustomProtocolCommand::Code::BenchmarkStart);
     protocolClient->Push(message);
 
     for (U32 i = 0; i < loopCount; ++i)
     {
         // Push Nop
-        Message *message = allocateCustomProtocolCommand(protocolClient, CustomProtocolCommand::CommandCode::Nop);
+        message = allocateCustomProtocolCommand(protocolClient, CustomProtocolCommand::Code::Nop);
         protocolClient->Push(message);
     }
 
     // End benchmark
     // This message requires response
-    message = allocateCustomProtocolCommand(protocolClient, CustomProtocolCommand::CommandCode::BenchmarkEnd, 0, true);
+    message = allocateCustomProtocolCommand(protocolClient, CustomProtocolCommand::Code::BenchmarkEnd, 0, true);
     protocolClient->Push(message);
 
     //// Wait for response
@@ -285,17 +283,15 @@ TEST(SimFramework, Benchmark)
     }
 
     message = protocolClient->PopResponse();
-    ASSERT_EQ(Message::Type::CUSTOM_PROTOCOL_COMMAND, message->_Type);
-
-    command = (CustomProtocolCommand*)message->_Payload;
-    ASSERT_EQ(CustomProtocolCommand::CommandCode::BenchmarkEnd, command->Command);
+    command = &message->_Data;
+    ASSERT_EQ(CustomProtocolCommand::Code::BenchmarkEnd, command->Command);
     ASSERT_EQ(loopCount, command->Payload.BenchmarkPayload.Response.NopCount);
 
     GOUT(loopCount << " NOPs took " << command->Payload.BenchmarkPayload.Response.Duration << " ms to process");
 
-    std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
-    message = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
-    client->Push(message);
+    std::shared_ptr<MessageClient<SimFrameworkCommand>> client = std::make_shared<MessageClient<SimFrameworkCommand>>(SSDSIM_IPC_NAME);
+    Message<SimFrameworkCommand> *simMessage = allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
+    client->Push(simMessage);
 }
 
 TEST(MessagingSystem, NopMessageWithResponse)
@@ -303,30 +299,30 @@ TEST(MessagingSystem, NopMessageWithResponse)
     constexpr char name[] = "Test";
     constexpr U32 size = 10 * 1024 * 1024;
 
-    std::shared_ptr<MessageServer> server = std::make_shared<MessageServer>(name, size);
+    std::shared_ptr<MessageServer<CustomProtocolCommand>> server = std::make_shared<MessageServer<CustomProtocolCommand>>(name, size);
     ASSERT_NE(nullptr, server);
 
-    std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(name);
+    std::shared_ptr<MessageClient<CustomProtocolCommand>> client = std::make_shared<MessageClient<CustomProtocolCommand>>(name);
     ASSERT_NE(nullptr, client);
 
     /* Send message without response */
-    Message *message = allocateCustomProtocolCommand(client, CustomProtocolCommand::CommandCode::Nop);
+    Message<CustomProtocolCommand> *message = allocateCustomProtocolCommand(client, CustomProtocolCommand::Code::Nop);
     ASSERT_NE(nullptr, message);
     client->Push(message);
     ASSERT_TRUE(server->HasMessage());
-    Message *popMessage = server->Pop();
+    Message<CustomProtocolCommand> *popMessage = server->Pop();
     ASSERT_ANY_THROW(server->PushResponse(popMessage));             // Don't allow to response message without response flag
     ASSERT_NO_THROW(server->DeallocateMessage(popMessage));         // Allow to deallocate message
 
     /* Send message with response */
-    Message *messageWithResponse = allocateCustomProtocolCommand(client, CustomProtocolCommand::CommandCode::Nop, 0, true);
+    Message<CustomProtocolCommand> *messageWithResponse = allocateCustomProtocolCommand(client, CustomProtocolCommand::Code::Nop, 0, true);
     ASSERT_NE(nullptr, messageWithResponse);
     client->Push(messageWithResponse);
     ASSERT_TRUE(server->HasMessage());
-    Message *popMessageWithResponse = server->Pop();
+    Message<CustomProtocolCommand> *popMessageWithResponse = server->Pop();
     ASSERT_ANY_THROW(server->DeallocateMessage(popMessageWithResponse));    // Don't allow to deallocate message with response flag
     ASSERT_NO_THROW(server->PushResponse(popMessageWithResponse));          // Allow to response message
     ASSERT_TRUE(client->HasResponse());                                     // Should have response
-    Message *responseMessage = client->PopResponse();
+    Message<CustomProtocolCommand> *responseMessage = client->PopResponse();
     client->DeallocateMessage(responseMessage);
 }

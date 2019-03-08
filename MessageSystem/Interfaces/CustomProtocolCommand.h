@@ -4,7 +4,7 @@
 #include "Common/BasicTypes.h"
 
 // TODO: add macro to check for sim only
-#include "Ipc/Message.h"
+#include "Ipc/Message.hpp"
 class CustomProtocolInterface;
 
 struct DownloadAndExecutePayload
@@ -31,7 +31,7 @@ union CustomProtocolCommandPayload
 
 struct CustomProtocolCommand
 {
-    enum CommandCode
+    enum Code
     {
         DownloadAndExecute,
         BenchmarkStart,
@@ -40,7 +40,7 @@ struct CustomProtocolCommand
     };
 
 public:
-    CommandCode Command;
+    Code Command;
     CustomProtocolCommandPayload Payload;
 
 private:

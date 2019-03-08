@@ -10,13 +10,13 @@
 #include "Nand/NandDevice.h"
 #include "Nand/NandHal.h"
 #include "Framework.h"
-#include "Ipc/MessageClient.h"
+#include "Ipc/MessageClient.hpp"
 #include "ServerNames.h"
 
-Message* _allocateSimFrameworkCommand(std::shared_ptr<MessageClient> client, const SimFrameworkCommand::Code &code,
+Message<SimFrameworkCommand>* _allocateSimFrameworkCommand(std::shared_ptr<MessageClient<SimFrameworkCommand>> client, const SimFrameworkCommand::Code &code,
 	const U32 &bufferSize = 0, const bool &expectsResponse = false)
 {
-	Message *message = client->AllocateMessage(Message::Type::SIM_FRAMEWORK_COMMAND, sizeof(SimFrameworkCommand) + bufferSize, expectsResponse);
+	Message<SimFrameworkCommand> *message = client->AllocateMessage(sizeof(SimFrameworkCommand) + bufferSize, expectsResponse);
 	SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
 	command->_Code = code;
 	return message;
@@ -51,11 +51,11 @@ TEST(A_SsdSimCmdExecute, Basic)
 	ASSERT_TRUE(GetExitCodeProcess(ShExecInfo.hProcess, &exitCode));
 	ASSERT_EQ(STILL_ACTIVE, exitCode);
 
-	std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
+	std::shared_ptr<MessageClient<SimFrameworkCommand>> client = std::make_shared<MessageClient<SimFrameworkCommand>>(SSDSIM_IPC_NAME);
 	ASSERT_NE(nullptr, client);
 
 	std::cout << "Sending exit command." << std::endl;
-	Message *message = _allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
+	Message<SimFrameworkCommand> *message = _allocateSimFrameworkCommand(client, SimFrameworkCommand::Code::Exit);
 	client->Push(message);
 
 	if (ShExecInfo.hProcess)

@@ -7,7 +7,8 @@
 
 #include "Nand/NandHal.h"
 #include "FirmwareCore.h"
-#include "Ipc/MessageServer.h"
+#include "Ipc/MessageServer.hpp"
+#include "Interfaces/CustomProtocolCommand.h"
 
 class JSONParser;
 
@@ -45,7 +46,6 @@ public:
 private:
     void SetupNandHal(JSONParser& parser);
     void GetFirmwareCoreInfo(JSONParser& parser);
-    void HandleSimFrameworkCommand(SimFrameworkCommand *command);
 
 private:
 	enum class State
@@ -58,8 +58,8 @@ private:
 	State _State;
 
 private:
-    std::shared_ptr<MessageServer> _SimServer;
-    std::shared_ptr<MessageServer> _ProtocolServer;
+    std::shared_ptr<MessageServer<SimFrameworkCommand>> _SimServer;
+    std::shared_ptr<MessageServer<CustomProtocolCommand>> _ProtocolServer;
 	NandHal _NandHal;
 	FirmwareCore _FirmwareCore;
 	std::string _RomCodePath;

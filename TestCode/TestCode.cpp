@@ -23,20 +23,20 @@ extern "C"
 
             switch (command->Command)
             {
-                case CustomProtocolCommand::CommandCode::BenchmarkStart:    // No response
+                case CustomProtocolCommand::Code::BenchmarkStart:    // No response
                 {
                     _StartMs = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
                     _NopCount = 0;
                 } break;
 
-                case CustomProtocolCommand::CommandCode::BenchmarkEnd:
+                case CustomProtocolCommand::Code::BenchmarkEnd:
                 {
                     milliseconds endMs = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
                     command->Payload.BenchmarkPayload.Response.Duration = (endMs.count() - _StartMs.count());
                     command->Payload.BenchmarkPayload.Response.NopCount = _NopCount;
                 } break;
 
-                case CustomProtocolCommand::CommandCode::Nop:      // No response
+                case CustomProtocolCommand::Code::Nop:      // No response
                 {
                     ++_NopCount;
                 } break;

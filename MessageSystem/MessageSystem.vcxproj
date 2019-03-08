@@ -23,17 +23,14 @@
     <ClInclude Include="Interfaces\CustomProtocolCommand.h" />
     <ClInclude Include="Interfaces\CustomProtocolInterface.h" />
     <ClInclude Include="Ipc\Constant.h" />
-    <ClInclude Include="Ipc\Message.h" />
-    <ClInclude Include="Ipc\MessageBaseService.h" />
-    <ClInclude Include="Ipc\MessageClient.h" />
-    <ClInclude Include="Ipc\MessageServer.h" />
+    <ClInclude Include="Ipc\Message.hpp" />
+    <ClInclude Include="Ipc\MessageBaseService.hpp" />
+    <ClInclude Include="Ipc\MessageClient.hpp" />
+    <ClInclude Include="Ipc\MessageServer.hpp" />
     <ClInclude Include="ServerNames.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Interfaces\CustomProtocolInterface.cpp" />
-    <ClCompile Include="Ipc\MessageBaseService.cpp" />
-    <ClCompile Include="Ipc\MessageClient.cpp" />
-    <ClCompile Include="Ipc\MessageServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

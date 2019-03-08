@@ -19,9 +19,6 @@
     <Filter Include="Header Files\Ipc">
       <UniqueIdentifier>{6a39fac7-c807-4085-ba7b-f45f43e435c0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Ipc">
-      <UniqueIdentifier>{e9352421-4dc5-4476-bdb0-6c5a76451c00}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Interfaces">
       <UniqueIdentifier>{9d3db95c-cb7f-48ff-8f29-f0588f39d9ac}</UniqueIdentifier>
     </Filter>
@@ -36,18 +33,6 @@
     <ClInclude Include="Ipc\Constant.h">
       <Filter>Header Files\Ipc</Filter>
     </ClInclude>
-    <ClInclude Include="Ipc\Message.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
-    <ClInclude Include="Ipc\MessageBaseService.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
-    <ClInclude Include="Ipc\MessageClient.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
-    <ClInclude Include="Ipc\MessageServer.h">
-      <Filter>Header Files\Ipc</Filter>
-    </ClInclude>
     <ClInclude Include="Interfaces\CustomProtocolInterface.h">
       <Filter>Header Files\Interfaces</Filter>
     </ClInclude>
@@ -57,17 +42,20 @@
     <ClInclude Include="Interfaces\CustomProtocolCommand.h">
       <Filter>Header Files\Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="Ipc\MessageBaseService.hpp">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="Ipc\MessageClient.hpp">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="Ipc\MessageServer.hpp">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="Ipc\Message.hpp">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Ipc\MessageServer.cpp">
-      <Filter>Source Files\Ipc</Filter>
-    </ClCompile>
-    <ClCompile Include="Ipc\MessageClient.cpp">
-      <Filter>Source Files\Ipc</Filter>
-    </ClCompile>
-    <ClCompile Include="Ipc\MessageBaseService.cpp">
-      <Filter>Source Files\Ipc</Filter>
-    </ClCompile>
     <ClCompile Include="Interfaces\CustomProtocolInterface.cpp">
       <Filter>Source Files\Interfaces</Filter>
     </ClCompile>

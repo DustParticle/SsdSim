@@ -7,12 +7,12 @@
 #include <sstream>
 
 #include "Framework.h"
-#include "Ipc/MessageClient.h"
+#include "Ipc/MessageClient.hpp"
 #include "ServerNames.h"
 
 using namespace boost::program_options;
 
-bool parser_command_line(int argc, const char* argv[], std::string& hardwarespecFilename, bool& interactive)
+bool parseCommandLine(int argc, const char* argv[], std::string& hardwarespecFilename, bool& interactive)
 {
     try
     {
@@ -76,8 +76,8 @@ void handleInteractiveCmd()
         if (0 == userSelectedCmd)
         {
             // send command exit
-            std::shared_ptr<MessageClient> client = std::make_shared<MessageClient>(SSDSIM_IPC_NAME);
-            Message *message = client->AllocateMessage(Message::Type::SIM_FRAMEWORK_COMMAND, sizeof(SimFrameworkCommand), false);
+            std::shared_ptr<MessageClient<SimFrameworkCommand>> client = std::make_shared<MessageClient<SimFrameworkCommand>>(SSDSIM_IPC_NAME);
+            Message<SimFrameworkCommand> *message = client->AllocateMessage(sizeof(SimFrameworkCommand), false);
             SimFrameworkCommand *command = (SimFrameworkCommand*)message->_Payload;
             command->_Code = SimFrameworkCommand::Code::Exit;
             client->Push(message);
@@ -98,7 +98,7 @@ int main(int argc, const char* argv[])
     std::string hardwarespecFilename = "";
     bool interactive = false;
 
-    if (parser_command_line(argc, argv, hardwarespecFilename, interactive))
+    if (parseCommandLine(argc, argv, hardwarespecFilename, interactive))
     {
         if (!hardwarespecFilename.empty())
         {
