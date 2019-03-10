@@ -19,7 +19,7 @@ TEST(HostComm, Messaging_Basic)
 	auto client = std::make_shared<SimpleCommandMessageClient>(messagingName);
 	ASSERT_NE(client, nullptr);
 
-	auto message = AllocateMessage<SimpleCommand>(client, false);
+	auto message = AllocateMessage<SimpleCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
 	message->_Data._Command = SimpleCommand::Command::SimpleCommand;
 	client->Push(message);
@@ -32,7 +32,7 @@ TEST(HostComm, Messaging_Basic)
 	ASSERT_ANY_THROW(server->PushResponse(receivedMessage));             // Don't allow to response message without response flag
 	ASSERT_NO_THROW(server->DeallocateMessage(receivedMessage));
 
-	message = AllocateMessage<SimpleCommand>(client, true);
+	message = AllocateMessage<SimpleCommand>(client, 0, true);
 	ASSERT_NE(message, nullptr);
 	message->_Data._Command = SimpleCommand::Command::SimpleCommand;
 	client->Push(message);

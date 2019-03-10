@@ -29,7 +29,7 @@ TEST(SimFramework, Basic)
 	auto client = std::make_shared<MessageClient<SimFrameworkCommand>>(messagingName);
 	ASSERT_NE(nullptr, client);
 
-	auto message = AllocateMessage<SimFrameworkCommand>(client, false);
+	auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
 	message->_Data._Code = SimFrameworkCommand::Code::Exit;
 	client->Push(message);
