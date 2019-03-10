@@ -1,0 +1,7 @@
+{
+  "channel": 4,
+  "devices": 1,
+  "block": 128,
+  "pages": 256,
+  "bytes": 8192
+}

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="test.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="SsdSimCmdTest.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="gtest-cout.h" />
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Nandconfig\nandspec.json">
+      <Filter>Nandconfig</Filter>
+    </None>
+    <None Include="Nandconfig\nandbadvalue.json">
+      <Filter>Nandconfig</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Nandconfig">
+      <UniqueIdentifier>{84a20e97-749b-4821-a9ea-6dcb5b8afe1e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

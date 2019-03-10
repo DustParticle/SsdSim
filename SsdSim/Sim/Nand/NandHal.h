@@ -18,7 +18,6 @@ public:
 	//NOTE: With current design, we only support homogeneous NAND device configuration (i.e. all the NAND devices are the same).\
 	//PreInit is for simulation system only (i.e. there would be no equipvalent on target)
 	void PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerDevice, U32 pagesPerBlock, U32 bytesPerPage);
-
 	
 public:
 	void Init();

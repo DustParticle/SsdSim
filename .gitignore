@@ -1,7 +1,11 @@
 .vs/
 Test/x64
 Test/gTest.vcxproj.user
+Test/Test.vcxproj.user
 SsdSim/SsdSim.vcxproj.user
 SsdSim/x64
+SsdSimCmd/x64
+SsdSimCmd/SsdSimCmd.vcxproj.user
 x64/
 packages/
+Win32/

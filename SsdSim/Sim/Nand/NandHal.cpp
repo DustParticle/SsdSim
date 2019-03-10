@@ -1,4 +1,5 @@
 #include "Nand/NandHal.h"
+#include "JSONParser.h"
 
 NandHal::NandHal()
 {
