@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{FDF75646-6E43-4A8A-BC13-D597B68754C2}</ProjectGuid>
-    <RootNamespace>HostComm</RootNamespace>
+    <ProjectGuid>{E2C37474-B57F-49F8-B5BB-EB427C95A2E1}</ProjectGuid>
+    <RootNamespace>SimFrameworkBase</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,20 +70,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -134,29 +134,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BasicTypes.h" />
-    <ClInclude Include="CustomProtocol\CustomProtocolCommand.h" />
-    <ClInclude Include="CustomProtocol\CustomProtocolInterface.h" />
-    <ClInclude Include="Ipc\Constant.h" />
-    <ClInclude Include="Ipc\Message.hpp" />
-    <ClInclude Include="Ipc\MessageBaseService.hpp" />
-    <ClInclude Include="Ipc\MessageClient.hpp" />
-    <ClInclude Include="Ipc\MessageServer.hpp" />
+    <ClCompile Include="FrameworkThread.cpp" />
+    <ClCompile Include="JSONParser.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CustomProtocol\CustomProtocolInterface.cpp" />
+    <ClInclude Include="FrameworkThread.h" />
+    <ClInclude Include="JSONParser.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\boost.1.69.0.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.69.0.0\build\boost.targets')" />
+    <Import Project="..\..\packages\tencent.rapidjson.1.1.1\build\tencent.rapidjson.targets" Condition="Exists('..\..\packages\tencent.rapidjson.1.1.1\build\tencent.rapidjson.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\boost.1.69.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.69.0.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\..\packages\tencent.rapidjson.1.1.1\build\tencent.rapidjson.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\tencent.rapidjson.1.1.1\build\tencent.rapidjson.targets'))" />
   </Target>
 </Project>

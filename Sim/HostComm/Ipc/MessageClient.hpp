@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __MessageClient_h__
 #define __MessageClient_h__
 

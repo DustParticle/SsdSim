@@ -1,9 +1,8 @@
 #include "CustomProtocolInterface.h"
 
 #include "HostComm/Ipc/MessageServer.hpp"
-#include "HostComm/ServerNames.h"
 
-MessageServer<CustomProtocolCommand> _MessageServer(PROTOCOL_IPC_NAME);
+MessageServer<CustomProtocolCommand> _MessageServer("SsdSimCustomProtocolServer");
 
 bool CustomProtocolInterface::HasCommand()
 {

@@ -27,9 +27,6 @@
     <ClInclude Include="BasicTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ServerNames.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Ipc\Constant.h">
       <Filter>Header Files\Ipc</Filter>
     </ClInclude>

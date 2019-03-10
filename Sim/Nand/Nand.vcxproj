@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{FDF75646-6E43-4A8A-BC13-D597B68754C2}</ProjectGuid>
-    <RootNamespace>HostComm</RootNamespace>
+    <ProjectGuid>{885BBD45-90F8-4446-BAD6-4A1702D1F1F7}</ProjectGuid>
+    <RootNamespace>Nand</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -70,20 +70,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -134,17 +134,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BasicTypes.h" />
-    <ClInclude Include="CustomProtocol\CustomProtocolCommand.h" />
-    <ClInclude Include="CustomProtocol\CustomProtocolInterface.h" />
-    <ClInclude Include="Ipc\Constant.h" />
-    <ClInclude Include="Ipc\Message.hpp" />
-    <ClInclude Include="Ipc\MessageBaseService.hpp" />
-    <ClInclude Include="Ipc\MessageClient.hpp" />
-    <ClInclude Include="Ipc\MessageServer.hpp" />
+    <ClInclude Include="Hal\NandHal.h" />
+    <ClInclude Include="Sim\NandBlock.h" />
+    <ClInclude Include="Sim\NandChannel.h" />
+    <ClInclude Include="Sim\NandDevice.h" />
+    <ClInclude Include="Sim\NandDeviceDesc.h" />
+    <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CustomProtocol\CustomProtocolInterface.cpp" />
+    <ClCompile Include="Hal\NandHal.cpp" />
+    <ClCompile Include="Sim\NandBlock.cpp" />
+    <ClCompile Include="Sim\NandChannel.cpp" />
+    <ClCompile Include="Sim\NandDevice.cpp" />
+    <ClCompile Include="Sim\NandDeviceDesc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -152,11 +154,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\boost.1.69.0.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.69.0.0\build\boost.targets')" />
+    <Import Project="..\..\packages\boost_atomic-vc141.1.69.0.0\build\boost_atomic-vc141.targets" Condition="Exists('..\..\packages\boost_atomic-vc141.1.69.0.0\build\boost_atomic-vc141.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\boost.1.69.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.69.0.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\..\packages\boost_atomic-vc141.1.69.0.0\build\boost_atomic-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost_atomic-vc141.1.69.0.0\build\boost_atomic-vc141.targets'))" />
   </Target>
 </Project>

@@ -2,33 +2,9 @@
 
 #include <memory>
 
-#include "HostComm/Ipc/MessageServer.hpp"
-#include "HostComm/Ipc/MessageClient.hpp"
+#include "HostCommShared.h"
 
-class SimpleCommand
-{
-public:
-	enum class Command
-	{
-		SimpleCommand
-	};
-
-public:
-	Command _Command;
-};
-
-using SimpleCommandMessage = Message<SimpleCommand>;
-using SimpleCommandMessageClient = MessageClient<SimpleCommand>;
-using SimpleCommandMessageClientSharedPtr = std::shared_ptr<MessageClient<SimpleCommand>>;
-using SimpleCommandMessageServer = MessageServer<SimpleCommand>;
-
-SimpleCommandMessage* AllocateSimpleCommandMessage(SimpleCommandMessageClientSharedPtr client, const SimpleCommand::Command& command, bool expectResponse)
-{
-	auto message = client->AllocateMessage(sizeof(SimpleCommand), expectResponse);
-	SimpleCommand* simpleCommand = (SimpleCommand*)message->_Payload;
-	simpleCommand->_Command = SimpleCommand::Command::SimpleCommand;
-	return message;
-}
+using namespace HostCommTest;
 
 TEST(HostComm, Messaging_Basic)
 {
@@ -43,8 +19,9 @@ TEST(HostComm, Messaging_Basic)
 	auto client = std::make_shared<SimpleCommandMessageClient>(messagingName);
 	ASSERT_NE(client, nullptr);
 
-	auto message = AllocateSimpleCommandMessage(client, SimpleCommand::Command::SimpleCommand, false);
+	auto message = AllocateMessage<SimpleCommand>(client, false);
 	ASSERT_NE(message, nullptr);
+	message->_Data._Command = SimpleCommand::Command::SimpleCommand;
 	client->Push(message);
 
 	ASSERT_TRUE(server->HasMessage());
@@ -55,8 +32,9 @@ TEST(HostComm, Messaging_Basic)
 	ASSERT_ANY_THROW(server->PushResponse(receivedMessage));             // Don't allow to response message without response flag
 	ASSERT_NO_THROW(server->DeallocateMessage(receivedMessage));
 
-	message = AllocateSimpleCommandMessage(client, SimpleCommand::Command::SimpleCommand, true);
+	message = AllocateMessage<SimpleCommand>(client, true);
 	ASSERT_NE(message, nullptr);
+	message->_Data._Command = SimpleCommand::Command::SimpleCommand;
 	client->Push(message);
 	ASSERT_TRUE(server->HasMessage());
 	receivedMessage = server->Pop();

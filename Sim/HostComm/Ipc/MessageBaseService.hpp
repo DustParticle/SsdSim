@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __MessageBaseService_h__
 #define __MessageBaseService_h__
 

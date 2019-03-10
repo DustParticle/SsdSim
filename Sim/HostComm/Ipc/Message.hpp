@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __Message_h__
 #define __Message_h__
 
