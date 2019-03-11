@@ -25,7 +25,7 @@ void Framework::Init(const std::string& configFileName)
 	SetupNandHal(parser);
 	GetFirmwareCoreInfo(parser);
 
-    _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>("SsdSimMainMessageServer", 8 * 1024);
+    _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>("SsdSimMainMessageServer", 8 * 1024 * 1024);
     _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>("SsdSimCustomProtocolServer", 8 * 1024 * 1024);
 }
 
@@ -151,10 +151,25 @@ void Framework::operator()()
                         case SimFrameworkCommand::Code::Exit:
                         {
                             _State = State::Exit;
+							_SimServer->DeallocateMessage(message);
                         } break;
+						case SimFrameworkCommand::Code::DataOutLoopback:
+						{
+							//Get data from host
+							auto buffer = std::make_unique<U8[]>(message->_PayloadSize);
+							memcpy_s(buffer.get(), message->_PayloadSize, message->_Payload, message->_PayloadSize);
+							_SimServer->PushResponse(message->Id());
+						} break;
+						case SimFrameworkCommand::Code::DataInLoopback:
+						{
+							//Send data to host
+							auto buffer = std::make_unique<U8[]>(message->_PayloadSize);
+							memcpy_s(message->_Payload, message->_PayloadSize, buffer.get(), message->_PayloadSize);
+							_SimServer->PushResponse(message->Id());
+						} break;
 					}
 
-                    _SimServer->DeallocateMessage(message);
+                    
 				}
 			} break;
 		}
