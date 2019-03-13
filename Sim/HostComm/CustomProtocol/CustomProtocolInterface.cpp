@@ -14,6 +14,7 @@ CustomProtocolCommand* CustomProtocolInterface::GetCommand()
     Message<CustomProtocolCommand>* msg = _MessageServer.Pop();
     if (msg)
     {
+        msg->_Data.CommandId = msg->Id();
         return &msg->_Data;
     }
 
@@ -22,7 +23,7 @@ CustomProtocolCommand* CustomProtocolInterface::GetCommand()
 
 void CustomProtocolInterface::SubmitResponse(CustomProtocolCommand *command)
 {
-    Message<CustomProtocolCommand> *message = _MessageServer.GetMessage(command->MessageId);
+    Message<CustomProtocolCommand> *message = _MessageServer.GetMessage(command->CommandId);
     if (message->ExpectsResponse())
     {
         _MessageServer.PushResponse(message);

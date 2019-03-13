@@ -28,37 +28,32 @@ public:
         }
 
         MessageBaseService<TData>::_ManagedShm = std::unique_ptr<managed_shared_memory>(sharedMemory);
-        MessageBaseService<TData>::_Lock = MessageBaseService<TData>::_ManagedShm->find<bool>(LOCK).first;
         MessageBaseService<TData>::_Counter = MessageBaseService<TData>::_ManagedShm->find<MessageId>(COUNTER).first;
-        MessageBaseService<TData>::_Queue = MessageBaseService<TData>::_ManagedShm->find<deque<MessageId>>(QUEUE).first;
-        MessageBaseService<TData>::_ResponseQueueLock = MessageBaseService<TData>::_ManagedShm->find<bool>(RESPONSE_QUEUE_LOCK).first;
-        MessageBaseService<TData>::_ResponseQueue = MessageBaseService<TData>::_ManagedShm->find<deque<MessageId>>(RESPONSE_QUEUE).first;
+        MessageBaseService<TData>::_Queue = MessageBaseService<TData>::_ManagedShm->find<MessageQueue>(QUEUE).first;
+        MessageBaseService<TData>::_ResponseQueue = MessageBaseService<TData>::_ManagedShm->find<MessageQueue>(RESPONSE_QUEUE).first;
     }
 
     MessageServer(const char* serverName, const U32 &size)
     {
         shared_memory_object::remove(serverName);
         MessageBaseService<TData>::_ManagedShm = std::unique_ptr<managed_shared_memory>(new managed_shared_memory(open_or_create, serverName, size));
-        MessageBaseService<TData>::_Lock = MessageBaseService<TData>::_ManagedShm->construct<bool>(LOCK)(false);
+
+        SynchronizedQueue<MessageId>::allocator_type alloc(MessageBaseService<TData>::_ManagedShm->get_segment_manager());
+        SynchronizedQueue<MessageId>::allocator_type alloc1(MessageBaseService<TData>::_ManagedShm->get_segment_manager());
+
         MessageBaseService<TData>::_Counter = MessageBaseService<TData>::_ManagedShm->construct<MessageId>(COUNTER)(0);
-        MessageBaseService<TData>::_Queue = MessageBaseService<TData>::_ManagedShm->construct<deque<MessageId>>(QUEUE)();
-        MessageBaseService<TData>::_ResponseQueueLock = MessageBaseService<TData>::_ManagedShm->construct<bool>(RESPONSE_QUEUE_LOCK)(false);
-        MessageBaseService<TData>::_ResponseQueue = MessageBaseService<TData>::_ManagedShm->construct<deque<MessageId>>(RESPONSE_QUEUE)();
+        MessageBaseService<TData>::_Queue = MessageBaseService<TData>::_ManagedShm->construct<MessageQueue>(QUEUE)(alloc);
+        MessageBaseService<TData>::_ResponseQueue = MessageBaseService<TData>::_ManagedShm->construct<MessageQueue>(RESPONSE_QUEUE)(alloc1);
     }
 
     bool HasMessage()
     {
-        if (*MessageBaseService<TData>::_Lock)
-        {
-            return false;
-        }
-
         return !MessageBaseService<TData>::_Queue->empty();
     }
 
     Message<TData>* Pop()
     {
-        return MessageBaseService<TData>::DoPop(MessageBaseService<TData>::_Lock, MessageBaseService<TData>::_Queue);
+        return MessageBaseService<TData>::DoPop(MessageBaseService<TData>::_Queue);
     }
 
     void PushResponse(Message<TData>* message)
@@ -68,7 +63,7 @@ public:
             throw "This message doesn't need respond";
         }
 
-        MessageBaseService<TData>::DoPush(MessageBaseService<TData>::_ResponseQueueLock, MessageBaseService<TData>::_ResponseQueue, message);
+        MessageBaseService<TData>::DoPush(MessageBaseService<TData>::_ResponseQueue, message);
     }
 
     void PushResponse(const MessageId &id)

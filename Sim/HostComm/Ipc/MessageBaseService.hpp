@@ -9,19 +9,20 @@
 
 #include "Message.hpp"
 #include "Constant.h"
+#include "SynchronizedQueue.hpp"
 
 using namespace boost::interprocess;
+
+typedef SynchronizedQueue<MessageId> MessageQueue;
 
 template<typename TData>
 class MessageBaseService
 {
 protected: 
     std::unique_ptr<managed_shared_memory> _ManagedShm;
-    bool *_Lock;
     U32 *_Counter;
-    deque<MessageId> *_Queue;
-    bool *_ResponseQueueLock;
-    deque<MessageId> *_ResponseQueue;
+    MessageQueue *_Queue;
+    MessageQueue *_ResponseQueue;
 
 public:
     Message<TData>* GetMessage(const MessageId &id)
@@ -57,7 +58,6 @@ protected:
         Message<TData>* message = _ManagedShm->construct<Message<TData>>(messageName.c_str())();
         message->_Id = *_Counter;
         message->_PayloadSize = payloadSize;
-        message->_PayloadSize = payloadSize;
         message->_PayloadHandle = handle;
         message->_Payload = payload;
         message->_ExpectsResponse = expectsResponse;
@@ -77,27 +77,18 @@ protected:
         _ManagedShm->destroy<Message<TData>>(messageName.c_str());
     }
 
-    void DoPush(bool* lock, deque<MessageId>* &queue, Message<TData>* message)
+    void DoPush(MessageQueue* &queue, Message<TData>* message)
     {
-        *lock = true;
-        queue->push_back(message->_Id);
-        *lock = false;
+        queue->push(message->_Id);
     }
 
-    Message<TData>* DoPop(bool* lock, deque<MessageId>* &queue)
+    Message<TData>* DoPop(MessageQueue* &queue)
     {
-        if (*lock)
+        MessageId id;
+        if (!queue->pop(id))
         {
             return nullptr;
         }
-
-        if (queue->empty())
-        {
-            return nullptr;
-        }
-
-        MessageId id = queue->front();
-        queue->pop_front();
 
         return GetMessage(id);
     }

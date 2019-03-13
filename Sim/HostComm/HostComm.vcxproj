@@ -142,6 +142,7 @@
     <ClInclude Include="Ipc\MessageBaseService.hpp" />
     <ClInclude Include="Ipc\MessageClient.hpp" />
     <ClInclude Include="Ipc\MessageServer.hpp" />
+    <ClInclude Include="Ipc\SynchronizedQueue.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CustomProtocol\CustomProtocolInterface.cpp" />

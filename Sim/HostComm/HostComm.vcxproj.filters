@@ -48,6 +48,9 @@
     <ClInclude Include="CustomProtocol\CustomProtocolInterface.h">
       <Filter>Header Files\CustomProtocol</Filter>
     </ClInclude>
+    <ClInclude Include="Ipc\SynchronizedQueue.hpp">
+      <Filter>Header Files\Ipc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CustomProtocol\CustomProtocolInterface.cpp">

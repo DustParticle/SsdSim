@@ -3,31 +3,29 @@
 
 #include "HostComm/BasicTypes.h"
 
-// TODO: add macro to check for sim only
-#include "HostComm/Ipc/Message.hpp"
 class CustomProtocolInterface;
 
 struct DownloadAndExecutePayload
 {
-    U8 CodeName[20];
-    U32 CodeSize;
-    U8 CodeBinary[1];
+    U8 _CodeName[20];
 };
 
 union BenchmarkPayload
 {
     struct
     {
-        long long Duration;
-        U32 NopCount;
-    } Response;
+        long long _Duration;
+        U32 _NopCount;
+    } _Response;
 };
 
 union CustomProtocolCommandPayload
 {
-    DownloadAndExecutePayload DownloadAndExecute;
-    BenchmarkPayload BenchmarkPayload;
+    DownloadAndExecutePayload _DownloadAndExecute;
+    BenchmarkPayload _BenchmarkPayload;
 };
+
+typedef U32 CommandId;
 
 struct CustomProtocolCommand
 {
@@ -40,12 +38,11 @@ struct CustomProtocolCommand
     };
 
 public:
-    Code Command;
-    CustomProtocolCommandPayload Payload;
+    Code _Command;
+    CustomProtocolCommandPayload _Payload;
 
 private:
-    // TODO: add macro to check for sim only
-    MessageId MessageId;
+    CommandId CommandId;
     friend class CustomProtocolInterface;
 };
 

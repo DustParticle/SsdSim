@@ -29,7 +29,6 @@ template <class M>
 Message<M>* AllocateMessage(std::shared_ptr<MessageClient<M>> client, U32 payloadSize, bool expectResponse)
 {
 	auto message = client->AllocateMessage(payloadSize, expectResponse);
-	M* simpleCommand = (M*)message->_Payload;
 	return message;
 }
 

@@ -27,11 +27,9 @@ public:
         }
 
         MessageBaseService<TData>::_ManagedShm = std::unique_ptr<managed_shared_memory>(sharedMemory);
-        MessageBaseService<TData>::_Lock = MessageBaseService<TData>::_ManagedShm->find<bool>(LOCK).first;
         MessageBaseService<TData>::_Counter = MessageBaseService<TData>::_ManagedShm->find<MessageId>(COUNTER).first;
-        MessageBaseService<TData>::_Queue = MessageBaseService<TData>::_ManagedShm->find<deque<MessageId>>(QUEUE).first;
-        MessageBaseService<TData>::_ResponseQueueLock = MessageBaseService<TData>::_ManagedShm->find<bool>(RESPONSE_QUEUE_LOCK).first;
-        MessageBaseService<TData>::_ResponseQueue = MessageBaseService<TData>::_ManagedShm->find<deque<MessageId>>(RESPONSE_QUEUE).first;
+        MessageBaseService<TData>::_Queue = MessageBaseService<TData>::_ManagedShm->find<MessageQueue>(QUEUE).first;
+        MessageBaseService<TData>::_ResponseQueue = MessageBaseService<TData>::_ManagedShm->find<MessageQueue>(RESPONSE_QUEUE).first;
     }
 
     ~MessageClient()
@@ -45,22 +43,17 @@ public:
 
     void Push(Message<TData>* message)
     {
-        MessageBaseService<TData>::DoPush(MessageBaseService<TData>::_Lock, MessageBaseService<TData>::_Queue, message);
+        MessageBaseService<TData>::DoPush(MessageBaseService<TData>::_Queue, message);
     }
 
     bool HasResponse()
     {
-        if (*MessageBaseService<TData>::_ResponseQueueLock)
-        {
-            return false;
-        }
-
         return !MessageBaseService<TData>::_ResponseQueue->empty();
     }
 
     Message<TData>* PopResponse()
     {
-        return MessageBaseService<TData>::DoPop(MessageBaseService<TData>::_ResponseQueueLock, MessageBaseService<TData>::_ResponseQueue);
+        return MessageBaseService<TData>::DoPop(MessageBaseService<TData>::_ResponseQueue);
     }
 
     void DeallocateMessage(Message<TData>* message)
