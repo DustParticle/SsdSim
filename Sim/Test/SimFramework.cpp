@@ -67,7 +67,6 @@ TEST(SimFramework, Basic_Benchmark)
 
 	constexpr U32 payloadSize = 4 * 1024;
 	constexpr U32 commandCount = 10;
-	U8 buffer[payloadSize];
 	Message<SimFrameworkCommand>* messages[commandCount];
 	for (auto i = 0; i < commandCount; ++i)
 	{
@@ -123,6 +122,7 @@ TEST(SimFramework, Basic_Benchmark)
 	dataCmdMaxDuration = duration<double>::min();
 	dataCmdMinDuration = duration<double>::max();
 	dataCmdTotalTime = duration<double>::zero();
+	t0s.clear();
 	for (auto i = 0; i < commandCount; ++i)
 	{
 		messages[i]->_Data._Code = SimFrameworkCommand::Code::DataInLoopback;

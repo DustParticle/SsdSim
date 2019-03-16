@@ -130,6 +130,7 @@ TEST(SsdSimApp, Basic_Benchmark)
 	dataCmdMaxDuration = duration<double>::min();
 	dataCmdMinDuration = duration<double>::max();
 	dataCmdTotalTime = duration<double>::zero();
+	t0s.clear();
 	for (auto i = 0; i < commandCount; ++i)
 	{
 		messages[i]->_Data._Code = SimFrameworkCommand::Code::DataInLoopback;
