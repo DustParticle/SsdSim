@@ -1,6 +1,6 @@
 #pragma once
-#ifndef __HostCommShared_h__
-#define __HostCommShared_h__
+#ifndef __HostComm_h__
+#define __HostComm_h__
 
 #include "HostComm/Ipc/MessageServer.hpp"
 #include "HostComm/Ipc/MessageClient.hpp"

@@ -6,10 +6,11 @@
 HMODULE _DllInstance;
 HMODULE _NewDllInstance;
 
+typedef void(__stdcall *fInitialize)(std::shared_ptr<NandHal> nandHal);
 typedef void(__stdcall *fExecute)();
 typedef void(__stdcall *fExecuteCallback)(std::function<bool(std::string)> callback);
 
-FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr)
+FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr), _NandHal(nullptr)
 {
     _DllInstance = NULL;
     _NewDllInstance = NULL;
@@ -22,6 +23,13 @@ bool FirmwareCore::SetExecute(std::string Filename)
     if (!_NewDllInstance)
     {
         return false;
+    }
+
+    // search the Initialize and execute
+    auto initialize = (fInitialize)GetProcAddress(_NewDllInstance, "Initialize");
+    if (initialize)
+    {
+        initialize(_NandHal);
     }
 
     // resolve function address here
@@ -84,4 +92,9 @@ void FirmwareCore::SwapExecute()
 
     _DllInstance = _NewDllInstance;
     _NewDllInstance = NULL;
+}
+
+void FirmwareCore::LinkNandHal(std::shared_ptr<NandHal> nandHal)
+{
+    _NandHal = nandHal;
 }

@@ -8,6 +8,8 @@
 Framework::Framework() :
 	_State(State::Start)
 {
+    _NandHal = std::make_shared<NandHal>();
+    _FirmwareCore = std::make_shared<FirmwareCore>();
 }
 
 void Framework::Init(const std::string& configFileName)
@@ -105,7 +107,8 @@ void Framework::SetupNandHal(JSONParser& parser)
 	constexpr U32 minBytesValue = 4 * 1024;
 	U32 bytes = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
-	_NandHal.PreInit(channels, devices, blocks, pages, bytes);
+	_NandHal->PreInit(channels, devices, blocks, pages, bytes);
+	_NandHal->Init();
 }
 
 void Framework::GetFirmwareCoreInfo(JSONParser& parser)
@@ -126,7 +129,8 @@ void Framework::operator()()
 	std::future<void> firmwareMain;
 
     // Load ROM
-	_FirmwareCore.SetExecute(this->_RomCodePath);
+	_FirmwareCore->LinkNandHal(_NandHal);
+	_FirmwareCore->SetExecute(this->_RomCodePath);
 
     while (State::Exit != _State)
 	{
@@ -134,8 +138,8 @@ void Framework::operator()()
 		{
 			case State::Start:
 			{
-				nandHal = std::async(std::launch::async, &NandHal::operator(), &_NandHal);
-				firmwareMain = std::async(std::launch::async, &FirmwareCore::operator(), &_FirmwareCore);
+				nandHal = std::async(std::launch::async, &NandHal::operator(), _NandHal);
+				firmwareMain = std::async(std::launch::async, &FirmwareCore::operator(), _FirmwareCore);
 
 				_State = State::Run;
 			} break;
@@ -175,8 +179,8 @@ void Framework::operator()()
 		}
 	}
 
-	_FirmwareCore.Stop();
-	_NandHal.Stop();
+	_FirmwareCore->Stop();
+	_NandHal->Stop();
 
-    _FirmwareCore.Unload();
+    _FirmwareCore->Unload();
 }

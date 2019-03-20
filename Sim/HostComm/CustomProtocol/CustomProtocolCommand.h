@@ -19,10 +19,24 @@ union BenchmarkPayload
     } _Response;
 };
 
+struct SimpleFtlPayload
+{
+    U32 _Lba;
+    U32 _SectorCount;
+};
+
+struct DeviceInfoPayload
+{
+    U32 _LbaCount;
+    U32 _BytesPerSector;
+};
+
 union CustomProtocolCommandPayload
 {
     DownloadAndExecutePayload _DownloadAndExecute;
     BenchmarkPayload _BenchmarkPayload;
+    SimpleFtlPayload _SimpleFtlPayload;
+    DeviceInfoPayload _DeviceInfoPayload;
 };
 
 typedef U32 CommandId;
@@ -34,6 +48,9 @@ struct CustomProtocolCommand
         DownloadAndExecute,
         BenchmarkStart,
         BenchmarkEnd,
+        Write,
+        Read,
+        GetDeviceInfo,
         Nop
     };
 

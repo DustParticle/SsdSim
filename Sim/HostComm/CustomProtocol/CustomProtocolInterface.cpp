@@ -21,6 +21,19 @@ CustomProtocolCommand* CustomProtocolInterface::GetCommand()
     return nullptr;
 }
 
+U8* CustomProtocolInterface::GetBuffer(CustomProtocolCommand *command, U32 &bufferSizeInBytes)
+{
+    Message<CustomProtocolCommand>* msg = _MessageServer.GetMessage(command->CommandId);
+    if (msg)
+    {
+        bufferSizeInBytes = msg->_PayloadSize;
+        return (U8*)msg->_Payload;
+    }
+
+    bufferSizeInBytes = 0;
+    return nullptr;
+}
+
 void CustomProtocolInterface::SubmitResponse(CustomProtocolCommand *command)
 {
     Message<CustomProtocolCommand> *message = _MessageServer.GetMessage(command->CommandId);

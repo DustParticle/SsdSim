@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "HostCommShared.h"
+#include "HostComm.hpp"
 
 using namespace HostCommTest;
 

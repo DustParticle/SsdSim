@@ -1,14 +1,13 @@
 #include "pch.h"
 
 #include <ctime>
-#include <chrono>
 #include <map>
 
 #include "Test/gtest-cout.h"
 
 #include "SimFramework/Framework.h"
 
-#include "HostCommShared.h"
+#include "HostComm.hpp"
 
 using namespace HostCommTest;
 

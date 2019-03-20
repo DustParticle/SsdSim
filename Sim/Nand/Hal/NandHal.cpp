@@ -7,11 +7,11 @@ NandHal::NandHal()
 
 void NandHal::PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerPage, U32 pagesPerBlock, U32 bytesPerPage)
 {
-	_ChannelCount = channelCount;
-	_DeviceCount = deviceCount;
-	_BlocksPerDevice = blocksPerPage;
-	_PagesPerBlock = pagesPerBlock;
-	_BytesPerPage = bytesPerPage;
+	_Geometry._ChannelCount = channelCount;
+	_Geometry._DevicesPerChannel = deviceCount;
+	_Geometry._BlocksPerDevice = blocksPerPage;
+	_Geometry._PagesPerBlock = pagesPerBlock;
+	_Geometry._BytesPerPage = bytesPerPage;
 }
 
 void NandHal::Init()
@@ -19,10 +19,10 @@ void NandHal::Init()
 	//Normally in hardware implementation we would query each device
 	//Here we rely on PreInit
 
-	for (U8 i(0); i < _ChannelCount; ++i)
+	for (U8 i(0); i < _Geometry._ChannelCount; ++i)
 	{
 		NandChannel nandChannel;
-		nandChannel.Init(_DeviceCount, _BlocksPerDevice, _PagesPerBlock, _BytesPerPage);
+		nandChannel.Init(_Geometry._DevicesPerChannel, _Geometry._BlocksPerDevice, _Geometry._PagesPerBlock, _Geometry._BytesPerPage);
 		_NandChannels.push_back(std::move(nandChannel));
 	}
 }

@@ -9,6 +9,7 @@ class CustomProtocolInterface
 public:
     bool HasCommand();
     CustomProtocolCommand* GetCommand();
+    U8* GetBuffer(CustomProtocolCommand *command, U32 &bufferSizeInBytes);
     void SubmitResponse(CustomProtocolCommand *command);
 };
 

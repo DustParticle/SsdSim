@@ -1,33 +1,31 @@
 #include "pch.h"
 
-#define NOMINMAX
-#include <windows.h>
-
-#include <ctime>
 #include <chrono>
+#include <ctime>
 #include <map>
 
 #include "Test/gtest-cout.h"
 
 #include "SimFramework/Framework.h"
 
-#include "HostCommShared.h"
+#include "SsdSimApp.h"
+#include "HostComm.hpp"
 
 using namespace HostCommTest;
 
 bool LaunchProcess(const char *pFile, const char *pArgs, SHELLEXECUTEINFO & ShExecInfo)
 {
-	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-	ShExecInfo.hwnd = NULL;
-	ShExecInfo.lpVerb = NULL;
-	ShExecInfo.lpFile = pFile;
-	ShExecInfo.lpParameters = pArgs;
-	ShExecInfo.lpDirectory = NULL;
-	ShExecInfo.nShow = SW_SHOW;
-	ShExecInfo.hInstApp = NULL;
+    ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+    ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+    ShExecInfo.hwnd = NULL;
+    ShExecInfo.lpVerb = NULL;
+    ShExecInfo.lpFile = pFile;
+    ShExecInfo.lpParameters = pArgs;
+    ShExecInfo.lpDirectory = NULL;
+    ShExecInfo.nShow = SW_SHOW;
+    ShExecInfo.hInstApp = NULL;
 
-	return ShellExecuteEx(&ShExecInfo);
+    return ShellExecuteEx(&ShExecInfo);
 }
 
 TEST(SsdSimApp, Basic)

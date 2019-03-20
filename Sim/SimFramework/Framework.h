@@ -62,8 +62,8 @@ private:
 private:
     std::shared_ptr<MessageServer<SimFrameworkCommand>> _SimServer;
     std::shared_ptr<MessageServer<CustomProtocolCommand>> _ProtocolServer;
-	NandHal _NandHal;
-	FirmwareCore _FirmwareCore;
+    std::shared_ptr<NandHal> _NandHal;
+    std::shared_ptr<FirmwareCore> _FirmwareCore;
 	std::string _RomCodePath;
 };
 
