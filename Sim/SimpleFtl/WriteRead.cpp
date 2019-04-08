@@ -36,8 +36,8 @@ extern "C"
     void WriteToNand(CustomProtocolCommand *command)
     {
         NandHal::CommandDesc commandDesc;
-        U32 lba = command->_Payload._SimpleFtlPayload._Lba;
-        U32 sectorCount = command->_Payload._SimpleFtlPayload._SectorCount;
+        U32 lba = command->Descriptor.SimpleFtlPayload.Lba;
+        U32 sectorCount = command->Descriptor.SimpleFtlPayload.SectorCount;
         U32 bufferSizeInBytes = 0;
         auto buffer = _CustomProtocolInterface->GetBuffer(command, bufferSizeInBytes);
         auto writeBuffer = std::make_unique<U8[]>(_Geometry._BytesPerPage);
@@ -75,8 +75,8 @@ extern "C"
     void ReadFromNand(CustomProtocolCommand *command)
     {
         NandHal::CommandDesc commandDesc;
-        U32 lba = command->_Payload._SimpleFtlPayload._Lba;
-        U32 sectorCount = command->_Payload._SimpleFtlPayload._SectorCount;
+        U32 lba = command->Descriptor.SimpleFtlPayload.Lba;
+        U32 sectorCount = command->Descriptor.SimpleFtlPayload.SectorCount;
         U32 bufferSizeInBytes = 0;
         auto buffer = _CustomProtocolInterface->GetBuffer(command, bufferSizeInBytes);
         auto readBuffer = std::make_unique<U8[]>(_Geometry._BytesPerPage);
@@ -126,7 +126,7 @@ extern "C"
         {
             CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
 
-            switch (command->_Command)
+            switch (command->Command)
             {
                 case CustomProtocolCommand::Code::Write:
                 {
@@ -144,8 +144,8 @@ extern "C"
                 } break;
                 case CustomProtocolCommand::Code::GetDeviceInfo:
                 {
-                    command->_Payload._DeviceInfoPayload._LbaCount = _LbaCount;
-                    command->_Payload._DeviceInfoPayload._BytesPerSector = _SectorSizeInBytes;
+                    command->Descriptor.DeviceInfoPayload.LbaCount = _LbaCount;
+                    command->Descriptor.DeviceInfoPayload.BytesPerSector = _SectorSizeInBytes;
 
                     _CustomProtocolInterface->SubmitResponse(command);
                 } break;

@@ -17,16 +17,16 @@ extern "C"
         {
             CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
 
-            switch (command->_Command)
+            switch (command->Command)
             {
                 case CustomProtocolCommand::Code::DownloadAndExecute:
                 {
                     // Do download and execute
-                    U32 size = sizeof(command->_Payload._DownloadAndExecute._CodeName);
+                    U32 size = sizeof(command->Descriptor.DownloadAndExecute.CodeName);
                     char *temp = new char[size];
                     for (U32 i = 0; i < size; i++)
                     {
-                        temp[i] = command->_Payload._DownloadAndExecute._CodeName[i];
+                        temp[i] = command->Descriptor.DownloadAndExecute.CodeName[i];
                     }
                     std::string filename = temp;
                     delete[] temp;

@@ -23,7 +23,7 @@ public:
     };
 
 public:
-    Code _Code;
+    Code Code;
 };
 
 class Framework

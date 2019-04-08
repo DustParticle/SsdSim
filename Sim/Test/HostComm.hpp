@@ -17,7 +17,7 @@ public:
 	};
 
 public:
-	Command _Command;
+	Command Command;
 };
 
 using SimpleCommandMessage = Message<SimpleCommand>;

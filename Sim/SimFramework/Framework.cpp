@@ -150,7 +150,7 @@ void Framework::operator()()
 				{
                     Message<SimFrameworkCommand>* message = _SimServer->Pop();
 
-					switch (message->_Data._Code)
+					switch (message->_Data.Code)
 					{
                         case SimFrameworkCommand::Code::Exit:
                         {

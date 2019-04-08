@@ -51,6 +51,10 @@ protected:
         if (payloadSize)
         {
             payload = _ManagedShm->allocate(payloadSize, std::nothrow);
+            if (payload == nullptr)
+            {
+                throw "Not enough memory to allocate message";
+            }
             handle = _ManagedShm->get_handle_from_address(payload);
         }
 

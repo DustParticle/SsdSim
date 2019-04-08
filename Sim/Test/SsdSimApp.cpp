@@ -49,7 +49,7 @@ TEST(SsdSimApp, Basic)
 
 	auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
-	message->_Data._Code = SimFrameworkCommand::Code::Exit;
+	message->_Data.Code = SimFrameworkCommand::Code::Exit;
 	client->Push(message);
 
 	if (ShExecInfo.hProcess)
@@ -97,7 +97,7 @@ TEST(SsdSimApp, Basic_Benchmark)
 	std::map<U32, high_resolution_clock::time_point> t0s;
 	for (auto i = 0; i < commandCount; ++i)
 	{
-		messages[i]->_Data._Code = SimFrameworkCommand::Code::DataOutLoopback;
+		messages[i]->_Data.Code = SimFrameworkCommand::Code::DataOutLoopback;
 		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
 		memset(messages[i]->_Payload, 0xaa, messages[i]->_PayloadSize);
 		client->Push(messages[i]);
@@ -131,7 +131,7 @@ TEST(SsdSimApp, Basic_Benchmark)
 	t0s.clear();
 	for (auto i = 0; i < commandCount; ++i)
 	{
-		messages[i]->_Data._Code = SimFrameworkCommand::Code::DataInLoopback;
+		messages[i]->_Data.Code = SimFrameworkCommand::Code::DataInLoopback;
 		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
 		client->Push(messages[i]);
 	}
@@ -165,7 +165,7 @@ TEST(SsdSimApp, Basic_Benchmark)
 
 	auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
-	message->_Data._Code = SimFrameworkCommand::Code::Exit;
+	message->_Data.Code = SimFrameworkCommand::Code::Exit;
 	client->Push(message);
 
 	if (ShExecInfo.hProcess)
