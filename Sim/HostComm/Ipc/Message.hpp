@@ -16,9 +16,9 @@ public:
     MessageId Id() { return _Id; }
 
 public:
-    TData _Data;
-    void* _Payload;
-    U32 _PayloadSize;
+    TData Data;
+    void* Payload;
+    U32 PayloadSize;
 
 private:
     boost::interprocess::managed_shared_memory::handle_t _PayloadHandle;

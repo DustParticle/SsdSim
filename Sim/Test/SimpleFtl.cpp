@@ -67,15 +67,15 @@ TEST(SimpleFtl, Basic_WriteReadVerify)
     constexpr char* simpleFtlDll = "SimpleFtl.dll";
     auto messageDownloadAndExecute = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, 0, false);
     ASSERT_NE(messageDownloadAndExecute, nullptr);
-    messageDownloadAndExecute->_Data.Command = CustomProtocolCommand::Code::DownloadAndExecute;
-    memcpy(messageDownloadAndExecute->_Data.Descriptor.DownloadAndExecute.CodeName, simpleFtlDll,
-        sizeof(messageDownloadAndExecute->_Data.Descriptor.DownloadAndExecute.CodeName));
+    messageDownloadAndExecute->Data.Command = CustomProtocolCommand::Code::DownloadAndExecute;
+    memcpy(messageDownloadAndExecute->Data.Descriptor.DownloadAndExecute.CodeName, simpleFtlDll,
+        sizeof(messageDownloadAndExecute->Data.Descriptor.DownloadAndExecute.CodeName));
     clientCustomProtocolCmd->Push(messageDownloadAndExecute);
 
     //Get device info
     auto messageGetDeviceInfo = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, 0, true);
     ASSERT_NE(messageGetDeviceInfo, nullptr);
-    messageGetDeviceInfo->_Data.Command = CustomProtocolCommand::Code::GetDeviceInfo;
+    messageGetDeviceInfo->Data.Command = CustomProtocolCommand::Code::GetDeviceInfo;
     clientCustomProtocolCmd->Push(messageGetDeviceInfo);
 
     while (!clientCustomProtocolCmd->HasResponse());
@@ -84,17 +84,17 @@ TEST(SimpleFtl, Basic_WriteReadVerify)
     //Write a buffer with lba and sector count
     constexpr U32 lba = 123456;
     constexpr U32 sectorCount = 100;
-    U32 payloadSize = sectorCount * responseGetDeviceInfo->_Data.Descriptor.DeviceInfoPayload.BytesPerSector;
+    U32 payloadSize = sectorCount * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
     auto messageWrite = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, payloadSize, true);
     ASSERT_NE(messageWrite, nullptr);
-    ASSERT_NE(messageWrite->_Payload, nullptr);
+    ASSERT_NE(messageWrite->Payload, nullptr);
     for (U32 i(0); i < payloadSize; ++i)
     {
-        ((U8*)messageWrite->_Payload)[i] = i % 255;
+        ((U8*)messageWrite->Payload)[i] = i % 255;
     }
-    messageWrite->_Data.Command = CustomProtocolCommand::Code::Write;
-    messageWrite->_Data.Descriptor.SimpleFtlPayload.Lba = lba;
-    messageWrite->_Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+    messageWrite->Data.Command = CustomProtocolCommand::Code::Write;
+    messageWrite->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+    messageWrite->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
     clientCustomProtocolCmd->Push(messageWrite);
 
     //Wait for write command response
@@ -104,9 +104,9 @@ TEST(SimpleFtl, Basic_WriteReadVerify)
     //Read a buffer with lba and sector count
     auto messageRead = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, payloadSize, true);
     ASSERT_NE(messageRead, nullptr);
-    messageRead->_Data.Command = CustomProtocolCommand::Code::Read;
-    messageRead->_Data.Descriptor.SimpleFtlPayload.Lba = lba;
-    messageRead->_Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+    messageRead->Data.Command = CustomProtocolCommand::Code::Read;
+    messageRead->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+    messageRead->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
     clientCustomProtocolCmd->Push(messageRead);
 
     //Wait for read command response
@@ -114,7 +114,7 @@ TEST(SimpleFtl, Basic_WriteReadVerify)
     auto responseMessageRead = clientCustomProtocolCmd->PopResponse();
 
     //Get message read buffer to verify with the write buffer
-    auto result = std::memcmp(responseMessageWrite->_Payload, responseMessageRead->_Payload, payloadSize);
+    auto result = std::memcmp(responseMessageWrite->Payload, responseMessageRead->Payload, payloadSize);
 
     ASSERT_EQ(0, result);
 
@@ -132,7 +132,7 @@ TEST(SimpleFtl, Basic_WriteReadVerify)
 
     auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
     ASSERT_NE(message, nullptr);
-    message->_Data.Code = SimFrameworkCommand::Code::Exit;
+    message->Data.Code = SimFrameworkCommand::Code::Exit;
     client->Push(message);
 
     if (ShExecInfo.hProcess)
@@ -162,26 +162,26 @@ TEST(SimpleFtl, Basic_AscendingWriteReadVerifyAll)
     constexpr char* simpleFtlDll = "SimpleFtl.dll";
     auto messageDownloadAndExecute = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, 0, false);
     ASSERT_NE(messageDownloadAndExecute, nullptr);
-    messageDownloadAndExecute->_Data.Command = CustomProtocolCommand::Code::DownloadAndExecute;
-    memcpy(messageDownloadAndExecute->_Data.Descriptor.DownloadAndExecute.CodeName, simpleFtlDll,
-        sizeof(messageDownloadAndExecute->_Data.Descriptor.DownloadAndExecute.CodeName));
+    messageDownloadAndExecute->Data.Command = CustomProtocolCommand::Code::DownloadAndExecute;
+    memcpy(messageDownloadAndExecute->Data.Descriptor.DownloadAndExecute.CodeName, simpleFtlDll,
+        sizeof(messageDownloadAndExecute->Data.Descriptor.DownloadAndExecute.CodeName));
     clientCustomProtocolCmd->Push(messageDownloadAndExecute);
 
     //Get device info to get lba count
     auto messageGetDeviceInfo = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, 0, true);
     ASSERT_NE(messageGetDeviceInfo, nullptr);
-    messageGetDeviceInfo->_Data.Command = CustomProtocolCommand::Code::GetDeviceInfo;
+    messageGetDeviceInfo->Data.Command = CustomProtocolCommand::Code::GetDeviceInfo;
     clientCustomProtocolCmd->Push(messageGetDeviceInfo);
 
     while (!clientCustomProtocolCmd->HasResponse());
     auto responseGetDeviceInfo = clientCustomProtocolCmd->PopResponse();
-    U32 lbaCount = responseGetDeviceInfo->_Data.Descriptor.DeviceInfoPayload.LbaCount;
+    U32 lbaCount = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.LbaCount;
 
     constexpr U32 maxSectorPerTransfer = 256;
-    U32 payloadSize = maxSectorPerTransfer * responseGetDeviceInfo->_Data.Descriptor.DeviceInfoPayload.BytesPerSector;
+    U32 payloadSize = maxSectorPerTransfer * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
     auto messageWrite = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, payloadSize, true);
     ASSERT_NE(messageWrite, nullptr);
-    ASSERT_NE(messageWrite->_Payload, nullptr);
+    ASSERT_NE(messageWrite->Payload, nullptr);
     auto messageRead = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, payloadSize, true);
     ASSERT_NE(messageRead, nullptr);
 
@@ -193,20 +193,20 @@ TEST(SimpleFtl, Basic_AscendingWriteReadVerifyAll)
         //Fill write buffer
         for (U32 i(0); i < payloadSize; ++i)
         {
-            ((U8*)messageWrite->_Payload)[i] = i % 255;
+            ((U8*)messageWrite->Payload)[i] = i % 255;
         }
-        messageWrite->_Data.Command = CustomProtocolCommand::Code::Write;
-        messageWrite->_Data.Descriptor.SimpleFtlPayload.Lba = lba;
-        messageWrite->_Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+        messageWrite->Data.Command = CustomProtocolCommand::Code::Write;
+        messageWrite->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+        messageWrite->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
         clientCustomProtocolCmd->Push(messageWrite);
 
         //Wait for write command response
         while (!clientCustomProtocolCmd->HasResponse());
         auto responseMessageWrite = clientCustomProtocolCmd->PopResponse();
 
-        messageRead->_Data.Command = CustomProtocolCommand::Code::Read;
-        messageRead->_Data.Descriptor.SimpleFtlPayload.Lba = lba;
-        messageRead->_Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+        messageRead->Data.Command = CustomProtocolCommand::Code::Read;
+        messageRead->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+        messageRead->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
         clientCustomProtocolCmd->Push(messageRead);
 
         //Wait for read command response
@@ -214,9 +214,9 @@ TEST(SimpleFtl, Basic_AscendingWriteReadVerifyAll)
         auto responseMessageRead = clientCustomProtocolCmd->PopResponse();
 
         //Get message read buffer to verify with the write buffer
-        auto pReadData = clientCustomProtocolCmd->GetMessage(responseMessageRead->Id())->_Payload;
-        auto result = std::memcmp(responseMessageWrite->_Payload, pReadData,
-            sectorCount * responseGetDeviceInfo->_Data.Descriptor.DeviceInfoPayload.BytesPerSector);
+        auto pReadData = clientCustomProtocolCmd->GetMessage(responseMessageRead->Id())->Payload;
+        auto result = std::memcmp(responseMessageWrite->Payload, pReadData,
+            sectorCount * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector);
         ASSERT_EQ(0, result);
     }
 
@@ -227,7 +227,7 @@ TEST(SimpleFtl, Basic_AscendingWriteReadVerifyAll)
 
     auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
     ASSERT_NE(message, nullptr);
-    message->_Data.Code = SimFrameworkCommand::Code::Exit;
+    message->Data.Code = SimFrameworkCommand::Code::Exit;
     client->Push(message);
 
     //Give the Framework a chance to stop completely before next test
@@ -253,26 +253,26 @@ TEST(SimpleFtl, Basic_DescendingWriteReadVerifyAll)
     constexpr char* simpleFtlDll = "SimpleFtl.dll";
     auto messageDownloadAndExecute = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, 0, false);
     ASSERT_NE(messageDownloadAndExecute, nullptr);
-    messageDownloadAndExecute->_Data.Command = CustomProtocolCommand::Code::DownloadAndExecute;
-    memcpy(messageDownloadAndExecute->_Data.Descriptor.DownloadAndExecute.CodeName, simpleFtlDll,
-        sizeof(messageDownloadAndExecute->_Data.Descriptor.DownloadAndExecute.CodeName));
+    messageDownloadAndExecute->Data.Command = CustomProtocolCommand::Code::DownloadAndExecute;
+    memcpy(messageDownloadAndExecute->Data.Descriptor.DownloadAndExecute.CodeName, simpleFtlDll,
+        sizeof(messageDownloadAndExecute->Data.Descriptor.DownloadAndExecute.CodeName));
     clientCustomProtocolCmd->Push(messageDownloadAndExecute);
 
     //Get device info to get lba count
     auto messageGetDeviceInfo = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, 0, true);
     ASSERT_NE(messageGetDeviceInfo, nullptr);
-    messageGetDeviceInfo->_Data.Command = CustomProtocolCommand::Code::GetDeviceInfo;
+    messageGetDeviceInfo->Data.Command = CustomProtocolCommand::Code::GetDeviceInfo;
     clientCustomProtocolCmd->Push(messageGetDeviceInfo);
 
     while (!clientCustomProtocolCmd->HasResponse());
     auto responseGetDeviceInfo = clientCustomProtocolCmd->PopResponse();
-    U32 lbaCount = responseGetDeviceInfo->_Data.Descriptor.DeviceInfoPayload.LbaCount;
+    U32 lbaCount = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.LbaCount;
 
     constexpr U32 maxSectorPerTransfer = 256;
-    U32 payloadSize = maxSectorPerTransfer * responseGetDeviceInfo->_Data.Descriptor.DeviceInfoPayload.BytesPerSector;
+    U32 payloadSize = maxSectorPerTransfer * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
     auto messageWrite = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, payloadSize, true);
     ASSERT_NE(messageWrite, nullptr);
-    ASSERT_NE(messageWrite->_Payload, nullptr);
+    ASSERT_NE(messageWrite->Payload, nullptr);
     auto messageRead = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, payloadSize, true);
     ASSERT_NE(messageRead, nullptr);
 
@@ -293,20 +293,20 @@ TEST(SimpleFtl, Basic_DescendingWriteReadVerifyAll)
         //Fill write buffer
         for (U32 i(0); i < payloadSize; ++i)
         {
-            ((U8*)messageWrite->_Payload)[i] = i % 255;
+            ((U8*)messageWrite->Payload)[i] = i % 255;
         }
-        messageWrite->_Data.Command = CustomProtocolCommand::Code::Write;
-        messageWrite->_Data.Descriptor.SimpleFtlPayload.Lba = lba;
-        messageWrite->_Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+        messageWrite->Data.Command = CustomProtocolCommand::Code::Write;
+        messageWrite->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+        messageWrite->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
         clientCustomProtocolCmd->Push(messageWrite);
 
         //Wait for write command response
         while (!clientCustomProtocolCmd->HasResponse());
         auto responseMessageWrite = clientCustomProtocolCmd->PopResponse();
 
-        messageRead->_Data.Command = CustomProtocolCommand::Code::Read;
-        messageRead->_Data.Descriptor.SimpleFtlPayload.Lba = lba;
-        messageRead->_Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+        messageRead->Data.Command = CustomProtocolCommand::Code::Read;
+        messageRead->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+        messageRead->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
         clientCustomProtocolCmd->Push(messageRead);
 
         //Wait for read command response
@@ -314,9 +314,9 @@ TEST(SimpleFtl, Basic_DescendingWriteReadVerifyAll)
         auto responseMessageRead = clientCustomProtocolCmd->PopResponse();
 
         //Get message read buffer to verify with the write buffer
-        auto pReadData = clientCustomProtocolCmd->GetMessage(responseMessageRead->Id())->_Payload;
-        auto result = std::memcmp(responseMessageWrite->_Payload, pReadData,
-            sectorCount * responseGetDeviceInfo->_Data.Descriptor.DeviceInfoPayload.BytesPerSector);
+        auto pReadData = clientCustomProtocolCmd->GetMessage(responseMessageRead->Id())->Payload;
+        auto result = std::memcmp(responseMessageWrite->Payload, pReadData,
+            sectorCount * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector);
         ASSERT_EQ(0, result);
     }
 
@@ -327,7 +327,7 @@ TEST(SimpleFtl, Basic_DescendingWriteReadVerifyAll)
 
     auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
     ASSERT_NE(message, nullptr);
-    message->_Data.Code = SimFrameworkCommand::Code::Exit;
+    message->Data.Code = SimFrameworkCommand::Code::Exit;
     client->Push(message);
 
     //Give the Framework a chance to stop completely before next test
@@ -354,9 +354,9 @@ TEST(SimpleFtl, Basic_WriteReadBenchmark)
     constexpr char* simpleFtlDll = "SimpleFtl.dll";
     auto messageDownloadAndExecute = AllocateMessage<CustomProtocolCommand>(customClient, 0, false);
     ASSERT_NE(messageDownloadAndExecute, nullptr);
-    messageDownloadAndExecute->_Data.Command = CustomProtocolCommand::Code::DownloadAndExecute;
-    memcpy(messageDownloadAndExecute->_Data.Descriptor.DownloadAndExecute.CodeName, simpleFtlDll,
-        sizeof(messageDownloadAndExecute->_Data.Descriptor.DownloadAndExecute.CodeName));
+    messageDownloadAndExecute->Data.Command = CustomProtocolCommand::Code::DownloadAndExecute;
+    memcpy(messageDownloadAndExecute->Data.Descriptor.DownloadAndExecute.CodeName, simpleFtlDll,
+        sizeof(messageDownloadAndExecute->Data.Descriptor.DownloadAndExecute.CodeName));
     customClient->Push(messageDownloadAndExecute);
 
     using namespace std::chrono;
@@ -378,11 +378,11 @@ TEST(SimpleFtl, Basic_WriteReadBenchmark)
     std::map<U32, high_resolution_clock::time_point> t0s;
     for (auto i = 0; i < commandCount; ++i)
     {
-        messages[i]->_Data.Command = CustomProtocolCommand::Code::Write;
-        messages[i]->_Data.Descriptor.SimpleFtlPayload.Lba = lba;
-        messages[i]->_Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+        messages[i]->Data.Command = CustomProtocolCommand::Code::Write;
+        messages[i]->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+        messages[i]->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
         t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
-        memset(messages[i]->_Payload, 0xaa, messages[i]->_PayloadSize);
+        memset(messages[i]->Payload, 0xaa, messages[i]->PayloadSize);
         customClient->Push(messages[i]);
     }
 
@@ -395,7 +395,7 @@ TEST(SimpleFtl, Basic_WriteReadBenchmark)
 
             auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0s.find(messages[responseReceivedCount]->Id())->second);
             dataCmdTotalTime += deltaT;
-            totalBytesWrittenInSeconds += messages[responseReceivedCount]->_PayloadSize;
+            totalBytesWrittenInSeconds += messages[responseReceivedCount]->PayloadSize;
 
             responseReceivedCount++;
         }
@@ -409,9 +409,9 @@ TEST(SimpleFtl, Basic_WriteReadBenchmark)
     t0s.clear();
     for (auto i = 0; i < commandCount; ++i)
     {
-        messages[i]->_Data.Command = CustomProtocolCommand::Code::Read;
-        messages[i]->_Data.Descriptor.SimpleFtlPayload.Lba = lba;
-        messages[i]->_Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+        messages[i]->Data.Command = CustomProtocolCommand::Code::Read;
+        messages[i]->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+        messages[i]->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
         t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
         customClient->Push(messages[i]);
     }
@@ -425,7 +425,7 @@ TEST(SimpleFtl, Basic_WriteReadBenchmark)
 
             auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0s.find(messages[responseReceivedCount]->Id())->second);
             dataCmdTotalTime += deltaT;
-            totalBytesReadInSeconds += messages[responseReceivedCount]->_PayloadSize;
+            totalBytesReadInSeconds += messages[responseReceivedCount]->PayloadSize;
 
             responseReceivedCount++;
         }
@@ -449,7 +449,7 @@ TEST(SimpleFtl, Basic_WriteReadBenchmark)
 
     auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
     ASSERT_NE(message, nullptr);
-    message->_Data.Code = SimFrameworkCommand::Code::Exit;
+    message->Data.Code = SimFrameworkCommand::Code::Exit;
     client->Push(message);
 
     //Give the Framework a chance to stop completely before next test

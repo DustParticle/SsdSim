@@ -150,7 +150,7 @@ void Framework::operator()()
 				{
                     Message<SimFrameworkCommand>* message = _SimServer->Pop();
 
-					switch (message->_Data.Code)
+					switch (message->Data.Code)
 					{
                         case SimFrameworkCommand::Code::Exit:
                         {
@@ -160,15 +160,15 @@ void Framework::operator()()
 						case SimFrameworkCommand::Code::DataOutLoopback:
 						{
 							//Get data from host
-							auto buffer = std::make_unique<U8[]>(message->_PayloadSize);
-							memcpy_s(buffer.get(), message->_PayloadSize, message->_Payload, message->_PayloadSize);
+							auto buffer = std::make_unique<U8[]>(message->PayloadSize);
+							memcpy_s(buffer.get(), message->PayloadSize, message->Payload, message->PayloadSize);
 							_SimServer->PushResponse(message->Id());
 						} break;
 						case SimFrameworkCommand::Code::DataInLoopback:
 						{
 							//Send data to host
-							auto buffer = std::make_unique<U8[]>(message->_PayloadSize);
-							memcpy_s(message->_Payload, message->_PayloadSize, buffer.get(), message->_PayloadSize);
+							auto buffer = std::make_unique<U8[]>(message->PayloadSize);
+							memcpy_s(message->Payload, message->PayloadSize, buffer.get(), message->PayloadSize);
 							_SimServer->PushResponse(message->Id());
 						} break;
 					}
