@@ -14,6 +14,7 @@ NandHal::Geometry _Geometry;
 U32 _LbaCount;
 U32 _LbasPerPage;
 U32 _SectorSizeInBytes = 512;
+U8 _SectorsPerPage;
 
 extern "C"
 {
@@ -118,6 +119,7 @@ extern "C"
         _Geometry = nandHal->GetGeometry();
         _LbasPerPage = _Geometry._BytesPerPage >> 9;
         _LbaCount = _Geometry._ChannelCount * _Geometry._DevicesPerChannel * _Geometry._BlocksPerDevice * _Geometry._PagesPerBlock * _LbasPerPage;
+		_SectorsPerPage = _Geometry._BytesPerPage / _SectorSizeInBytes;
     }
 
     void __declspec(dllexport) __stdcall Execute()
@@ -135,6 +137,10 @@ extern "C"
 
                     _CustomProtocolInterface->SubmitResponse(command);
                 } break;
+				case CustomProtocolCommand::Code::LoopbackWrite:
+				{
+					_CustomProtocolInterface->SubmitResponse(command);
+				} break;
                 case CustomProtocolCommand::Code::Read:
                 {
                     //Read command from nand
@@ -142,10 +148,15 @@ extern "C"
 
                     _CustomProtocolInterface->SubmitResponse(command);
                 } break;
+				case CustomProtocolCommand::Code::LoopbackRead:
+				{
+					_CustomProtocolInterface->SubmitResponse(command);
+				} break;
                 case CustomProtocolCommand::Code::GetDeviceInfo:
                 {
                     command->Descriptor.DeviceInfoPayload.LbaCount = _LbaCount;
                     command->Descriptor.DeviceInfoPayload.BytesPerSector = _SectorSizeInBytes;
+					command->Descriptor.DeviceInfoPayload.SectorsPerPage = _SectorsPerPage;
 
                     _CustomProtocolInterface->SubmitResponse(command);
                 } break;

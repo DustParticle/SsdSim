@@ -29,6 +29,7 @@ struct DeviceInfoPayload
 {
     U32 LbaCount;
     U32 BytesPerSector;
+	U8	SectorsPerPage;
 };
 
 union CustomProtocolCommandDescriptor
@@ -49,7 +50,9 @@ struct CustomProtocolCommand
         BenchmarkStart,
         BenchmarkEnd,
         Write,
+		LoopbackWrite,
         Read,
+		LoopbackRead,
         GetDeviceInfo,
         Nop
     };
