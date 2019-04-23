@@ -5,14 +5,20 @@
 #include <functional>
 
 #include "HostComm/CustomProtocol/CustomProtocolInterface.h"
+#include "Nand/Hal/NandHal.h"
 
 std::function<bool(std::string)> _SetExecuteFunc;
-std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>();
+std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
 
 extern "C"
 {
     void __declspec(dllexport) __stdcall Execute()
     {
+        if (_CustomProtocolInterface == nullptr)
+        {
+            throw "CustomProtocol is null";
+        }
+
         if (_CustomProtocolInterface->HasCommand())
         {
             CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
@@ -36,6 +42,11 @@ extern "C"
                 } break;
             }
         }
+    }
+
+    void __declspec(dllexport) __stdcall SetCustomProtocolIpcName(const std::string& protocolIpcName)
+    {
+        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>(protocolIpcName.c_str());
     }
 
     void __declspec(dllexport) __stdcall SetExecuteCallback(std::function<bool(std::string)> setExecuteFunc)

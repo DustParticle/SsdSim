@@ -5,6 +5,8 @@
 #include "HostComm/Ipc/Message.hpp"
 #include "HostComm/CustomProtocol/CustomProtocolCommand.h"
 
+constexpr U32 MaxIpcServer = 10;
+
 Framework::Framework() :
 	_State(State::Start)
 {
@@ -12,7 +14,7 @@ Framework::Framework() :
     _FirmwareCore = std::make_shared<FirmwareCore>();
 }
 
-void Framework::Init(const std::string& configFileName)
+void Framework::Init(const std::string& configFileName, std::string ipcNamesPrefix)
 {
 	JSONParser parser;
 	try
@@ -27,8 +29,45 @@ void Framework::Init(const std::string& configFileName)
 	SetupNandHal(parser);
 	GetFirmwareCoreInfo(parser);
 
-    _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>("SsdSimMainMessageServer", 8 * 1024 * 1024);
-    _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>("SsdSimCustomProtocolServer", 8 * 1024 * 1024);
+    std::string simServerIpcName;
+    std::string customProtocolIpcName;
+    if (ipcNamesPrefix.empty())
+    {
+        simServerIpcName = "SsdSimMainMessageServer";
+        customProtocolIpcName = "SsdSimCustomProtocolServer";
+        _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(simServerIpcName.c_str(), 8 * 1024 * 1024, true);
+        _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(customProtocolIpcName.c_str(), 8 * 1024 * 1024, true);
+    }
+    else
+    {
+        U32 serverId = 0;
+        while(serverId < MaxIpcServer)
+        {
+            try
+            {
+                simServerIpcName = ipcNamesPrefix + "MainMessageServer" + std::to_string(serverId);
+                customProtocolIpcName = ipcNamesPrefix + "CustomProtocolServer" + std::to_string(serverId);
+                _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(simServerIpcName.c_str(), 8 * 1024 * 1024);
+                _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(customProtocolIpcName.c_str(), 8 * 1024 * 1024);
+            }
+            catch (...)
+            {
+                // try next id
+                serverId++;
+                continue;
+            }
+
+            // found the available ipc servers
+            break;
+        }
+
+        if (serverId == MaxIpcServer)
+        {
+            throw Exception("Failed to create ipc servers");
+        }
+    }
+
+    _FirmwareCore->SetIpcNames(customProtocolIpcName);
 }
 
 void Framework::SetupNandHal(JSONParser& parser)

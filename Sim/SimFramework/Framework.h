@@ -40,7 +40,7 @@ public:
 
 public:
 	Framework();
-	void Init(const std::string& nandConfigFilename);
+	void Init(const std::string& nandConfigFilename, std::string ipcNamesPrefix = "");
 
 public:
 	void operator()();

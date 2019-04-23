@@ -7,6 +7,7 @@ HMODULE _DllInstance;
 HMODULE _NewDllInstance;
 
 typedef void(__stdcall *fInitialize)(std::shared_ptr<NandHal> nandHal);
+typedef void(__stdcall *fSetIpcName)(const std::string& ipcName);
 typedef void(__stdcall *fExecute)();
 typedef void(__stdcall *fExecuteCallback)(std::function<bool(std::string)> callback);
 
@@ -30,6 +31,13 @@ bool FirmwareCore::SetExecute(std::string Filename)
     if (initialize)
     {
         initialize(_NandHal);
+    }
+
+    // search the SetIpcName functions and execute
+    auto setIpcName = (fSetIpcName)GetProcAddress(_NewDllInstance, "SetCustomProtocolIpcName");
+    if (setIpcName)
+    {
+        setIpcName(_CustomProtocolIpcName);
     }
 
     // resolve function address here
@@ -97,4 +105,9 @@ void FirmwareCore::SwapExecute()
 void FirmwareCore::LinkNandHal(std::shared_ptr<NandHal> nandHal)
 {
     _NandHal = nandHal;
+}
+
+void FirmwareCore::SetIpcNames(const std::string& customProtocolIpcName)
+{
+    _CustomProtocolIpcName = customProtocolIpcName;
 }

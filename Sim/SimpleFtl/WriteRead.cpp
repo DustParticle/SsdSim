@@ -8,7 +8,7 @@
 #include "HostComm/CustomProtocol/CustomProtocolInterface.h"
 #include "Nand/Hal/NandHal.h"
 
-std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>();
+std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
 std::shared_ptr<NandHal> _NandHal;
 NandHal::Geometry _Geometry;
 U32 _LbaCount;
@@ -124,6 +124,11 @@ extern "C"
 
     void __declspec(dllexport) __stdcall Execute()
     {
+        if (_CustomProtocolInterface == nullptr)
+        {
+            throw "CustomProtocol is null";
+        }
+
         if (_CustomProtocolInterface->HasCommand())
         {
             CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
@@ -162,5 +167,10 @@ extern "C"
                 } break;
             }
         }
+    }
+
+    void __declspec(dllexport) __stdcall SetCustomProtocolIpcName(const std::string& protocolIpcName)
+    {
+        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>(protocolIpcName.c_str());
     }
 };
