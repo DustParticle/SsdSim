@@ -35,6 +35,14 @@ public:
     inline Geometry GetGeometry() const { return _Geometry; }
 
 public:
+    struct NandAddress
+    {
+        tChannel Channel;
+        tDeviceInChannel Device;
+        tBlockInDevice Block;
+        tPageInBlock Page;
+    };
+
 	struct CommandDesc
 	{
 		enum class Op
@@ -44,11 +52,8 @@ public:
 			ERASE
 		};
 
+        NandAddress Address;
 		Op	Operation;
-		tChannel Channel;
-		tDeviceInChannel Device;
-		tBlockInDevice Block;
-		tPageInBlock Page;
 		U8* Buffer;
 	};
 

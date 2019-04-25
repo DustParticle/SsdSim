@@ -27,7 +27,7 @@ struct SimpleFtlPayload
 
 struct DeviceInfoPayload
 {
-    U32 LbaCount;
+    U32 TotalSector;
     U32 BytesPerSector;
 	U8	SectorsPerPage;
 };

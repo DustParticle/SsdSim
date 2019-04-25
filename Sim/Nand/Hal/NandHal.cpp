@@ -57,19 +57,20 @@ void NandHal::Run()
 	if (_CommandQueue->empty() == false)
 	{
 		CommandDesc& command = _CommandQueue->front();
+        NandAddress& address = command.Address;
 		switch (command.Operation)
 		{
 			case CommandDesc::Op::READ:
 			{
-				ReadPage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
+				ReadPage(address.Channel, address.Device, address.Block, address.Page, command.Buffer);
 			}break;
 			case CommandDesc::Op::WRITE:
 			{
-				WritePage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
+				WritePage(address.Channel, address.Device, address.Block, address.Page, command.Buffer);
 			}break;
 			case CommandDesc::Op::ERASE:
 			{
-				EraseBlock(command.Channel, command.Device, command.Block);
+				EraseBlock(address.Channel, address.Device, address.Block);
 			}break;
 		}
 		_CommandQueue->pop();

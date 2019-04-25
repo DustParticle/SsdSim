@@ -1,0 +1,355 @@
+diff --git a/Sim/HostComm/CustomProtocol/CustomProtocolCommand.h b/Sim/HostComm/CustomProtocol/CustomProtocolCommand.h
+index 4c5ffd0..727090a 100644
+--- a/Sim/HostComm/CustomProtocol/CustomProtocolCommand.h
++++ b/Sim/HostComm/CustomProtocol/CustomProtocolCommand.h
+@@ -27,7 +27,7 @@ struct SimpleFtlPayload
+ 
+ struct DeviceInfoPayload
+ {
+-    U32 LbaCount;
++    U32 TotalSector;
+     U32 BytesPerSector;
+ 	U8	SectorsPerPage;
+ };
+diff --git a/Sim/Nand/Hal/NandHal.cpp b/Sim/Nand/Hal/NandHal.cpp
+index 3f437d2..75f4d2e 100644
+--- a/Sim/Nand/Hal/NandHal.cpp
++++ b/Sim/Nand/Hal/NandHal.cpp
+@@ -57,19 +57,20 @@ void NandHal::Run()
+ 	if (_CommandQueue->empty() == false)
+ 	{
+ 		CommandDesc& command = _CommandQueue->front();
++        NandAddress& address = command.Address;
+ 		switch (command.Operation)
+ 		{
+ 			case CommandDesc::Op::READ:
+ 			{
+-				ReadPage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
++				ReadPage(address.Channel, address.Device, address.Block, address.Page, command.Buffer);
+ 			}break;
+ 			case CommandDesc::Op::WRITE:
+ 			{
+-				WritePage(command.Channel, command.Device, command.Block, command.Page, command.Buffer);
++				WritePage(address.Channel, address.Device, address.Block, address.Page, command.Buffer);
+ 			}break;
+ 			case CommandDesc::Op::ERASE:
+ 			{
+-				EraseBlock(command.Channel, command.Device, command.Block);
++				EraseBlock(address.Channel, address.Device, address.Block);
+ 			}break;
+ 		}
+ 		_CommandQueue->pop();
+diff --git a/Sim/Nand/Hal/NandHal.h b/Sim/Nand/Hal/NandHal.h
+index 0fdd10c..1bbd6c8 100644
+--- a/Sim/Nand/Hal/NandHal.h
++++ b/Sim/Nand/Hal/NandHal.h
+@@ -35,6 +35,14 @@ public:
+     inline Geometry GetGeometry() const { return _Geometry; }
+ 
+ public:
++    struct NandAddress
++    {
++        tChannel Channel;
++        tDeviceInChannel Device;
++        tBlockInDevice Block;
++        tPageInBlock Page;
++    };
++
+ 	struct CommandDesc
+ 	{
+ 		enum class Op
+@@ -44,11 +52,8 @@ public:
+ 			ERASE
+ 		};
+ 
++        NandAddress Address;
+ 		Op	Operation;
+-		tChannel Channel;
+-		tDeviceInChannel Device;
+-		tBlockInDevice Block;
+-		tPageInBlock Page;
+ 		U8* Buffer;
+ 	};
+ 
+diff --git a/Sim/SimpleFtl/Translation.h b/Sim/SimpleFtl/Translation.h
+index f7cd6ac..8463a96 100644
+--- a/Sim/SimpleFtl/Translation.h
++++ b/Sim/SimpleFtl/Translation.h
+@@ -5,13 +5,13 @@
+ 
+ namespace SimpleFtlTranslation
+ {
+-    inline void LbaToNandAddress(const NandHal::Geometry &geometry, const U32 &lba, NandHal::CommandDesc &commandDesc)
++    inline void LbaToNandAddress(const NandHal::Geometry &geometry, const U32 &lba, NandHal::NandAddress &nandAddress)
+     {
+         U32 pageIndex = lba / (geometry._BytesPerPage >> 9);
+-        commandDesc.Channel._ = pageIndex % geometry._ChannelCount;
+-        commandDesc.Device._ = (pageIndex / geometry._ChannelCount) % geometry._DevicesPerChannel;
+-        commandDesc.Page._ = ((pageIndex / geometry._ChannelCount) / geometry._DevicesPerChannel) % geometry._PagesPerBlock;
+-        commandDesc.Block._ = (((pageIndex / geometry._ChannelCount) / geometry._DevicesPerChannel) / geometry._PagesPerBlock);
++        nandAddress.Channel._ = pageIndex % geometry._ChannelCount;
++        nandAddress.Device._ = (pageIndex / geometry._ChannelCount) % geometry._DevicesPerChannel;
++        nandAddress.Page._ = ((pageIndex / geometry._ChannelCount) / geometry._DevicesPerChannel) % geometry._PagesPerBlock;
++        nandAddress.Block._ = (((pageIndex / geometry._ChannelCount) / geometry._DevicesPerChannel) / geometry._PagesPerBlock);
+     }
+ }
+ 
+diff --git a/Sim/SimpleFtl/WriteRead.cpp b/Sim/SimpleFtl/WriteRead.cpp
+index 4616816..837d776 100644
+--- a/Sim/SimpleFtl/WriteRead.cpp
++++ b/Sim/SimpleFtl/WriteRead.cpp
+@@ -8,12 +8,12 @@
+ #include "HostComm/CustomProtocol/CustomProtocolInterface.h"
+ #include "Nand/Hal/NandHal.h"
+ 
++constexpr U32 _SectorSizeInBytes = 512;
++
+ std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
+ std::shared_ptr<NandHal> _NandHal;
+ NandHal::Geometry _Geometry;
+-U32 _LbaCount;
+-U32 _LbasPerPage;
+-U32 _SectorSizeInBytes = 512;
++U32 _TotalSectors;
+ U8 _SectorsPerPage;
+ 
+ extern "C"
+@@ -24,16 +24,37 @@ extern "C"
+         commandDesc.Buffer = buffer;
+ 
+         //Translate from LBA to NAND address
+-        SimpleFtlTranslation::LbaToNandAddress(_Geometry, lba, commandDesc);
++        SimpleFtlTranslation::LbaToNandAddress(_Geometry, lba, commandDesc.Address);
+     }
+ 
+     U32 CalculateTransferPageCount(U32 sectorCount)
+     {
+-        U32 transferPageCount = (sectorCount / _LbasPerPage);
+-        transferPageCount += (0 < (sectorCount % _LbasPerPage) ? 1 : 0);
++        U32 transferPageCount = (sectorCount / _SectorsPerPage);
++        transferPageCount += (0 < (sectorCount % _SectorsPerPage) ? 1 : 0);
+         return transferPageCount;
+     }
+ 
++    void ReadPage(NandHal::CommandDesc &commandDesc, U32 lba, U8 *outBuffer, U8 startSectorIndex, U8 sectorToRead)
++    {
++        if (startSectorIndex + sectorToRead < _SectorsPerPage)
++        {
++            throw "Out of bound";
++        }
++
++        // Create Nand command
++        commandDesc.Operation = NandHal::CommandDesc::Op::READ;
++        SimpleFtlTranslation::LbaToNandAddress(_Geometry, lba, commandDesc.Address);
++
++        // Submit to the NandHal
++        _NandHal->QueueCommand(commandDesc);
++
++        // Wait for nand command completed
++        while (!_NandHal->IsCommandQueueEmpty());
++
++        // Copy read page buffer to buffer
++        memcpy(outBuffer, commandDesc.Buffer + (startSectorIndex * _SectorSizeInBytes), sectorToRead * _SectorSizeInBytes);
++    }
++
+     void WriteToNand(CustomProtocolCommand *command)
+     {
+         NandHal::CommandDesc commandDesc;
+@@ -68,7 +89,7 @@ extern "C"
+             while (!_NandHal->IsCommandQueueEmpty());
+ 
+             //Update next lba and buffer offset
+-            lba += _LbasPerPage;
++            lba += _SectorsPerPage;
+             bufferOffset += _Geometry._BytesPerPage;
+         }
+     }
+@@ -81,35 +102,28 @@ extern "C"
+         U32 bufferSizeInBytes = 0;
+         auto buffer = _CustomProtocolInterface->GetBuffer(command, bufferSizeInBytes);
+         auto readBuffer = std::make_unique<U8[]>(_Geometry._BytesPerPage);
+-        U32 bufferOffset = 0;
+-
+-        //Calculate number of pages to loop write per page
+-        U32 readPageCount = CalculateTransferPageCount(sectorCount);
+-        for (U32 count(0); count < readPageCount; ++count)
+-        {
+-            //Create Nand command
+-            CreateNandCommand(lba, readBuffer.get(), NandHal::CommandDesc::Op::READ, commandDesc);
+ 
+-            //Submit to the NandHal
+-            _NandHal->QueueCommand(commandDesc);
+-
+-            //Wait for nand command completed
+-            while (!_NandHal->IsCommandQueueEmpty());
++        U32 alignedStartLba = (lba / _SectorsPerPage) * _SectorsPerPage;
++        U8 readSectorIndex = lba - alignedStartLba;
++        lba = alignedStartLba;
+ 
+-            // Copy read page buffer to buffer
+-            if (bufferOffset + _Geometry._BytesPerPage <= bufferSizeInBytes)
+-            {
+-                memcpy_s(buffer + bufferOffset, _Geometry._BytesPerPage, readBuffer.get(), _Geometry._BytesPerPage);
+-            }
+-            else
++        U32 remainingSectors = sectorCount;
++        while (remainingSectors > 0)
++        {
++            U8 sectorToRead = _SectorsPerPage - readSectorIndex;
++            if (sectorToRead > remainingSectors)
+             {
+-                auto remainingSizeInBytes = bufferSizeInBytes - bufferOffset;
+-                memcpy_s(buffer + bufferOffset, remainingSizeInBytes, readBuffer.get(), remainingSizeInBytes);
++                sectorToRead = remainingSectors;
+             }
+ 
+-            //Update next lba and buffer offset
+-            lba += _LbasPerPage;
+-            bufferOffset += _Geometry._BytesPerPage;
++            ReadPage(commandDesc, lba, buffer, readSectorIndex, sectorToRead);
++
++            buffer += (sectorToRead * _SectorSizeInBytes);
++            remainingSectors -= sectorToRead;
++            lba += sectorToRead;
++
++            // read from the beginning of the page since next command
++            readSectorIndex = 0;
+         }
+     }
+ 
+@@ -117,9 +131,8 @@ extern "C"
+     {
+         _NandHal = nandHal;
+         _Geometry = nandHal->GetGeometry();
+-        _LbasPerPage = _Geometry._BytesPerPage >> 9;
+-        _LbaCount = _Geometry._ChannelCount * _Geometry._DevicesPerChannel * _Geometry._BlocksPerDevice * _Geometry._PagesPerBlock * _LbasPerPage;
+-		_SectorsPerPage = _Geometry._BytesPerPage / _SectorSizeInBytes;
++        _SectorsPerPage = _Geometry._BytesPerPage / _SectorSizeInBytes;
++        _TotalSectors = _Geometry._ChannelCount * _Geometry._DevicesPerChannel * _Geometry._BlocksPerDevice * _Geometry._PagesPerBlock * _SectorsPerPage;
+     }
+ 
+     void __declspec(dllexport) __stdcall Execute()
+@@ -159,7 +172,7 @@ extern "C"
+ 				} break;
+                 case CustomProtocolCommand::Code::GetDeviceInfo:
+                 {
+-                    command->Descriptor.DeviceInfoPayload.LbaCount = _LbaCount;
++                    command->Descriptor.DeviceInfoPayload.TotalSector = _TotalSectors;
+                     command->Descriptor.DeviceInfoPayload.BytesPerSector = _SectorSizeInBytes;
+ 					command->Descriptor.DeviceInfoPayload.SectorsPerPage = _SectorsPerPage;
+ 
+diff --git a/Sim/Test/Nand.cpp b/Sim/Test/Nand.cpp
+index d434145..23f542c 100644
+--- a/Sim/Test/Nand.cpp
++++ b/Sim/Test/Nand.cpp
+@@ -135,10 +135,11 @@ TEST(NandHal, Basic_CommandQueue)
+ 	nandHalFuture = std::async(std::launch::async, &NandHal::operator(), &nandHal);
+ 
+ 	NandHal::CommandDesc commandDesc;
+-	commandDesc.Channel._ = 0;
+-	commandDesc.Device._ = 0;
+-	commandDesc.Block._ = 0;
+-	commandDesc.Page._ = 0;
++    NandHal::NandAddress& address = commandDesc.Address;
++	address.Channel._ = 0;
++	address.Device._ = 0;
++	address.Block._ = 0;
++	address.Page._ = 0;
+ 	for (auto c(0); c < commandCount;)
+ 	{
+ 		for (auto i(0); i < bufferCount; ++i, ++c)
+@@ -151,17 +152,17 @@ TEST(NandHal, Basic_CommandQueue)
+ 			commandDesc.Buffer = readBuffers[i];
+ 			nandHal.QueueCommand(commandDesc);
+ 
+-			if (++commandDesc.Channel._ >= channels)
++			if (++address.Channel._ >= channels)
+ 			{
+-				commandDesc.Channel._ = 0;
+-				if (++commandDesc.Device._ >= devices)
++                address.Channel._ = 0;
++				if (++address.Device._ >= devices)
+ 				{
+-					commandDesc.Device._ = 0;
+-					if (++commandDesc.Page._ >= pages)
++                    address.Device._ = 0;
++					if (++address.Page._ >= pages)
+ 					{
+-						commandDesc.Page._ = 0;
+-						assert(commandDesc.Block._ < blocks);	//let's not go pass this boundary
+-						++commandDesc.Block._;
++                        address.Page._ = 0;
++						assert(address.Block._ < blocks);	//let's not go pass this boundary
++						++address.Block._;
+ 					}
+ 				}
+ 			}
+diff --git a/Sim/Test/SimpleFtl.cpp b/Sim/Test/SimpleFtl.cpp
+index 231417e..dc0951a 100644
+--- a/Sim/Test/SimpleFtl.cpp
++++ b/Sim/Test/SimpleFtl.cpp
+@@ -92,11 +92,11 @@ TEST(SimpleFtl, Translation_LbaToNand)
+             {
+                 for (U32 channel(0); channel < geometry._ChannelCount; ++channel)
+                 {
+-                    SimpleFtlTranslation::LbaToNandAddress(geometry, lba, cmdDesc);
+-                    ASSERT_EQ(cmdDesc.Channel._, channel);
+-                    ASSERT_EQ(cmdDesc.Device._, device);
+-                    ASSERT_EQ(cmdDesc.Page._, page);
+-                    ASSERT_EQ(cmdDesc.Block._, block);
++                    SimpleFtlTranslation::LbaToNandAddress(geometry, lba, cmdDesc.Address);
++                    ASSERT_EQ(cmdDesc.Address.Channel._, channel);
++                    ASSERT_EQ(cmdDesc.Address.Device._, device);
++                    ASSERT_EQ(cmdDesc.Address.Page._, page);
++                    ASSERT_EQ(cmdDesc.Address.Block._, block);
+                     lba += (geometry._BytesPerPage >> 9);
+                 }
+             }
+@@ -234,7 +234,7 @@ TEST(SimpleFtl, Basic_AscendingWriteReadVerifyAll)
+ 
+     while (!clientCustomProtocolCmd->HasResponse());
+     auto responseGetDeviceInfo = clientCustomProtocolCmd->PopResponse();
+-    U32 lbaCount = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.LbaCount;
++    U32 totalSector = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.TotalSector;
+ 
+     constexpr U32 maxSectorPerTransfer = 256;
+     U32 payloadSize = maxSectorPerTransfer * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
+@@ -246,9 +246,9 @@ TEST(SimpleFtl, Basic_AscendingWriteReadVerifyAll)
+ 
+     //Write and read to verify all written data in ascending order
+     U32 sectorCount;
+-    for (U32 lba(0); lba < lbaCount; lba += maxSectorPerTransfer)
++    for (U32 lba(0); lba < totalSector; lba += maxSectorPerTransfer)
+     {
+-        sectorCount = std::min(maxSectorPerTransfer, lbaCount - lba);
++        sectorCount = std::min(maxSectorPerTransfer, totalSector - lba);
+         //Fill write buffer
+         for (U32 i(0); i < payloadSize; ++i)
+         {
+@@ -325,7 +325,7 @@ TEST(SimpleFtl, Basic_DescendingWriteReadVerifyAll)
+ 
+     while (!clientCustomProtocolCmd->HasResponse());
+     auto responseGetDeviceInfo = clientCustomProtocolCmd->PopResponse();
+-    U32 lbaCount = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.LbaCount;
++    U32 totalSector = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.TotalSector;
+ 
+     constexpr U32 maxSectorPerTransfer = 256;
+     U32 payloadSize = maxSectorPerTransfer * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
+@@ -337,7 +337,7 @@ TEST(SimpleFtl, Basic_DescendingWriteReadVerifyAll)
+ 
+     //Write and read to verify all written data in descending order
+     U32 sectorCount;
+-    for (U32 lba(lbaCount); lba > 0; )
++    for (U32 lba(totalSector); lba > 0; )
+     {
+         if (lba > maxSectorPerTransfer)
+         {
+@@ -572,7 +572,7 @@ TEST_F(SimpleFtlTest, BasicRepeatedWriteReadVerify)
+ 	U32 bytesPerSector = DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
+ 	U32 payloadSize = sectorCount * bytesPerSector;
+ 
+-	ASSERT_EQ(DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.LbaCount >= sectorCount, true);
++	ASSERT_EQ(DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.TotalSector >= sectorCount, true);
+ 
+ 	auto writeMessage = AllocateMessage<CustomProtocolCommand>(CustomProtocolClient, payloadSize, true);
+ 	ASSERT_NE(writeMessage, nullptr);

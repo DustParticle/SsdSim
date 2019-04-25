@@ -92,11 +92,11 @@ TEST(SimpleFtl, Translation_LbaToNand)
             {
                 for (U32 channel(0); channel < geometry._ChannelCount; ++channel)
                 {
-                    SimpleFtlTranslation::LbaToNandAddress(geometry, lba, cmdDesc);
-                    ASSERT_EQ(cmdDesc.Channel._, channel);
-                    ASSERT_EQ(cmdDesc.Device._, device);
-                    ASSERT_EQ(cmdDesc.Page._, page);
-                    ASSERT_EQ(cmdDesc.Block._, block);
+                    SimpleFtlTranslation::LbaToNandAddress(geometry, lba, cmdDesc.Address);
+                    ASSERT_EQ(cmdDesc.Address.Channel._, channel);
+                    ASSERT_EQ(cmdDesc.Address.Device._, device);
+                    ASSERT_EQ(cmdDesc.Address.Page._, page);
+                    ASSERT_EQ(cmdDesc.Address.Block._, block);
                     lba += (geometry._BytesPerPage >> 9);
                 }
             }
@@ -234,7 +234,7 @@ TEST(SimpleFtl, Basic_AscendingWriteReadVerifyAll)
 
     while (!clientCustomProtocolCmd->HasResponse());
     auto responseGetDeviceInfo = clientCustomProtocolCmd->PopResponse();
-    U32 lbaCount = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.LbaCount;
+    U32 totalSector = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.TotalSector;
 
     constexpr U32 maxSectorPerTransfer = 256;
     U32 payloadSize = maxSectorPerTransfer * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
@@ -246,9 +246,9 @@ TEST(SimpleFtl, Basic_AscendingWriteReadVerifyAll)
 
     //Write and read to verify all written data in ascending order
     U32 sectorCount;
-    for (U32 lba(0); lba < lbaCount; lba += maxSectorPerTransfer)
+    for (U32 lba(0); lba < totalSector; lba += maxSectorPerTransfer)
     {
-        sectorCount = std::min(maxSectorPerTransfer, lbaCount - lba);
+        sectorCount = std::min(maxSectorPerTransfer, totalSector - lba);
         //Fill write buffer
         for (U32 i(0); i < payloadSize; ++i)
         {
@@ -325,7 +325,7 @@ TEST(SimpleFtl, Basic_DescendingWriteReadVerifyAll)
 
     while (!clientCustomProtocolCmd->HasResponse());
     auto responseGetDeviceInfo = clientCustomProtocolCmd->PopResponse();
-    U32 lbaCount = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.LbaCount;
+    U32 totalSector = responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.TotalSector;
 
     constexpr U32 maxSectorPerTransfer = 256;
     U32 payloadSize = maxSectorPerTransfer * responseGetDeviceInfo->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
@@ -337,7 +337,7 @@ TEST(SimpleFtl, Basic_DescendingWriteReadVerifyAll)
 
     //Write and read to verify all written data in descending order
     U32 sectorCount;
-    for (U32 lba(lbaCount); lba > 0; )
+    for (U32 lba(totalSector); lba > 0; )
     {
         if (lba > maxSectorPerTransfer)
         {
@@ -572,7 +572,7 @@ TEST_F(SimpleFtlTest, BasicRepeatedWriteReadVerify)
 	U32 bytesPerSector = DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
 	U32 payloadSize = sectorCount * bytesPerSector;
 
-	ASSERT_EQ(DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.LbaCount >= sectorCount, true);
+	ASSERT_EQ(DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.TotalSector >= sectorCount, true);
 
 	auto writeMessage = AllocateMessage<CustomProtocolCommand>(CustomProtocolClient, payloadSize, true);
 	ASSERT_NE(writeMessage, nullptr);
