@@ -35,8 +35,8 @@ void Framework::Init(const std::string& configFileName, std::string ipcNamesPref
     {
         simServerIpcName = "SsdSimMainMessageServer";
         customProtocolIpcName = "SsdSimCustomProtocolServer";
-        _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(simServerIpcName.c_str(), 8 * 1024 * 1024, true);
-        _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(customProtocolIpcName.c_str(), 8 * 1024 * 1024, true);
+        _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(simServerIpcName.c_str(), 8 * 1024 * 1024);
+        _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(customProtocolIpcName.c_str(), 8 * 1024 * 1024);
     }
     else
     {
@@ -47,8 +47,8 @@ void Framework::Init(const std::string& configFileName, std::string ipcNamesPref
             {
                 simServerIpcName = ipcNamesPrefix + "MainMessageServer" + std::to_string(serverId);
                 customProtocolIpcName = ipcNamesPrefix + "CustomProtocolServer" + std::to_string(serverId);
-                _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(simServerIpcName.c_str(), 8 * 1024 * 1024);
-                _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(customProtocolIpcName.c_str(), 8 * 1024 * 1024);
+                _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(simServerIpcName.c_str(), 8 * 1024 * 1024, false);
+                _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(customProtocolIpcName.c_str(), 8 * 1024 * 1024, false);
             }
             catch (...)
             {

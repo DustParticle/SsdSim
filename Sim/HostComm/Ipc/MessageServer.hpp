@@ -33,7 +33,7 @@ public:
         MessageBaseService<TData>::_ResponseQueue = MessageBaseService<TData>::_ManagedShm->find<MessageQueue>(RESPONSE_QUEUE).first;
     }
 
-    MessageServer(const char* serverName, const U32 &size, bool force = false)
+    MessageServer(const char* serverName, const U32 &size, bool force = true)
     {
         if (force)
         {

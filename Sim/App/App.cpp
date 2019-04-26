@@ -121,6 +121,7 @@ int main(int argc, const char* argv[])
             }
             catch (const Framework::Exception &err)
             {
+                std::cout << "Error";
                 std::cout << err.what();
                 return -1;
             }
