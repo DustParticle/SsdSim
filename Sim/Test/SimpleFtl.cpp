@@ -105,7 +105,7 @@ TEST(SimpleFtl, Translation_LbaToNand)
     }
 }
 
-TEST(SimpleFtl, BasicWriteReadVerify)
+TEST(SimpleFtl, BasicWriteReadVerify_App)
 {
     //Start the app
     GOUT("Starting SsdSim process.");
@@ -203,6 +203,51 @@ TEST(SimpleFtl, BasicWriteReadVerify)
     }
 
     ASSERT_EQ(0, compareResult);
+}
+
+TEST_F(SimpleFtlTest, BasicWriteReadVerify)
+{
+	U32 totalSector = DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.TotalSector;
+
+	//Write a buffer with lba and sector count
+    constexpr U32 lba = 12345;
+    U32 sectorCount = 35;
+    U32 payloadSize = sectorCount * DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.BytesPerSector;
+    auto writeMessage = AllocateMessage<CustomProtocolCommand>(CustomProtocolClient, payloadSize, true);
+    ASSERT_NE(writeMessage, nullptr);
+    ASSERT_NE(writeMessage->Payload, nullptr);
+    for (auto i(0); i < sectorCount; ++i)
+    {
+        auto buffer = &(static_cast<U8*>(writeMessage->Payload)[i * DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.BytesPerSector]);
+        memset((void*)buffer, lba + i, DeviceInfoResponse->Data.Descriptor.DeviceInfoPayload.BytesPerSector);
+    }
+    writeMessage->Data.Command = CustomProtocolCommand::Code::Write;
+    writeMessage->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+    writeMessage->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+	CustomProtocolClient->Push(writeMessage);
+
+    //Wait for write command response
+    while (!CustomProtocolClient->HasResponse());
+    auto responseMessageWrite = CustomProtocolClient->PopResponse();
+
+	//Read a buffer with lba and sector count
+    auto readMessage = AllocateMessage<CustomProtocolCommand>(CustomProtocolClient, payloadSize, true);
+    ASSERT_NE(readMessage, nullptr);
+    readMessage->Data.Command = CustomProtocolCommand::Code::Read;
+    readMessage->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+    readMessage->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
+	CustomProtocolClient->Push(readMessage);
+
+    //Wait for read command response
+    while (!CustomProtocolClient->HasResponse());
+    auto responseMessageRead = CustomProtocolClient->PopResponse();
+
+    //Get message read buffer to verify with the write buffer
+    int compareResult = std::memcmp(responseMessageWrite->Payload, responseMessageRead->Payload, payloadSize);
+
+    //--Deallocate
+	CustomProtocolClient->DeallocateMessage(responseMessageWrite);
+	CustomProtocolClient->DeallocateMessage(responseMessageRead);
 }
 
 TEST_F(SimpleFtlTest, BasicAscendingWriteReadVerifyAll)

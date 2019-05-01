@@ -15,7 +15,7 @@ extern "C"
 {
     void __declspec(dllexport) __stdcall Initialize(std::shared_ptr<NandHal> nandHal)
     {
-        _SimpleFtl.SetNandHal(nandHal.operator->());
+        _SimpleFtl.SetNandHal(nandHal.get());
     }
 
     void __declspec(dllexport) __stdcall Execute()

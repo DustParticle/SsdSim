@@ -16,8 +16,10 @@ public:
 	void Erase();
 
 	void WritePage(tPageInBlock page, const U8* const pInData);
+	void WritePage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, const U8* const inBuffer);
 
 	void ReadPage(tPageInBlock page, U8* const pOutData);
+	void ReadPage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer);
 
 public:
 	static const U8 ERASED_PATTERN = 0xff;

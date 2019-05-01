@@ -144,11 +144,11 @@ TEST(NandHal, Basic_CommandQueue)
 	{
 		for (auto i(0); i < bufferCount; ++i, ++c)
 		{
-			commandDesc.Operation = NandHal::CommandDesc::Op::WRITE;
+			commandDesc.Operation = NandHal::CommandDesc::Op::Write;
 			commandDesc.Buffer = writeBuffers[i];
 			nandHal.QueueCommand(commandDesc);
 
-			commandDesc.Operation = NandHal::CommandDesc::Op::READ;
+			commandDesc.Operation = NandHal::CommandDesc::Op::Read;
 			commandDesc.Buffer = readBuffers[i];
 			nandHal.QueueCommand(commandDesc);
 

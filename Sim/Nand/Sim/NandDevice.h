@@ -15,8 +15,10 @@ public:
 
 public:
 	void ReadPage(tBlockInDevice block, tPageInBlock page, U8* const pOutData);
+	void ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer);
 
 	void WritePage(tBlockInDevice block, tPageInBlock page, const U8* const pInData);
+	void WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, const U8* const inBuffer);
 
 	void EraseBlock(tBlockInDevice block);
 

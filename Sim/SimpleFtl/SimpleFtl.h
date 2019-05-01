@@ -13,20 +13,30 @@ public:
     void operator()();
 
 private:
+	struct tSectorOffset
+	{
+		U8 _;
+	};
+
+	struct tSectorCount
+	{
+		U8 _;
+	};
+
+private:
     void ReadFromNand(CustomProtocolCommand *command);
     void WriteToNand(CustomProtocolCommand *command);
 
-    bool ReadPage(const U32 &lba, U8 *outBuffer, const U8 &startSectorIndex, const U8 &sectorToRead);
-    bool WritePage(const U32 &lba, U8 *inBuffer);
-
-    void CopySectors(U8 *dest, U8 *src, const U32 &lengthInSector);
+	void ReadPage(const U32& lba, U8* outBuffer);
+    void ReadPage(const U32& lba, U8 *outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount);
+	void WritePage(const U32& lba, U8* inBuffer);
+    void WritePage(const U32& lba, U8* inBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount);
 
 private:
     NandHal *_NandHal;
     CustomProtocolInterface *_CustomProtocolInterface;
     U32 _TotalSectors;
     U8 _SectorsPerPage;
-    U8 _SharedBuffer[SimpleFtlTranslation::SectorSizeInBytes * 100];
 };
 
 #endif

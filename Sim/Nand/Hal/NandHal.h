@@ -47,14 +47,18 @@ public:
 	{
 		enum class Op
 		{
-			READ,
-			WRITE,
-			ERASE
+			Read,
+			Write,
+			Erase,
+			ReadPartial,
+			WritePartial,
 		};
 
         NandAddress Address;
 		Op	Operation;
 		U8* Buffer;
+		tByteOffset ByteOffset;
+		tByteCount ByteCount;
 	};
 
 	void QueueCommand(const CommandDesc& command);
@@ -63,8 +67,24 @@ public:
 
 public:
 	void ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData);
+	void ReadPage(
+		const tChannel& channel,
+		const tDeviceInChannel& device,
+		const tBlockInDevice& block,
+		const tPageInBlock& page,
+		const tByteOffset& byteOffset, 
+		const tByteCount& byteCount, 
+		U8* const outBuffer);
 
-	void WritePage(tChannel channel, tDeviceInChannel chip, tBlockInDevice block, tPageInBlock page, const U8* const pInData);
+	void WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const U8* const pInData);
+	void WritePage(
+		const tChannel& channel, 
+		const tDeviceInChannel& device, 
+		const tBlockInDevice& block, 
+		const tPageInBlock& page, 
+		const tByteOffset& byteOffset, 
+		const tByteCount& byteCount, 
+		const U8* const inBuffer);
 
 	void EraseBlock(tChannel channel, tDeviceInChannel chip, tBlockInDevice block);
 
