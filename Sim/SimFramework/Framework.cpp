@@ -5,12 +5,16 @@
 #include "HostComm/Ipc/Message.hpp"
 #include "HostComm/CustomProtocol/CustomProtocolCommand.h"
 
+constexpr U32 MaxIpcServer = 10;
+
 Framework::Framework() :
 	_State(State::Start)
 {
+    _NandHal = std::make_shared<NandHal>();
+    _FirmwareCore = std::make_shared<FirmwareCore>();
 }
 
-void Framework::Init(const std::string& configFileName)
+void Framework::Init(const std::string& configFileName, std::string ipcNamesPrefix)
 {
 	JSONParser parser;
 	try
@@ -25,8 +29,45 @@ void Framework::Init(const std::string& configFileName)
 	SetupNandHal(parser);
 	GetFirmwareCoreInfo(parser);
 
-    _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>("SsdSimMainMessageServer", 8 * 1024 * 1024);
-    _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>("SsdSimCustomProtocolServer", 8 * 1024 * 1024);
+    std::string simServerIpcName;
+    std::string customProtocolIpcName;
+    if (ipcNamesPrefix.empty())
+    {
+        simServerIpcName = "SsdSimMainMessageServer";
+        customProtocolIpcName = "SsdSimCustomProtocolServer";
+        _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(simServerIpcName.c_str(), 8 * 1024 * 1024);
+        _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(customProtocolIpcName.c_str(), 8 * 1024 * 1024);
+    }
+    else
+    {
+        U32 serverId = 0;
+        while(serverId < MaxIpcServer)
+        {
+            try
+            {
+                simServerIpcName = ipcNamesPrefix + "MainMessageServer" + std::to_string(serverId);
+                customProtocolIpcName = ipcNamesPrefix + "CustomProtocolServer" + std::to_string(serverId);
+                _SimServer = std::make_shared<MessageServer<SimFrameworkCommand>>(simServerIpcName.c_str(), 8 * 1024 * 1024, false);
+                _ProtocolServer = std::make_shared<MessageServer<CustomProtocolCommand>>(customProtocolIpcName.c_str(), 8 * 1024 * 1024, false);
+            }
+            catch (...)
+            {
+                // try next id
+                serverId++;
+                continue;
+            }
+
+            // found the available ipc servers
+            break;
+        }
+
+        if (serverId == MaxIpcServer)
+        {
+            throw Exception("Failed to create ipc servers");
+        }
+    }
+
+    _FirmwareCore->SetIpcNames(customProtocolIpcName);
 }
 
 void Framework::SetupNandHal(JSONParser& parser)
@@ -105,7 +146,8 @@ void Framework::SetupNandHal(JSONParser& parser)
 	constexpr U32 minBytesValue = 4 * 1024;
 	U32 bytes = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
-	_NandHal.PreInit(channels, devices, blocks, pages, bytes);
+	_NandHal->PreInit(channels, devices, blocks, pages, bytes);
+	_NandHal->Init();
 }
 
 void Framework::GetFirmwareCoreInfo(JSONParser& parser)
@@ -126,7 +168,8 @@ void Framework::operator()()
 	std::future<void> firmwareMain;
 
     // Load ROM
-	_FirmwareCore.SetExecute(this->_RomCodePath);
+	_FirmwareCore->LinkNandHal(_NandHal);
+	_FirmwareCore->SetExecute(this->_RomCodePath);
 
     while (State::Exit != _State)
 	{
@@ -134,8 +177,8 @@ void Framework::operator()()
 		{
 			case State::Start:
 			{
-				nandHal = std::async(std::launch::async, &NandHal::operator(), &_NandHal);
-				firmwareMain = std::async(std::launch::async, &FirmwareCore::operator(), &_FirmwareCore);
+				nandHal = std::async(std::launch::async, &NandHal::operator(), _NandHal);
+				firmwareMain = std::async(std::launch::async, &FirmwareCore::operator(), _FirmwareCore);
 
 				_State = State::Run;
 			} break;
@@ -146,7 +189,7 @@ void Framework::operator()()
 				{
                     Message<SimFrameworkCommand>* message = _SimServer->Pop();
 
-					switch (message->_Data._Code)
+					switch (message->Data.Code)
 					{
                         case SimFrameworkCommand::Code::Exit:
                         {
@@ -156,15 +199,15 @@ void Framework::operator()()
 						case SimFrameworkCommand::Code::DataOutLoopback:
 						{
 							//Get data from host
-							auto buffer = std::make_unique<U8[]>(message->_PayloadSize);
-							memcpy_s(buffer.get(), message->_PayloadSize, message->_Payload, message->_PayloadSize);
+							auto buffer = std::make_unique<U8[]>(message->PayloadSize);
+							memcpy_s(buffer.get(), message->PayloadSize, message->Payload, message->PayloadSize);
 							_SimServer->PushResponse(message->Id());
 						} break;
 						case SimFrameworkCommand::Code::DataInLoopback:
 						{
 							//Send data to host
-							auto buffer = std::make_unique<U8[]>(message->_PayloadSize);
-							memcpy_s(message->_Payload, message->_PayloadSize, buffer.get(), message->_PayloadSize);
+							auto buffer = std::make_unique<U8[]>(message->PayloadSize);
+							memcpy_s(message->Payload, message->PayloadSize, buffer.get(), message->PayloadSize);
 							_SimServer->PushResponse(message->Id());
 						} break;
 					}
@@ -175,8 +218,8 @@ void Framework::operator()()
 		}
 	}
 
-	_FirmwareCore.Stop();
-	_NandHal.Stop();
+	_FirmwareCore->Stop();
+	_NandHal->Stop();
 
-    _FirmwareCore.Unload();
+    _FirmwareCore->Unload();
 }

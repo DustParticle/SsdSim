@@ -7,22 +7,37 @@ class CustomProtocolInterface;
 
 struct DownloadAndExecutePayload
 {
-    U8 _CodeName[20];
+    U8 CodeName[20];
 };
 
 union BenchmarkPayload
 {
     struct
     {
-        long long _Duration;
-        U32 _NopCount;
-    } _Response;
+        long long Duration;
+        U32 NopCount;
+    } Response;
 };
 
-union CustomProtocolCommandPayload
+struct SimpleFtlPayload
 {
-    DownloadAndExecutePayload _DownloadAndExecute;
-    BenchmarkPayload _BenchmarkPayload;
+    U32 Lba;
+    U32 SectorCount;
+};
+
+struct DeviceInfoPayload
+{
+    U32 TotalSector;
+    U32 BytesPerSector;
+	U8	SectorsPerPage;
+};
+
+union CustomProtocolCommandDescriptor
+{
+    DownloadAndExecutePayload DownloadAndExecute;
+    BenchmarkPayload BenchmarkPayload;
+    SimpleFtlPayload SimpleFtlPayload;
+    DeviceInfoPayload DeviceInfoPayload;
 };
 
 typedef U32 CommandId;
@@ -34,12 +49,17 @@ struct CustomProtocolCommand
         DownloadAndExecute,
         BenchmarkStart,
         BenchmarkEnd,
+        Write,
+		LoopbackWrite,
+        Read,
+		LoopbackRead,
+        GetDeviceInfo,
         Nop
     };
 
 public:
-    Code _Command;
-    CustomProtocolCommandPayload _Payload;
+    Code Command;
+    CustomProtocolCommandDescriptor Descriptor;
 
 private:
     CommandId CommandId;

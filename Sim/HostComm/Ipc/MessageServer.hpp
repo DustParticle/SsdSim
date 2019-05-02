@@ -33,10 +33,21 @@ public:
         MessageBaseService<TData>::_ResponseQueue = MessageBaseService<TData>::_ManagedShm->find<MessageQueue>(RESPONSE_QUEUE).first;
     }
 
-    MessageServer(const char* serverName, const U32 &size)
+    MessageServer(const char* serverName, const U32 &size, bool force = true)
     {
-        shared_memory_object::remove(serverName);
-        MessageBaseService<TData>::_ManagedShm = std::unique_ptr<managed_shared_memory>(new managed_shared_memory(open_or_create, serverName, size));
+        if (force)
+        {
+            shared_memory_object::remove(serverName);
+        }
+
+        try
+        {
+            MessageBaseService<TData>::_ManagedShm = std::unique_ptr<managed_shared_memory>(new managed_shared_memory(open_or_create, serverName, size));
+        }
+        catch (...)
+        {
+            throw "Shared memory with the name " + std::string(serverName) + " already exists";
+        }
 
         SynchronizedQueue<MessageId>::allocator_type alloc(MessageBaseService<TData>::_ManagedShm->get_segment_manager());
         SynchronizedQueue<MessageId>::allocator_type alloc1(MessageBaseService<TData>::_ManagedShm->get_segment_manager());

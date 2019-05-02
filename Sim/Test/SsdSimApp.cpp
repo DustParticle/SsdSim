@@ -1,33 +1,31 @@
 #include "pch.h"
 
-#define NOMINMAX
-#include <windows.h>
-
-#include <ctime>
 #include <chrono>
+#include <ctime>
 #include <map>
 
 #include "Test/gtest-cout.h"
 
 #include "SimFramework/Framework.h"
 
-#include "HostCommShared.h"
+#include "SsdSimApp.h"
+#include "HostComm.hpp"
 
 using namespace HostCommTest;
 
 bool LaunchProcess(const char *pFile, const char *pArgs, SHELLEXECUTEINFO & ShExecInfo)
 {
-	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-	ShExecInfo.hwnd = NULL;
-	ShExecInfo.lpVerb = NULL;
-	ShExecInfo.lpFile = pFile;
-	ShExecInfo.lpParameters = pArgs;
-	ShExecInfo.lpDirectory = NULL;
-	ShExecInfo.nShow = SW_SHOW;
-	ShExecInfo.hInstApp = NULL;
+    ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+    ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+    ShExecInfo.hwnd = NULL;
+    ShExecInfo.lpVerb = NULL;
+    ShExecInfo.lpFile = pFile;
+    ShExecInfo.lpParameters = pArgs;
+    ShExecInfo.lpDirectory = NULL;
+    ShExecInfo.nShow = SW_SHOW;
+    ShExecInfo.hInstApp = NULL;
 
-	return ShellExecuteEx(&ShExecInfo);
+    return ShellExecuteEx(&ShExecInfo);
 }
 
 TEST(SsdSimApp, Basic)
@@ -51,7 +49,7 @@ TEST(SsdSimApp, Basic)
 
 	auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
-	message->_Data._Code = SimFrameworkCommand::Code::Exit;
+	message->Data.Code = SimFrameworkCommand::Code::Exit;
 	client->Push(message);
 
 	if (ShExecInfo.hProcess)
@@ -99,9 +97,9 @@ TEST(SsdSimApp, Basic_Benchmark)
 	std::map<U32, high_resolution_clock::time_point> t0s;
 	for (auto i = 0; i < commandCount; ++i)
 	{
-		messages[i]->_Data._Code = SimFrameworkCommand::Code::DataOutLoopback;
+		messages[i]->Data.Code = SimFrameworkCommand::Code::DataOutLoopback;
 		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
-		memset(messages[i]->_Payload, 0xaa, messages[i]->_PayloadSize);
+		memset(messages[i]->Payload, 0xaa, messages[i]->PayloadSize);
 		client->Push(messages[i]);
 	}
 
@@ -133,7 +131,7 @@ TEST(SsdSimApp, Basic_Benchmark)
 	t0s.clear();
 	for (auto i = 0; i < commandCount; ++i)
 	{
-		messages[i]->_Data._Code = SimFrameworkCommand::Code::DataInLoopback;
+		messages[i]->Data.Code = SimFrameworkCommand::Code::DataInLoopback;
 		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
 		client->Push(messages[i]);
 	}
@@ -167,7 +165,7 @@ TEST(SsdSimApp, Basic_Benchmark)
 
 	auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
-	message->_Data._Code = SimFrameworkCommand::Code::Exit;
+	message->Data.Code = SimFrameworkCommand::Code::Exit;
 	client->Push(message);
 
 	if (ShExecInfo.hProcess)

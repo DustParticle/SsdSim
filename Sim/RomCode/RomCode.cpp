@@ -5,28 +5,34 @@
 #include <functional>
 
 #include "HostComm/CustomProtocol/CustomProtocolInterface.h"
+#include "Nand/Hal/NandHal.h"
 
 std::function<bool(std::string)> _SetExecuteFunc;
-std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>();
+std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
 
 extern "C"
 {
     void __declspec(dllexport) __stdcall Execute()
     {
+        if (_CustomProtocolInterface == nullptr)
+        {
+            throw "CustomProtocol is null";
+        }
+
         if (_CustomProtocolInterface->HasCommand())
         {
             CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
 
-            switch (command->_Command)
+            switch (command->Command)
             {
                 case CustomProtocolCommand::Code::DownloadAndExecute:
                 {
                     // Do download and execute
-                    U32 size = sizeof(command->_Payload._DownloadAndExecute._CodeName);
+                    U32 size = sizeof(command->Descriptor.DownloadAndExecute.CodeName);
                     char *temp = new char[size];
                     for (U32 i = 0; i < size; i++)
                     {
-                        temp[i] = command->_Payload._DownloadAndExecute._CodeName[i];
+                        temp[i] = command->Descriptor.DownloadAndExecute.CodeName[i];
                     }
                     std::string filename = temp;
                     delete[] temp;
@@ -36,6 +42,11 @@ extern "C"
                 } break;
             }
         }
+    }
+
+    void __declspec(dllexport) __stdcall SetCustomProtocolIpcName(const std::string& protocolIpcName)
+    {
+        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>(protocolIpcName.c_str());
     }
 
     void __declspec(dllexport) __stdcall SetExecuteCallback(std::function<bool(std::string)> setExecuteFunc)

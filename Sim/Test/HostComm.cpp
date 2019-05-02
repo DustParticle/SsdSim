@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "HostCommShared.h"
+#include "HostComm.hpp"
 
 using namespace HostCommTest;
 
@@ -21,20 +21,20 @@ TEST(HostComm, Messaging_Basic)
 
 	auto message = AllocateMessage<SimpleCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
-	message->_Data._Command = SimpleCommand::Command::SimpleCommand;
+	message->Data.Command = SimpleCommand::Command::SimpleCommand;
 	client->Push(message);
 
 	ASSERT_TRUE(server->HasMessage());
 
 	auto receivedMessage = server->Pop();
-	ASSERT_EQ(receivedMessage->_Data._Command, SimpleCommand::Command::SimpleCommand);
+	ASSERT_EQ(receivedMessage->Data.Command, SimpleCommand::Command::SimpleCommand);
 	ASSERT_FALSE(server->HasMessage());
 	ASSERT_ANY_THROW(server->PushResponse(receivedMessage));             // Don't allow to response message without response flag
 	ASSERT_NO_THROW(server->DeallocateMessage(receivedMessage));
 
 	message = AllocateMessage<SimpleCommand>(client, 0, true);
 	ASSERT_NE(message, nullptr);
-	message->_Data._Command = SimpleCommand::Command::SimpleCommand;
+	message->Data.Command = SimpleCommand::Command::SimpleCommand;
 	client->Push(message);
 	ASSERT_TRUE(server->HasMessage());
 	receivedMessage = server->Pop();

@@ -1,14 +1,13 @@
 #include "pch.h"
 
 #include <ctime>
-#include <chrono>
 #include <map>
 
 #include "Test/gtest-cout.h"
 
 #include "SimFramework/Framework.h"
 
-#include "HostCommShared.h"
+#include "HostComm.hpp"
 
 using namespace HostCommTest;
 
@@ -37,7 +36,7 @@ TEST(SimFramework, Basic)
 
 	auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
-	message->_Data._Code = SimFrameworkCommand::Code::Exit;
+	message->Data.Code = SimFrameworkCommand::Code::Exit;
 	client->Push(message);
 
 	//Give the Framework a chance to stop completely before next test
@@ -91,9 +90,9 @@ TEST(SimFramework, Basic_Benchmark)
 	std::map<U32, high_resolution_clock::time_point> t0s;
 	for (auto i = 0; i < commandCount; ++i)
 	{
-		messages[i]->_Data._Code = SimFrameworkCommand::Code::DataOutLoopback;
+		messages[i]->Data.Code = SimFrameworkCommand::Code::DataOutLoopback;
 		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
-		memset(messages[i]->_Payload, 0xaa, messages[i]->_PayloadSize);
+		memset(messages[i]->Payload, 0xaa, messages[i]->PayloadSize);
 		client->Push(messages[i]);
 	}
 
@@ -125,7 +124,7 @@ TEST(SimFramework, Basic_Benchmark)
 	t0s.clear();
 	for (auto i = 0; i < commandCount; ++i)
 	{
-		messages[i]->_Data._Code = SimFrameworkCommand::Code::DataInLoopback;
+		messages[i]->Data.Code = SimFrameworkCommand::Code::DataInLoopback;
 		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
 		client->Push(messages[i]);
 	}
@@ -159,7 +158,7 @@ TEST(SimFramework, Basic_Benchmark)
 
 	auto message = AllocateMessage<SimFrameworkCommand>(client, 0, false);
 	ASSERT_NE(message, nullptr);
-	message->_Data._Code = SimFrameworkCommand::Code::Exit;
+	message->Data.Code = SimFrameworkCommand::Code::Exit;
 	client->Push(message);
 
 	//Give the Framework a chance to stop completely before next test

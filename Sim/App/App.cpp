@@ -78,7 +78,7 @@ void handleInteractiveCmd()
 			//TODO: implement way to retrieve message server name
             std::shared_ptr<MessageClient<SimFrameworkCommand>> client = std::make_shared<MessageClient<SimFrameworkCommand>>("SsdSimMainMessageServer");
             Message<SimFrameworkCommand> *message = client->AllocateMessage(sizeof(SimFrameworkCommand), false);
-            message->_Data._Code = SimFrameworkCommand::Code::Exit;
+            message->Data.Code = SimFrameworkCommand::Code::Exit;
             client->Push(message);
 
             // exit app
@@ -121,6 +121,7 @@ int main(int argc, const char* argv[])
             }
             catch (const Framework::Exception &err)
             {
+                std::cout << "Error";
                 std::cout << err.what();
                 return -1;
             }

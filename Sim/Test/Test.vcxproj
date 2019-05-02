@@ -49,12 +49,12 @@
     <IntDir>$(ProjectDir)$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClInclude Include="HostCommShared.h" />
+    <ClInclude Include="HostComm.hpp" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="SsdSimApp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HostComm.cpp" />
-    <ClCompile Include="HostCommShared.cpp" />
     <ClCompile Include="Nand.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -63,6 +63,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SimFramework.cpp" />
+    <ClCompile Include="SimpleFtl.cpp" />
     <ClCompile Include="SsdSimApp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -77,6 +78,9 @@
     </ProjectReference>
     <ProjectReference Include="..\SimFramework\SimFramework.vcxproj">
       <Project>{89f1cb64-54c0-4448-8d36-7bfc3d7a8cc4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SimpleFtl\SimpleFtl.vcxproj">
+      <Project>{db5e97fa-28b3-487c-b91e-53484a16281d}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

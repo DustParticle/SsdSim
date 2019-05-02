@@ -1,0 +1,12 @@
+{
+  "NandHalPreInit": {
+    "channels": 1,
+    "devices": 1,
+    "blocks": 128,
+    "pages": 32,
+    "bytes": 4096
+  },
+  "RomCode": {
+	"path": ".\\RomCode.dll"
+  }
+}

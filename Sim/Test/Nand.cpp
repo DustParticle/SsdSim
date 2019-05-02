@@ -135,33 +135,34 @@ TEST(NandHal, Basic_CommandQueue)
 	nandHalFuture = std::async(std::launch::async, &NandHal::operator(), &nandHal);
 
 	NandHal::CommandDesc commandDesc;
-	commandDesc.Channel._ = 0;
-	commandDesc.Device._ = 0;
-	commandDesc.Block._ = 0;
-	commandDesc.Page._ = 0;
+    NandHal::NandAddress& address = commandDesc.Address;
+	address.Channel._ = 0;
+	address.Device._ = 0;
+	address.Block._ = 0;
+	address.Page._ = 0;
 	for (auto c(0); c < commandCount;)
 	{
 		for (auto i(0); i < bufferCount; ++i, ++c)
 		{
-			commandDesc.Operation = NandHal::CommandDesc::Op::WRITE;
+			commandDesc.Operation = NandHal::CommandDesc::Op::Write;
 			commandDesc.Buffer = writeBuffers[i];
 			nandHal.QueueCommand(commandDesc);
 
-			commandDesc.Operation = NandHal::CommandDesc::Op::READ;
+			commandDesc.Operation = NandHal::CommandDesc::Op::Read;
 			commandDesc.Buffer = readBuffers[i];
 			nandHal.QueueCommand(commandDesc);
 
-			if (++commandDesc.Channel._ >= channels)
+			if (++address.Channel._ >= channels)
 			{
-				commandDesc.Channel._ = 0;
-				if (++commandDesc.Device._ >= devices)
+                address.Channel._ = 0;
+				if (++address.Device._ >= devices)
 				{
-					commandDesc.Device._ = 0;
-					if (++commandDesc.Page._ >= pages)
+                    address.Device._ = 0;
+					if (++address.Page._ >= pages)
 					{
-						commandDesc.Page._ = 0;
-						assert(commandDesc.Block._ < blocks);	//let's not go pass this boundary
-						++commandDesc.Block._;
+                        address.Page._ = 0;
+						assert(address.Block._ < blocks);	//let's not go pass this boundary
+						++address.Block._;
 					}
 				}
 			}

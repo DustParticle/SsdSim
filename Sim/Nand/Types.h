@@ -23,4 +23,14 @@ struct tPageInBlock
 	U16 _;
 };
 
+struct tByteOffset
+{
+	U32	_;
+};
+
+struct tByteCount
+{
+	U32 _;
+};
+
 #endif

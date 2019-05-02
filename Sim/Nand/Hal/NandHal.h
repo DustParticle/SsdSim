@@ -23,21 +23,42 @@ public:
 	void Init();
 
 public:
+    struct Geometry
+    {
+        U8 _ChannelCount;
+        U8 _DevicesPerChannel;
+        U32 _BlocksPerDevice;
+        U32 _PagesPerBlock;
+        U32 _BytesPerPage;
+    };
+
+    inline Geometry GetGeometry() const { return _Geometry; }
+
+public:
+    struct NandAddress
+    {
+        tChannel Channel;
+        tDeviceInChannel Device;
+        tBlockInDevice Block;
+        tPageInBlock Page;
+    };
+
 	struct CommandDesc
 	{
 		enum class Op
 		{
-			READ,
-			WRITE,
-			ERASE
+			Read,
+			Write,
+			Erase,
+			ReadPartial,
+			WritePartial,
 		};
 
+        NandAddress Address;
 		Op	Operation;
-		tChannel Channel;
-		tDeviceInChannel Device;
-		tBlockInDevice Block;
-		tPageInBlock Page;
 		U8* Buffer;
+		tByteOffset ByteOffset;
+		tByteCount ByteCount;
 	};
 
 	void QueueCommand(const CommandDesc& command);
@@ -46,8 +67,24 @@ public:
 
 public:
 	void ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData);
+	void ReadPage(
+		const tChannel& channel,
+		const tDeviceInChannel& device,
+		const tBlockInDevice& block,
+		const tPageInBlock& page,
+		const tByteOffset& byteOffset, 
+		const tByteCount& byteCount, 
+		U8* const outBuffer);
 
-	void WritePage(tChannel channel, tDeviceInChannel chip, tBlockInDevice block, tPageInBlock page, const U8* const pInData);
+	void WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const U8* const pInData);
+	void WritePage(
+		const tChannel& channel, 
+		const tDeviceInChannel& device, 
+		const tBlockInDevice& block, 
+		const tPageInBlock& page, 
+		const tByteOffset& byteOffset, 
+		const tByteCount& byteCount, 
+		const U8* const inBuffer);
 
 	void EraseBlock(tChannel channel, tDeviceInChannel chip, tBlockInDevice block);
 
@@ -55,16 +92,11 @@ protected:
 	virtual void Run() override;
 
 private:
-	U8 _ChannelCount;
-	U8 _DeviceCount;
-	U32 _BlocksPerDevice;
-	U32 _PagesPerBlock;
-	U32 _BytesPerPage;
-
-private:
 	std::vector<NandChannel> _NandChannels;
 
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;
+
+    Geometry _Geometry;
 };
 
 #endif

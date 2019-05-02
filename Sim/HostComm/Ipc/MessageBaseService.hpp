@@ -31,9 +31,9 @@ public:
         auto message = _ManagedShm->find<Message<TData>>(messageName.c_str());
         if (message.first)
         {
-            if (message.first->_PayloadSize)
+            if (message.first->PayloadSize)
             {
-                message.first->_Payload = _ManagedShm->get_address_from_handle(message.first->_PayloadHandle);
+                message.first->Payload = _ManagedShm->get_address_from_handle(message.first->_PayloadHandle);
             }
             return message.first;
         }
@@ -51,15 +51,19 @@ protected:
         if (payloadSize)
         {
             payload = _ManagedShm->allocate(payloadSize, std::nothrow);
+            if (payload == nullptr)
+            {
+                throw "Not enough memory to allocate message";
+            }
             handle = _ManagedShm->get_handle_from_address(payload);
         }
 
         std::string messageName = GetMessageName(*_Counter);
         Message<TData>* message = _ManagedShm->construct<Message<TData>>(messageName.c_str())();
         message->_Id = *_Counter;
-        message->_PayloadSize = payloadSize;
+        message->PayloadSize = payloadSize;
         message->_PayloadHandle = handle;
-        message->_Payload = payload;
+        message->Payload = payload;
         message->_ExpectsResponse = expectsResponse;
         (*_Counter)++;
 
@@ -68,9 +72,9 @@ protected:
 
     void DoDeallocateMessage(Message<TData>* message)
     {
-        if (message->_PayloadSize)
+        if (message->PayloadSize)
         {
-            _ManagedShm->deallocate(message->_Payload);
+            _ManagedShm->deallocate(message->Payload);
         }
 
         std::string messageName = GetMessageName(message->_Id);
