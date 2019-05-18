@@ -71,8 +71,6 @@ void SimpleFtl::ReadPage(const U32& lba, U8 *outBuffer, const tSectorOffset& sec
 	commandDesc.ByteCount._ = sectorCount._ * SimpleFtlTranslation::SectorSizeInBytes;
 
     _NandHal->QueueCommand(commandDesc);
-
-    while (!_NandHal->IsCommandQueueEmpty());
 }
 
 void SimpleFtl::ReadPage(const U32& lba, U8* outBuffer)
@@ -83,8 +81,6 @@ void SimpleFtl::ReadPage(const U32& lba, U8* outBuffer)
 	commandDesc.Buffer = outBuffer;
 
 	_NandHal->QueueCommand(commandDesc);
-
-	while (!_NandHal->IsCommandQueueEmpty());
 }
 
 void SimpleFtl::WritePage(const U32& lba, U8 *inBuffer)
@@ -92,11 +88,9 @@ void SimpleFtl::WritePage(const U32& lba, U8 *inBuffer)
     NandHal::CommandDesc commandDesc;
     commandDesc.Operation = NandHal::CommandDesc::Op::Write;
     SimpleFtlTranslation::LbaToNandAddress(lba, commandDesc.Address);
-    commandDesc.Buffer = inBuffer;  // Read directly to outputBuffer to optimize performance if reading full page
+    commandDesc.Buffer = inBuffer;
 
     _NandHal->QueueCommand(commandDesc);
-
-    while (!_NandHal->IsCommandQueueEmpty());
 }
 
 void SimpleFtl::WritePage(const U32& lba, U8* inBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount)
@@ -111,8 +105,6 @@ void SimpleFtl::WritePage(const U32& lba, U8* inBuffer, const tSectorOffset& sec
 	commandDesc.ByteCount._ = sectorCount._ * SimpleFtlTranslation::SectorSizeInBytes;
 
 	_NandHal->QueueCommand(commandDesc);
-
-	while (!_NandHal->IsCommandQueueEmpty());
 }
 
 void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
@@ -161,6 +153,8 @@ void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
 			break;
 		}
 	}
+
+	while (!_NandHal->IsCommandQueueEmpty());
 }
 
 void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
@@ -209,4 +203,6 @@ void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
 			break;
 		}
 	}
+
+	while (!_NandHal->IsCommandQueueEmpty());
 }
