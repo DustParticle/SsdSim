@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Nand/Types.h"
+#include "Nand/Sim/NandBlockTracker.h"
 #include "Nand/Sim/NandDeviceDesc.h"
 
 class NandBlock
@@ -18,13 +19,15 @@ public:
 	void WritePage(tPageInBlock page, const U8* const pInData);
 	void WritePage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, const U8* const inBuffer);
 
-	void ReadPage(tPageInBlock page, U8* const pOutData);
-	void ReadPage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer);
+	bool ReadPage(tPageInBlock page, U8* const pOutData);
+	bool ReadPage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer);
 
 public:
 	static const U8 ERASED_PATTERN = 0xff;
 
 private:
+	NandBlockTracker* _pNandBlockTracker;
+
 	U32 _PagesPerBlock;
 	U32 _TotalBytesPerPage;
 

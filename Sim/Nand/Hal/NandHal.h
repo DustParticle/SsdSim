@@ -56,6 +56,7 @@ public:
 
         NandAddress Address;
 		Op	Operation;
+		bool IsCommandSuccess;
 		U8* Buffer;
 		tByteOffset ByteOffset;
 		tByteCount ByteCount;
@@ -64,10 +65,11 @@ public:
 	void QueueCommand(const CommandDesc& command);
 
 	bool IsCommandQueueEmpty() const;
+	bool IsCommandSuccess();
 
 public:
-	void ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData);
-	void ReadPage(
+	bool ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData);
+	bool ReadPage(
 		const tChannel& channel,
 		const tDeviceInChannel& device,
 		const tBlockInDevice& block,
@@ -95,6 +97,7 @@ private:
 	std::vector<NandChannel> _NandChannels;
 
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;
+	CommandDesc _LatestExecutedCommand;
 
     Geometry _Geometry;
 };

@@ -136,6 +136,7 @@
   <ItemGroup>
     <ClInclude Include="Hal\NandHal.h" />
     <ClInclude Include="Sim\NandBlock.h" />
+    <ClInclude Include="Sim\NandBlockTracker.h" />
     <ClInclude Include="Sim\NandChannel.h" />
     <ClInclude Include="Sim\NandDevice.h" />
     <ClInclude Include="Sim\NandDeviceDesc.h" />
@@ -144,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="Hal\NandHal.cpp" />
     <ClCompile Include="Sim\NandBlock.cpp" />
+    <ClCompile Include="Sim\NandBlockTracker.cpp" />
     <ClCompile Include="Sim\NandChannel.cpp" />
     <ClCompile Include="Sim\NandDevice.cpp" />
     <ClCompile Include="Sim\NandDeviceDesc.cpp" />

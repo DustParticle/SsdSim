@@ -155,6 +155,7 @@ void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
 	}
 
 	while (!_NandHal->IsCommandQueueEmpty());
+	command->CommandStatus = (_NandHal->IsCommandSuccess() ? CustomProtocolCommand::Status::Success : CustomProtocolCommand::Status::Failed);
 }
 
 void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
@@ -205,4 +206,5 @@ void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
 	}
 
 	while (!_NandHal->IsCommandQueueEmpty());
+	command->CommandStatus = (_NandHal->IsCommandSuccess() ? CustomProtocolCommand::Status::Success : CustomProtocolCommand::Status::Failed);
 }

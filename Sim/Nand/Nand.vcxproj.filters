@@ -33,6 +33,9 @@
     <ClInclude Include="Sim\NandDeviceDesc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sim\NandBlockTracker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sim\NandBlock.cpp">
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Hal\NandHal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sim\NandBlockTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
