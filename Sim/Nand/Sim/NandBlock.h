@@ -26,7 +26,7 @@ public:
 	static const U8 ERASED_PATTERN = 0xff;
 
 private:
-	NandBlockTracker _NandBlockTracker;
+	NandBlockTracker* _pNandBlockTracker;
 
 	U32 _PagesPerBlock;
 	U32 _TotalBytesPerPage;

@@ -57,8 +57,15 @@ struct CustomProtocolCommand
         Nop
     };
 
+	enum Status
+	{
+		Success,
+		Failed,
+	};
+
 public:
     Code Command;
+	Status CommandStatus;
     CustomProtocolCommandDescriptor Descriptor;
 
 private:

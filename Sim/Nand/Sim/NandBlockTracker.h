@@ -1,5 +1,5 @@
-#ifndef __NandBlock_h__
-#define __NandBlock_h__
+#ifndef __NandBlockTracker_h__
+#define __NandBlockTracker_h__
 
 #include <memory>
 
@@ -9,7 +9,7 @@ class NandBlockTracker
 {
 public:
     NandBlockTracker(U32 pagesPerBlock);
-    NandBlockTracker(NandBlock&& rhs) = default;
+    NandBlockTracker(NandBlockTracker&& rhs) = default;
 
 public:
     void Reset();

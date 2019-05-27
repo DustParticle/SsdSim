@@ -12,13 +12,13 @@ NandBlock::NandBlock(U32 pagesPerBlock, U32 totalBytesPerPage)
 	std::memset(_ErasedBuffer.get(), ERASED_PATTERN, _TotalBytesPerPage);
 
 	// Initialize the NandBlockTracker
-	_NandBlockTracker = new NandBlockTracker(pagesPerBlock);
+	_pNandBlockTracker = new NandBlockTracker(pagesPerBlock);
 }
 
 void NandBlock::Erase()
 {
 	_Buffer.reset();
-	_NandBlockTracker.Reset();
+	_pNandBlockTracker->Reset();
 }
 
 void NandBlock::WritePage(tPageInBlock page, const U8* const pInData)
@@ -29,7 +29,7 @@ void NandBlock::WritePage(tPageInBlock page, const U8* const pInData)
 	}
 
 	std::memcpy((void*)&_Buffer[page._ * _TotalBytesPerPage], pInData, _TotalBytesPerPage);
-	_NandBlockTracker.WritePage(page);
+	_pNandBlockTracker->WritePage(page);
 }
 
 void NandBlock::WritePage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, const U8* const inBuffer)
@@ -43,13 +43,13 @@ void NandBlock::WritePage(const tPageInBlock& page, const tByteOffset& byteOffse
 	}
 
 	std::memcpy((void*)&_Buffer[(page._ * _TotalBytesPerPage) + byteOffset._], inBuffer, byteCount._);
-	_NandBlockTracker.WritePage(page);
+	_pNandBlockTracker->WritePage(page);
 }
 
-void NandBlock::ReadPage(tPageInBlock page, U8* const pOutData)
+bool NandBlock::ReadPage(tPageInBlock page, U8* const pOutData)
 {
     // If page is written then return false to indicate ReadPage failed
-    if (true == _NandBlockTracker.IsPageWritten(page))
+    if (true == _pNandBlockTracker->IsPageWritten(page))
     {
         return (false);
     }
@@ -60,10 +60,10 @@ void NandBlock::ReadPage(tPageInBlock page, U8* const pOutData)
 	return (true);
 }
 
-void NandBlock::ReadPage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer)
+bool NandBlock::ReadPage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer)
 {
     // If page is written then return false to indicate ReadPage failed
-    if (true == _NandBlockTracker.IsPageWritten(page))
+    if (true == _pNandBlockTracker->IsPageWritten(page))
     {
         return (false);
     }

@@ -15,7 +15,7 @@ NandBlockTracker::NandBlockTracker(U32 pagesPerBlock)
 
 void NandBlockTracker::Reset()
 {
-    _PageWrittenMarker = 0;
+    _PageWrittenMarker._ = 0;
     std::memset(_PageWrittenBitmap.get(), 0, _BitmapSize);
 }
 

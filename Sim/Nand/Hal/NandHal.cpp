@@ -37,12 +37,17 @@ bool NandHal::IsCommandQueueEmpty() const
 	return _CommandQueue->empty();
 }
 
-void NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData)
+bool NandHal::IsCommandSuccess()
 {
-	_NandChannels[channel._][device._].ReadPage(block, page, pOutData);
+	return (_LatestExecutedCommand.IsCommandSuccess);
 }
 
-void NandHal::ReadPage(const tChannel& channel,
+bool NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData)
+{
+	return (_NandChannels[channel._][device._].ReadPage(block, page, pOutData));
+}
+
+bool NandHal::ReadPage(const tChannel& channel,
 	const tDeviceInChannel& device,
 	const tBlockInDevice& block,
 	const tPageInBlock& page,
@@ -50,7 +55,7 @@ void NandHal::ReadPage(const tChannel& channel,
 	const tByteCount& byteCount,
 	U8* const outBuffer)
 {
-	_NandChannels[channel._][device._].ReadPage(block, page, byteOffset, byteCount, outBuffer);
+	return (_NandChannels[channel._][device._].ReadPage(block, page, byteOffset, byteCount, outBuffer));
 }
 
 void NandHal::WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const U8* const pInData)
@@ -80,11 +85,15 @@ void NandHal::Run()
 	{
 		CommandDesc& command = _CommandQueue->front();
         NandAddress& address = command.Address;
+
+		// Set defaut return status is Success
+		command.IsCommandSuccess = true;
+
 		switch (command.Operation)
 		{
 			case CommandDesc::Op::Read:
 			{
-				ReadPage(address.Channel, address.Device, address.Block, address.Page, command.Buffer);
+				command.IsCommandSuccess = ReadPage(address.Channel, address.Device, address.Block, address.Page, command.Buffer);
 			}break;
 			case CommandDesc::Op::Write:
 			{
@@ -96,14 +105,14 @@ void NandHal::Run()
 			}break;
 			case CommandDesc::Op::ReadPartial:
 			{
-				ReadPage(address.Channel, address.Device, address.Block, address.Page, command.ByteOffset, command.ByteCount, command.Buffer);
+				command.IsCommandSuccess = ReadPage(address.Channel, address.Device, address.Block, address.Page, command.ByteOffset, command.ByteCount, command.Buffer);
 			}break;
 			case CommandDesc::Op::WritePartial:
 			{
 				WritePage(address.Channel, address.Device, address.Block, address.Page, command.ByteOffset, command.ByteCount, command.Buffer);
 			}break;
 		}
-		_CommandQueue->pop();
+		_CommandQueue->pop(_LatestExecutedCommand);
 	}
 	else
 	{
