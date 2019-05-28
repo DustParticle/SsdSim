@@ -60,7 +60,7 @@ public:
 			UECC,
 			WRITE_ERROR,
 			ERASE_ERROR,
-		}
+		};
 
 		NandAddress Address;
 		Op Operation;
