@@ -17,7 +17,7 @@ public:
     bool IsPageWritten(tPageInBlock page);
 
 public:
-    static const U8 BYTE_SIZE = 8;
+    constexpr U8 BYTE_SIZE = 8;
 
 private:
     U32 _PagesPerBlock;

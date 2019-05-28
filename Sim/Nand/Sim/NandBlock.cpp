@@ -12,7 +12,7 @@ NandBlock::NandBlock(U32 pagesPerBlock, U32 totalBytesPerPage)
 	std::memset(_ErasedBuffer.get(), ERASED_PATTERN, _TotalBytesPerPage);
 
 	// Initialize the NandBlockTracker
-	_pNandBlockTracker = new NandBlockTracker(pagesPerBlock);
+	_pNandBlockTracker = make_unique<NandBlockTracker>(pagesPerBlock);
 }
 
 void NandBlock::Erase()
