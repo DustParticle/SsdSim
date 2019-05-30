@@ -54,20 +54,29 @@ public:
 			WritePartial,
 		};
 
-        NandAddress Address;
-		Op	Operation;
+		enum class Status
+		{
+			Success,
+			Uecc,
+			WriteError,
+			EraseError,
+		}
+
+		NandAddress Address;
+		Op Operation;
+		Status CommandStatus;
 		U8* Buffer;
 		tByteOffset ByteOffset;
 		tByteCount ByteCount;
 	};
 
 	void QueueCommand(const CommandDesc& command);
-
 	bool IsCommandQueueEmpty() const;
+	bool PopFinishedCommand(CommandDesc& command);
 
 public:
-	void ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData);
-	void ReadPage(
+	bool ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData);
+	bool ReadPage(
 		const tChannel& channel,
 		const tDeviceInChannel& device,
 		const tBlockInDevice& block,
@@ -95,6 +104,7 @@ private:
 	std::vector<NandChannel> _NandChannels;
 
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;
+	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _FinishedCommandQueue;
 
     Geometry _Geometry;
 };

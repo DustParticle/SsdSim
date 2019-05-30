@@ -9,14 +9,14 @@ NandDevice::NandDevice(U32 blockCount, U32 pagesPerBlock, U32 bytesPerPage)
 	}
 }
 
-void NandDevice::ReadPage(tBlockInDevice block, tPageInBlock page, U8* const pOutData)
+bool NandDevice::ReadPage(tBlockInDevice block, tPageInBlock page, U8* const pOutData)
 {
-	_Blocks[block._].ReadPage(page, pOutData);
+	return (_Blocks[block._].ReadPage(page, pOutData));
 }
 
-void NandDevice::ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer)
+bool NandDevice::ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer)
 {
-	_Blocks[block._].ReadPage(page, byteOffset, byteCount, outBuffer);
+	return (_Blocks[block._].ReadPage(page, byteOffset, byteCount, outBuffer));
 }
 
 void NandDevice::WritePage(tBlockInDevice block, tPageInBlock page, const U8* const pInData)

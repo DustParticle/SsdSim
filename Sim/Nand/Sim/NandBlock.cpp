@@ -3,7 +3,7 @@
 
 #include "Nand/Sim/NandBlock.h"
 
-NandBlock::NandBlock(U32 pagesPerBlock, U32 totalBytesPerPage)
+NandBlock::NandBlock(U32 pagesPerBlock, U32 totalBytesPerPage) : _NandBlockTracker(pagesPerBlock)
 {
 	_PagesPerBlock = pagesPerBlock;
 	_TotalBytesPerPage = totalBytesPerPage;
@@ -15,6 +15,7 @@ NandBlock::NandBlock(U32 pagesPerBlock, U32 totalBytesPerPage)
 void NandBlock::Erase()
 {
 	_Buffer.reset();
+	_NandBlockTracker.Reset();
 }
 
 void NandBlock::WritePage(tPageInBlock page, const U8* const pInData)
@@ -25,6 +26,7 @@ void NandBlock::WritePage(tPageInBlock page, const U8* const pInData)
 	}
 
 	std::memcpy((void*)&_Buffer[page._ * _TotalBytesPerPage], pInData, _TotalBytesPerPage);
+	_NandBlockTracker.WritePage(page);
 }
 
 void NandBlock::WritePage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, const U8* const inBuffer)
@@ -38,22 +40,37 @@ void NandBlock::WritePage(const tPageInBlock& page, const tByteOffset& byteOffse
 	}
 
 	std::memcpy((void*)&_Buffer[(page._ * _TotalBytesPerPage) + byteOffset._], inBuffer, byteCount._);
+	_NandBlockTracker.WritePage(page);
 }
 
-void NandBlock::ReadPage(tPageInBlock page, U8* const pOutData)
+bool NandBlock::ReadPage(tPageInBlock page, U8* const pOutData)
 {
+    // If page is written then return false to indicate ReadPage failed
+    if (true == _NandBlockTracker.IsPageWritten(page))
+    {
+        return (false);
+    }
+
 	auto pData = (nullptr == _Buffer) ? &_ErasedBuffer[0] : &_Buffer[page._ * _TotalBytesPerPage];
 
 	std::memcpy((void*)pOutData, (void*)pData, _TotalBytesPerPage);
+	return (true);
 }
 
-void NandBlock::ReadPage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer)
+bool NandBlock::ReadPage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer)
 {
+    // If page is written then return false to indicate ReadPage failed
+    if (true == _NandBlockTracker.IsPageWritten(page))
+    {
+        return (false);
+    }
+
 	assert(byteCount._ > 0);
 	assert((byteOffset._ + byteCount._) <= _TotalBytesPerPage);
 
 	auto data = (nullptr == _Buffer) ? &_ErasedBuffer[0] : &_Buffer[(page._ * _TotalBytesPerPage) + byteOffset._];
 
 	std::memcpy((void*)outBuffer, (void*)data, byteCount._);
+	return (true);
 }
 

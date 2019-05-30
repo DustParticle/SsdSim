@@ -44,7 +44,7 @@ typedef U32 CommandId;
 
 struct CustomProtocolCommand
 {
-    enum Code
+    enum class Code
     {
         DownloadAndExecute,
         BenchmarkStart,
@@ -57,8 +57,16 @@ struct CustomProtocolCommand
         Nop
     };
 
+	enum class Status
+    {
+        Success,
+        ReadError,
+        WriteError,
+    }
+
 public:
     Code Command;
+	Status CommandStatus;
     CustomProtocolCommandDescriptor Descriptor;
 
 private:

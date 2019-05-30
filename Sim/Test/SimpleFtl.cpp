@@ -532,9 +532,16 @@ TEST_F(SimpleFtlTest, BasicRepeatedWriteReadVerify)
 		while (!CustomProtocolClient->HasResponse());
 		readMessageReponse = CustomProtocolClient->PopResponse();
 		ASSERT_EQ(readMessage, readMessageReponse);
-
-		auto result = std::memcmp(writeMessage->Payload, readMessageReponse->Payload, payloadSize);
-		ASSERT_EQ(0, result);
+		if (0 == loop)
+		{
+			ASSERT_EQ(CustomProtocolCommand::Status::SUCCESS, readMessageReponse->Data.CommandStatus);
+			auto result = std::memcmp(writeMessage->Payload, readMessageReponse->Payload, payloadSize);
+			ASSERT_EQ(0, result);
+		}
+		else
+		{
+			ASSERT_EQ(CustomProtocolCommand::Status::READ_ERROR, readMessageReponse->Data.CommandStatus);
+		}
 	}
 
 	CustomProtocolClient->DeallocateMessage(writeMessage);
