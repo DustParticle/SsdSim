@@ -56,11 +56,11 @@ public:
 
 		enum class Status
 		{
-			SUCCESS,
-			UECC,
-			WRITE_ERROR,
-			ERASE_ERROR,
-		};
+			Success,
+			Uecc,
+			WriteError,
+			EraseError,
+		}
 
 		NandAddress Address;
 		Op Operation;

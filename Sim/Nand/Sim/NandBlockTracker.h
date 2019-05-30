@@ -16,8 +16,11 @@ public:
     void WritePage(tPageInBlock page);
     bool IsPageWritten(tPageInBlock page);
 
-public:
-    static const U8 BYTE_SIZE = 8;
+private:
+    constexpr U32 CalculatingBitmapSize(U32 papgesPerBlock)
+    {
+        return ((papgesPerBlock + (8 - 1)) / 8);
+    }
 
 private:
     U32 _PagesPerBlock;

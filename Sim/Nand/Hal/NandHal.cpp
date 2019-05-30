@@ -87,8 +87,8 @@ void NandHal::Run()
 		CommandDesc& command = _CommandQueue->front();
         NandAddress& address = command.Address;
 
-		// Set defaut return status is SUCCESS
-		command.CommandStatus = CommandDesc::Status::SUCCESS;
+		// Set defaut return status is Success
+		command.CommandStatus = CommandDesc::Status::Success;
 
 		switch (command.Operation)
 		{
@@ -96,7 +96,7 @@ void NandHal::Run()
 			{
 				if (false == ReadPage(address.Channel, address.Device, address.Block, address.Page, command.Buffer))
 				{
-					command.CommandStatus = CommandDesc::Status::UECC;
+					command.CommandStatus = CommandDesc::Status::Uecc;
 				}
 			}break;
 			case CommandDesc::Op::Write:
@@ -113,7 +113,7 @@ void NandHal::Run()
 			{
 				if (false == ReadPage(address.Channel, address.Device, address.Block, address.Page, command.ByteOffset, command.ByteCount, command.Buffer))
 				{
-					command.CommandStatus = CommandDesc::Status::UECC;
+					command.CommandStatus = CommandDesc::Status::Uecc;
 				}
 			}break;
 			case CommandDesc::Op::WritePartial:

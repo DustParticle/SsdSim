@@ -22,8 +22,8 @@ void SimpleFtl::operator()()
     {
         CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
 
-		// Set default command staus is SUCCESS
-		command->CommandStatus = CustomProtocolCommand::Status::SUCCESS;
+		// Set default command staus is Success
+		command->CommandStatus = CustomProtocolCommand::Status::Success;
 
         switch (command->Command)
         {
@@ -162,9 +162,9 @@ void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
 	NandHal::CommandDesc commandDesc;
 	while(true == _NandHal->PopFinishedCommand(commandDesc))
 	{
-		if (NandHal::CommandDesc::Status::SUCCESS != commandDesc.CommandStatus)
+		if (NandHal::CommandDesc::Status::Success != commandDesc.CommandStatus)
 		{
-			command->CommandStatus = CustomProtocolCommand::Status::READ_ERROR;
+			command->CommandStatus = CustomProtocolCommand::Status::ReadError;
 		}
 	}
 }
@@ -221,9 +221,9 @@ void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
 	NandHal::CommandDesc commandDesc;
 	while(true == _NandHal->PopFinishedCommand(commandDesc))
 	{
-		if (NandHal::CommandDesc::Status::SUCCESS != commandDesc.CommandStatus)
+		if (NandHal::CommandDesc::Status::Success != commandDesc.CommandStatus)
 		{
-			command->CommandStatus = CustomProtocolCommand::Status::WRITE_ERROR;
+			command->CommandStatus = CustomProtocolCommand::Status::WriteError;
 		}
 	}
 }
