@@ -36,6 +36,7 @@ void SimpleFtl::operator()()
 
         case CustomProtocolCommand::Code::LoopbackWrite:
         {
+			command->CommandStatus = CustomProtocolCommand::Status::Success;
             _CustomProtocolInterface->SubmitResponse(command);
         } break;
 
@@ -48,6 +49,7 @@ void SimpleFtl::operator()()
 
         case CustomProtocolCommand::Code::LoopbackRead:
         {
+			command->CommandStatus = CustomProtocolCommand::Status::Success;
             _CustomProtocolInterface->SubmitResponse(command);
         } break;
 
@@ -56,6 +58,7 @@ void SimpleFtl::operator()()
             command->Descriptor.DeviceInfoPayload.TotalSector = _TotalSectors;
             command->Descriptor.DeviceInfoPayload.BytesPerSector = SimpleFtlTranslation::SectorSizeInBytes;
             command->Descriptor.DeviceInfoPayload.SectorsPerPage = _SectorsPerPage;
+			command->CommandStatus = CustomProtocolCommand::Status::Success;
             _CustomProtocolInterface->SubmitResponse(command);
         } break;
         }

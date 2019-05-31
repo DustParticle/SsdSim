@@ -45,6 +45,7 @@ protected:
 		CustomProtocolClient->Push(messageGetDeviceInfo);
 		while (!CustomProtocolClient->HasResponse());
 		DeviceInfoResponse = CustomProtocolClient->PopResponse();
+		ASSERT_EQ(CustomProtocolCommand::Status::Success, DeviceInfoResponse->Data.CommandStatus);
 	}
 
 	void TearDown() override
@@ -140,6 +141,7 @@ TEST(SimpleFtl, BasicWriteReadVerify_App)
 
     while (!clientCustomProtocolCmd->HasResponse());
     auto responseGetDeviceInfo = clientCustomProtocolCmd->PopResponse();
+	ASSERT_EQ(CustomProtocolCommand::Status::Success, responseGetDeviceInfo->Data.CommandStatus);
 
     //Write a buffer with lba and sector count
     constexpr U32 lba = 123455;
@@ -161,6 +163,7 @@ TEST(SimpleFtl, BasicWriteReadVerify_App)
     //Wait for write command response
     while (!clientCustomProtocolCmd->HasResponse());
     auto responseMessageWrite = clientCustomProtocolCmd->PopResponse();
+	ASSERT_EQ(CustomProtocolCommand::Status::Success, responseMessageWrite->Data.CommandStatus);
 
     //Read a buffer with lba and sector count
     auto readMessage = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, payloadSize, true);
@@ -173,6 +176,7 @@ TEST(SimpleFtl, BasicWriteReadVerify_App)
     //Wait for read command response
     while (!clientCustomProtocolCmd->HasResponse());
     auto responseMessageRead = clientCustomProtocolCmd->PopResponse();
+	ASSERT_EQ(CustomProtocolCommand::Status::Success, responseMessageRead->Data.CommandStatus);
 
     //Get message read buffer to verify with the write buffer
     int compareResult = std::memcmp(responseMessageWrite->Payload, responseMessageRead->Payload, payloadSize);
@@ -229,6 +233,7 @@ TEST_F(SimpleFtlTest, BasicWriteReadVerify)
     //Wait for write command response
     while (!CustomProtocolClient->HasResponse());
     auto responseMessageWrite = CustomProtocolClient->PopResponse();
+	ASSERT_EQ(CustomProtocolCommand::Status::Success, responseMessageWrite->Data.CommandStatus);
 
 	//Read a buffer with lba and sector count
     auto readMessage = AllocateMessage<CustomProtocolCommand>(CustomProtocolClient, payloadSize, true);
@@ -241,6 +246,7 @@ TEST_F(SimpleFtlTest, BasicWriteReadVerify)
     //Wait for read command response
     while (!CustomProtocolClient->HasResponse());
     auto responseMessageRead = CustomProtocolClient->PopResponse();
+	ASSERT_EQ(CustomProtocolCommand::Status::Success, responseMessageRead->Data.CommandStatus);
 
     //Get message read buffer to verify with the write buffer
     int compareResult = std::memcmp(responseMessageWrite->Payload, responseMessageRead->Payload, payloadSize);
@@ -280,6 +286,7 @@ TEST_F(SimpleFtlTest, BasicAscendingWriteReadVerifyAll)
         //Wait for write command response
         while (!CustomProtocolClient->HasResponse());
         auto responseMessageWrite = CustomProtocolClient->PopResponse();
+		ASSERT_EQ(CustomProtocolCommand::Status::Success, responseMessageWrite->Data.CommandStatus);
 
         readMessage->Data.Command = CustomProtocolCommand::Code::Read;
         readMessage->Data.Descriptor.SimpleFtlPayload.Lba = lba;
@@ -289,6 +296,7 @@ TEST_F(SimpleFtlTest, BasicAscendingWriteReadVerifyAll)
         //Wait for read command response
         while (!CustomProtocolClient->HasResponse());
         auto responseMessageRead = CustomProtocolClient->PopResponse();
+		ASSERT_EQ(CustomProtocolCommand::Status::Success, responseMessageRead->Data.CommandStatus);
 
         //Get message read buffer to verify with the write buffer
         auto pReadData = CustomProtocolClient->GetMessage(responseMessageRead->Id())->Payload;
@@ -337,6 +345,7 @@ TEST_F(SimpleFtlTest, BasicDescendingWriteReadVerifyAll)
         //Wait for write command response
         while (!CustomProtocolClient->HasResponse());
         auto responseMessageWrite = CustomProtocolClient->PopResponse();
+		ASSERT_EQ(CustomProtocolCommand::Status::Success, responseMessageWrite->Data.CommandStatus);
 
         readMessage->Data.Command = CustomProtocolCommand::Code::Read;
         readMessage->Data.Descriptor.SimpleFtlPayload.Lba = lba;
@@ -346,6 +355,7 @@ TEST_F(SimpleFtlTest, BasicDescendingWriteReadVerifyAll)
         //Wait for read command response
         while (!CustomProtocolClient->HasResponse());
         auto responseMessageRead = CustomProtocolClient->PopResponse();
+		ASSERT_EQ(CustomProtocolCommand::Status::Success, responseMessageRead->Data.CommandStatus);
 
         //Get message read buffer to verify with the write buffer
         auto pReadData = CustomProtocolClient->GetMessage(responseMessageRead->Id())->Payload;
@@ -466,6 +476,7 @@ TEST_F(SimpleFtlTest, BasicUnalignedWriteAlignedRead)
 	while (!CustomProtocolClient->HasResponse());
 	auto writeMessageReponse = CustomProtocolClient->PopResponse();
 	ASSERT_EQ(writeMessage, writeMessageReponse);
+	ASSERT_EQ(CustomProtocolCommand::Status::Success, writeMessageReponse->Data.CommandStatus);
 
 	auto readMessage = AllocateMessage<CustomProtocolCommand>(CustomProtocolClient, bytesPerSector * sectorsPerPage, true);
 	ASSERT_NE(readMessage, nullptr);
@@ -476,6 +487,7 @@ TEST_F(SimpleFtlTest, BasicUnalignedWriteAlignedRead)
 	while (!CustomProtocolClient->HasResponse());
 	auto readMessageReponse = CustomProtocolClient->PopResponse();
 	ASSERT_EQ(readMessage, readMessageReponse);
+	ASSERT_EQ(CustomProtocolCommand::Status::Success, readMessageReponse->Data.CommandStatus);
 
 	auto writeMessageBuffer = static_cast<void*>(writeMessageReponse->Payload);
 	auto readMessageBuffer = &(static_cast<U8*>(readMessageReponse->Payload)[lba * bytesPerSector]);
@@ -527,21 +539,16 @@ TEST_F(SimpleFtlTest, BasicRepeatedWriteReadVerify)
 		while (!CustomProtocolClient->HasResponse());
 		writeMessageReponse = CustomProtocolClient->PopResponse();
 		ASSERT_EQ(writeMessage, writeMessageReponse);
+		ASSERT_EQ(CustomProtocolCommand::Status::Success, writeMessageReponse->Data.CommandStatus);
 
 		CustomProtocolClient->Push(readMessage);
 		while (!CustomProtocolClient->HasResponse());
 		readMessageReponse = CustomProtocolClient->PopResponse();
 		ASSERT_EQ(readMessage, readMessageReponse);
-		if (0 == loop)
-		{
-			ASSERT_EQ(CustomProtocolCommand::Status::SUCCESS, readMessageReponse->Data.CommandStatus);
-			auto result = std::memcmp(writeMessage->Payload, readMessageReponse->Payload, payloadSize);
-			ASSERT_EQ(0, result);
-		}
-		else
-		{
-			ASSERT_EQ(CustomProtocolCommand::Status::READ_ERROR, readMessageReponse->Data.CommandStatus);
-		}
+		
+		ASSERT_EQ(CustomProtocolCommand::Status::Success, readMessageReponse->Data.CommandStatus);
+		auto result = std::memcmp(writeMessage->Payload, readMessageReponse->Payload, payloadSize);
+		ASSERT_EQ(0, result);
 	}
 
 	CustomProtocolClient->DeallocateMessage(writeMessage);

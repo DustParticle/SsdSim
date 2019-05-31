@@ -60,7 +60,7 @@ public:
 			Uecc,
 			WriteError,
 			EraseError,
-		}
+		};
 
 		NandAddress Address;
 		Op Operation;

@@ -58,11 +58,11 @@ struct CustomProtocolCommand
     };
 
 	enum class Status
-    {
-        Success,
-        ReadError,
-        WriteError,
-    }
+	{
+		Success,
+		ReadError,
+		WriteError,
+	};
 
 public:
     Code Command;

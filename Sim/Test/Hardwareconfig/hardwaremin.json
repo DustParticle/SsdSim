@@ -3,7 +3,7 @@
     "channels": 1,
     "devices": 1,
     "blocks": 128,
-    "pages": 32,
+    "pages": 64,
     "bytes": 4096
   },
   "RomCode": {
