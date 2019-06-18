@@ -6,12 +6,12 @@
 HMODULE _DllInstance;
 HMODULE _NewDllInstance;
 
-typedef void(__stdcall *fInitialize)(std::shared_ptr<NandHal> nandHal);
+typedef void(__stdcall *fInitialize)(std::shared_ptr<NandHal> nandHal, std::shared_ptr<BufferHal> bufferHal);
 typedef void(__stdcall *fSetIpcName)(const std::string& ipcName);
 typedef void(__stdcall *fExecute)();
 typedef void(__stdcall *fExecuteCallback)(std::function<bool(std::string)> callback);
 
-FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr), _NandHal(nullptr)
+FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr), _NandHal(nullptr), _BufferHal(nullptr)
 {
     _DllInstance = NULL;
     _NewDllInstance = NULL;
@@ -30,7 +30,7 @@ bool FirmwareCore::SetExecute(std::string Filename)
     auto initialize = (fInitialize)GetProcAddress(_NewDllInstance, "Initialize");
     if (initialize)
     {
-        initialize(_NandHal);
+        initialize(_NandHal, _BufferHal);
     }
 
     // search the SetIpcName functions and execute
@@ -102,9 +102,10 @@ void FirmwareCore::SwapExecute()
     _NewDllInstance = NULL;
 }
 
-void FirmwareCore::LinkNandHal(std::shared_ptr<NandHal> nandHal)
+void FirmwareCore::SetHalComponents(std::shared_ptr<NandHal> nandHal, std::shared_ptr<BufferHal> bufferHal)
 {
     _NandHal = nandHal;
+    _BufferHal = bufferHal;
 }
 
 void FirmwareCore::SetIpcNames(const std::string& customProtocolIpcName)

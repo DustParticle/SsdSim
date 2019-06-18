@@ -144,6 +144,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Buffer\Buffer.vcxproj">
+      <Project>{f0a74866-ef22-4f3c-9656-2e5be6d76d67}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Nand\Nand.vcxproj">
       <Project>{885bbd45-90f8-4446-bad6-4a1702d1f1f7}</Project>
     </ProjectReference>

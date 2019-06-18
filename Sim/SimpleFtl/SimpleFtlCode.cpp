@@ -13,9 +13,10 @@ SimpleFtl _SimpleFtl;
 
 extern "C"
 {
-    void __declspec(dllexport) __stdcall Initialize(std::shared_ptr<NandHal> nandHal)
+    void __declspec(dllexport) __stdcall Initialize(std::shared_ptr<NandHal> nandHal, std::shared_ptr<BufferHal> bufferHal)
     {
         _SimpleFtl.SetNandHal(nandHal.get());
+        _SimpleFtl.SetBufferHal(bufferHal.get());
     }
 
     void __declspec(dllexport) __stdcall Execute()

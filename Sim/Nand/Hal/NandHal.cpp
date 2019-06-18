@@ -15,7 +15,7 @@ void NandHal::PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerPage, U32 pa
 	_Geometry._BytesPerPage = bytesPerPage;
 }
 
-void NandHal::Init()
+void NandHal::Init(std::shared_ptr<BufferHal> bufferHal)
 {
 	//Normally in hardware implementation we would query each device
 	//Here we rely on PreInit
@@ -26,6 +26,8 @@ void NandHal::Init()
 		nandChannel.Init(_Geometry._DevicesPerChannel, _Geometry._BlocksPerDevice, _Geometry._PagesPerBlock, _Geometry._BytesPerPage);
 		_NandChannels.push_back(std::move(nandChannel));
 	}
+
+    _BufferHal = bufferHal;
 }
 
 void NandHal::QueueCommand(const CommandDesc& command)
@@ -43,9 +45,9 @@ bool NandHal::PopFinishedCommand(CommandDesc& command)
 	return (_FinishedCommandQueue->pop(command));
 }
 
-bool NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData)
+bool NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer)
 {
-	return (_NandChannels[channel._][device._].ReadPage(block, page, pOutData));
+	return (_NandChannels[channel._][device._].ReadPage(block, page, _BufferHal->ToBuffer(outBuffer)));
 }
 
 bool NandHal::ReadPage(const tChannel& channel,
@@ -54,14 +56,14 @@ bool NandHal::ReadPage(const tChannel& channel,
 	const tPageInBlock& page,
 	const tByteOffset& byteOffset,
 	const tByteCount& byteCount,
-	U8* const outBuffer)
+    const Buffer &outBuffer)
 {
-	return (_NandChannels[channel._][device._].ReadPage(block, page, byteOffset, byteCount, outBuffer));
+	return (_NandChannels[channel._][device._].ReadPage(block, page, byteOffset, byteCount, _BufferHal->ToBuffer(outBuffer)));
 }
 
-void NandHal::WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const U8* const pInData)
+void NandHal::WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer)
 {
-	_NandChannels[channel._][device._].WritePage(block, page, pInData);
+	_NandChannels[channel._][device._].WritePage(block, page, _BufferHal->ToBuffer(inBuffer));
 }
 
 void NandHal::WritePage(const tChannel& channel,
@@ -70,9 +72,9 @@ void NandHal::WritePage(const tChannel& channel,
 	const tPageInBlock& page,
 	const tByteOffset& byteOffset,
 	const tByteCount& byteCount,
-	const U8* const inBuffer)
+    const Buffer &inBuffer)
 {
-	_NandChannels[channel._][device._].WritePage(block, page, byteOffset, byteCount, inBuffer);
+	_NandChannels[channel._][device._].WritePage(block, page, byteOffset, byteCount, _BufferHal->ToBuffer(inBuffer));
 }
 
 void NandHal::EraseBlock(tChannel channel, tDeviceInChannel device, tBlockInDevice block)

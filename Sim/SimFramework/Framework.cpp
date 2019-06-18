@@ -11,6 +11,7 @@ Framework::Framework() :
 	_State(State::Start)
 {
     _NandHal = std::make_shared<NandHal>();
+    _BufferHal = std::make_shared<BufferHal>();
     _FirmwareCore = std::make_shared<FirmwareCore>();
 }
 
@@ -146,8 +147,11 @@ void Framework::SetupNandHal(JSONParser& parser)
 	constexpr U32 minBytesValue = 4 * 1024;
 	U32 bytes = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
+    constexpr U32 maxBufferSize = 10000 * 512;
+    _BufferHal->PreInit(maxBufferSize);
+
 	_NandHal->PreInit(channels, devices, blocks, pages, bytes);
-	_NandHal->Init();
+	_NandHal->Init(_BufferHal);
 }
 
 void Framework::GetFirmwareCoreInfo(JSONParser& parser)
@@ -168,7 +172,7 @@ void Framework::operator()()
 	std::future<void> firmwareMain;
 
     // Load ROM
-	_FirmwareCore->LinkNandHal(_NandHal);
+	_FirmwareCore->SetHalComponents(_NandHal, _BufferHal);
 	_FirmwareCore->SetExecute(this->_RomCodePath);
 
     while (State::Exit != _State)
