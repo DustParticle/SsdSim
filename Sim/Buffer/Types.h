@@ -5,8 +5,8 @@
 
 struct Buffer
 {
-    U32 Index;
-    U32 Size;
+    U32 Handle;
+    U32 SizeInSector;
 };
 
 #endif

@@ -140,6 +140,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Buffer\Buffer.vcxproj">
+      <Project>{f0a74866-ef22-4f3c-9656-2e5be6d76d67}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\HostComm\HostComm.vcxproj">
       <Project>{fdf75646-6e43-4a8a-bc13-d597b68754c2}</Project>
     </ProjectReference>

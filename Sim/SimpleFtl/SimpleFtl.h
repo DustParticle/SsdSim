@@ -29,8 +29,8 @@ private:
     void ReadFromNand(CustomProtocolCommand *command);
     void WriteToNand(CustomProtocolCommand *command);
 
-	void ReadPage(const U32& lba, const Buffer &outBuffer, U8* const descBuffer);
-    void ReadPage(const U32& lba, const Buffer &outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount, U8* const descBuffer);
+	void ReadPage(const U32& lba, const Buffer &outBuffer, const U32 &descSectorIndex);
+    void ReadPage(const U32& lba, const Buffer &outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount, const U32 &descSectorIndex);
 	void WritePage(const U32& lba, const Buffer &outBuffer);
     void WritePage(const U32& lba, const Buffer &outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount);
 

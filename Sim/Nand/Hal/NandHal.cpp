@@ -15,7 +15,7 @@ void NandHal::PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerPage, U32 pa
 	_Geometry._BytesPerPage = bytesPerPage;
 }
 
-void NandHal::Init(std::shared_ptr<BufferHal> bufferHal)
+void NandHal::Init(BufferHal *bufferHal)
 {
 	//Normally in hardware implementation we would query each device
 	//Here we rely on PreInit

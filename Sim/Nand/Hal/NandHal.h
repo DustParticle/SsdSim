@@ -21,7 +21,7 @@ public:
 	void PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerDevice, U32 pagesPerBlock, U32 bytesPerPage);
 	
 public:
-	void Init(std::shared_ptr<BufferHal> bufferHal);
+	void Init(BufferHal *bufferHal);
 
 public:
     struct Geometry
@@ -70,7 +70,7 @@ public:
 		tByteOffset ByteOffset;
 		tByteCount ByteCount;
 
-        U8 *DescBuffer;
+        U32 DescSectorIndex;
 	};
 
 	void QueueCommand(const CommandDesc& command);
@@ -106,7 +106,7 @@ protected:
 private:
 	std::vector<NandChannel> _NandChannels;
 
-    std::shared_ptr<BufferHal> _BufferHal;
+    BufferHal *_BufferHal;
 
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _FinishedCommandQueue;

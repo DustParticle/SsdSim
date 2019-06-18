@@ -6,6 +6,9 @@
     "pages": 256,
     "bytes": 8192
   },
+  "BufferHalPreInit": {
+	"kbs": 2048
+  },
   "RomCode": {
 	"path": ".\\RomCode.dll"
   }

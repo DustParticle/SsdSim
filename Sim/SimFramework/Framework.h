@@ -48,6 +48,7 @@ public:
 
 private:
     void SetupNandHal(JSONParser& parser);
+    void SetupBufferHal(JSONParser& parser);
     void GetFirmwareCoreInfo(JSONParser& parser);
 
 private:

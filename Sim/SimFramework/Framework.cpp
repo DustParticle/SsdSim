@@ -27,6 +27,8 @@ void Framework::Init(const std::string& configFileName, std::string ipcNamesPref
 		throw Exception("Failed to parse " + configFileName);
 	}
 
+    // Keep this order
+    SetupBufferHal(parser);
 	SetupNandHal(parser);
 	GetFirmwareCoreInfo(parser);
 
@@ -147,11 +149,23 @@ void Framework::SetupNandHal(JSONParser& parser)
 	constexpr U32 minBytesValue = 4 * 1024;
 	U32 bytes = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
-    constexpr U32 maxBufferSize = 10000 * 512;
-    _BufferHal->PreInit(maxBufferSize);
-
 	_NandHal->PreInit(channels, devices, blocks, pages, bytes);
-	_NandHal->Init(_BufferHal);
+	_NandHal->Init(_BufferHal.get());
+}
+
+void Framework::SetupBufferHal(JSONParser& parser)
+{
+    U32 maxBufferSizeInKB;
+    try
+    {
+        maxBufferSizeInKB = parser.GetValueIntForAttribute("BufferHalPreInit", "kbs");
+    }
+    catch (JSONParser::Exception e)
+    {
+        throw Exception("Failed to parse \'kbs\' value. Expecting an \'int\'");
+    }
+
+    _BufferHal->PreInit(maxBufferSizeInKB);
 }
 
 void Framework::GetFirmwareCoreInfo(JSONParser& parser)

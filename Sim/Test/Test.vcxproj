@@ -54,6 +54,7 @@
     <ClInclude Include="SsdSimApp.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="HostComm.cpp" />
     <ClCompile Include="Nand.cpp" />
     <ClCompile Include="pch.cpp">

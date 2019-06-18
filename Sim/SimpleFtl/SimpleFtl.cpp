@@ -70,7 +70,7 @@ void SimpleFtl::operator()()
     }
 }
 
-void SimpleFtl::ReadPage(const U32& lba, const Buffer &outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount, U8* const descBuffer)
+void SimpleFtl::ReadPage(const U32& lba, const Buffer &outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount, const U32 &descSectorIndex)
 {
 	assert((sectorOffset._ + sectorCount._) <= _SectorsPerPage);
 
@@ -78,20 +78,20 @@ void SimpleFtl::ReadPage(const U32& lba, const Buffer &outBuffer, const tSectorO
     commandDesc.Operation = NandHal::CommandDesc::Op::ReadPartial;
     SimpleFtlTranslation::LbaToNandAddress(lba, commandDesc.Address);
 	commandDesc.Buffer = outBuffer;
-    commandDesc.DescBuffer = descBuffer;
+    commandDesc.DescSectorIndex = descSectorIndex;
 	commandDesc.ByteOffset._ = sectorOffset._ * SimpleFtlTranslation::SectorSizeInBytes;
 	commandDesc.ByteCount._ = sectorCount._ * SimpleFtlTranslation::SectorSizeInBytes;
 
     _NandHal->QueueCommand(commandDesc);
 }
 
-void SimpleFtl::ReadPage(const U32& lba, const Buffer &outBuffer, U8* const descBuffer)
+void SimpleFtl::ReadPage(const U32& lba, const Buffer &outBuffer, const U32 &descSectorIndex)
 {
 	NandHal::CommandDesc commandDesc;
 	commandDesc.Operation = NandHal::CommandDesc::Op::Read;
 	SimpleFtlTranslation::LbaToNandAddress(lba, commandDesc.Address);
 	commandDesc.Buffer = outBuffer;
-    commandDesc.DescBuffer = descBuffer;
+    commandDesc.DescSectorIndex = descSectorIndex;
 
 	_NandHal->QueueCommand(commandDesc);
 }
@@ -124,12 +124,11 @@ void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
 {
     U32 lba = command->Descriptor.SimpleFtlPayload.Lba;
     U32 sectorCount = command->Descriptor.SimpleFtlPayload.SectorCount;
-    U32 bufferSizeInBytes = 0;
-    U8* rawBuffer = _CustomProtocolInterface->GetBuffer(command, bufferSizeInBytes);
 
     tSectorOffset startSectorOffset;
 	startSectorOffset._ = lba % _SectorsPerPage;
 	U32 remainingSectors = sectorCount;
+    Buffer buffer;
 	if (startSectorOffset._ != 0)
 	{
 		tSectorCount sectorsToProcessThisPage;
@@ -142,9 +141,8 @@ void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
 			sectorsToProcessThisPage._ = _SectorsPerPage - startSectorOffset._;
 		}
 
-        Buffer buffer = _BufferHal->AllocateBuffer(sectorsToProcessThisPage._ << SimpleFtlTranslation::SectorSizeInBits);
-		ReadPage(lba, buffer, startSectorOffset, sectorsToProcessThisPage, rawBuffer);
-        rawBuffer += sectorsToProcessThisPage._ << SimpleFtlTranslation::SectorSizeInBits;
+        _BufferHal->AllocateBuffer(sectorsToProcessThisPage._, buffer);
+		ReadPage(lba, buffer, startSectorOffset, sectorsToProcessThisPage, 0);
 		remainingSectors -= sectorsToProcessThisPage._;
 
 		startSectorOffset._ = 0;
@@ -155,19 +153,17 @@ void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
 	{
 		if (remainingSectors >= _SectorsPerPage)
 		{
-            Buffer buffer = _BufferHal->AllocateBuffer(_SectorsPerPage << SimpleFtlTranslation::SectorSizeInBits);
-			ReadPage(lba, buffer, rawBuffer);
-            rawBuffer += _SectorsPerPage << SimpleFtlTranslation::SectorSizeInBits;
+            _BufferHal->AllocateBuffer(_SectorsPerPage, buffer);
+			ReadPage(lba, buffer, sectorCount - remainingSectors);
 			lba += _SectorsPerPage;
 			remainingSectors -= _SectorsPerPage;
 		}
 		else
 		{
 			tSectorOffset sectorOffset;	sectorOffset._ = 0;
-			tSectorCount sectorCount; sectorCount._ = remainingSectors;
-            Buffer buffer = _BufferHal->AllocateBuffer(remainingSectors << SimpleFtlTranslation::SectorSizeInBits);
-            ReadPage(lba, buffer, sectorOffset, sectorCount, rawBuffer);
-            rawBuffer += remainingSectors << SimpleFtlTranslation::SectorSizeInBits;
+			tSectorCount tSectorCount; tSectorCount._ = remainingSectors;
+            _BufferHal->AllocateBuffer(remainingSectors, buffer);
+            ReadPage(lba, buffer, sectorOffset, tSectorCount, sectorCount - remainingSectors);
 			break;
 		}
 	}
@@ -183,7 +179,7 @@ void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
 		}
         else
         {
-            _BufferHal->Memcpy(commandDesc.DescBuffer, commandDesc.Buffer);
+            _CustomProtocolInterface->TransferOut(command, commandDesc.Buffer, commandDesc.DescSectorIndex);
         }
         _BufferHal->DeallocateBuffer(commandDesc.Buffer);
 	}
@@ -193,12 +189,11 @@ void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
 {
     U32 lba = command->Descriptor.SimpleFtlPayload.Lba;
     U32 sectorCount = command->Descriptor.SimpleFtlPayload.SectorCount;
-    U32 bufferSizeInBytes = 0;
-    U8* rawBuffer = _CustomProtocolInterface->GetBuffer(command, bufferSizeInBytes);
 
 	tSectorOffset startSectorOffset;
 	startSectorOffset._ = lba % _SectorsPerPage;
 	U32 remainingSectors = sectorCount;
+    Buffer buffer;
 	if (startSectorOffset._ != 0)
 	{
 		tSectorCount sectorsToProcessThisPage;
@@ -210,11 +205,10 @@ void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
 		{
 			sectorsToProcessThisPage._ = _SectorsPerPage - startSectorOffset._;
 		}
-        Buffer buffer = _BufferHal->AllocateBuffer(sectorsToProcessThisPage._ << SimpleFtlTranslation::SectorSizeInBits);
-        _BufferHal->Memcpy(buffer, rawBuffer);
+        _BufferHal->AllocateBuffer(sectorsToProcessThisPage._, buffer);
+        _CustomProtocolInterface->TransferIn(command, buffer, 0);
         WritePage(lba, buffer, startSectorOffset, sectorsToProcessThisPage);
-        rawBuffer += sectorsToProcessThisPage._ << SimpleFtlTranslation::SectorSizeInBits;
-		remainingSectors -= sectorsToProcessThisPage._;
+        remainingSectors -= sectorsToProcessThisPage._;
 
 		startSectorOffset._ = 0;
 		lba += sectorsToProcessThisPage._;
@@ -224,20 +218,19 @@ void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
 	{
 		if (remainingSectors >= _SectorsPerPage)
 		{
-            Buffer buffer = _BufferHal->AllocateBuffer(_SectorsPerPage << SimpleFtlTranslation::SectorSizeInBits);
-            _BufferHal->Memcpy(buffer, rawBuffer);
+            _BufferHal->AllocateBuffer(_SectorsPerPage, buffer);
+            _CustomProtocolInterface->TransferIn(command, buffer, sectorCount - remainingSectors);
 			WritePage(lba, buffer);
-            rawBuffer += _SectorsPerPage << SimpleFtlTranslation::SectorSizeInBits;
-			lba += _SectorsPerPage;
+            lba += _SectorsPerPage;
 			remainingSectors -= _SectorsPerPage;
 		}
 		else
 		{
 			tSectorOffset sectorOffset;	sectorOffset._ = 0;
-			tSectorCount sectorCount; sectorCount._ = remainingSectors;
-            Buffer buffer = _BufferHal->AllocateBuffer(remainingSectors << SimpleFtlTranslation::SectorSizeInBits);
-            WritePage(lba, buffer, sectorOffset, sectorCount);
-            rawBuffer += remainingSectors << SimpleFtlTranslation::SectorSizeInBits;
+			tSectorCount tSectorCount; tSectorCount._ = remainingSectors;
+            _BufferHal->AllocateBuffer(remainingSectors, buffer);
+            _CustomProtocolInterface->TransferIn(command, buffer, sectorCount - remainingSectors);
+            WritePage(lba, buffer, sectorOffset, tSectorCount);
             break;
 		}
 	}
