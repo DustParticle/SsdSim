@@ -47,7 +47,7 @@ bool NandHal::PopFinishedCommand(CommandDesc& command)
 
 bool NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer)
 {
-	return (_NandChannels[channel._][device._].ReadPage(block, page, _BufferHal->ToBuffer(outBuffer)));
+	return (_NandChannels[channel._][device._].ReadPage(block, page, _BufferHal->ToPointer(outBuffer)));
 }
 
 bool NandHal::ReadPage(const tChannel& channel,
@@ -58,12 +58,12 @@ bool NandHal::ReadPage(const tChannel& channel,
 	const tByteCount& byteCount,
     const Buffer &outBuffer)
 {
-	return (_NandChannels[channel._][device._].ReadPage(block, page, byteOffset, byteCount, _BufferHal->ToBuffer(outBuffer)));
+	return (_NandChannels[channel._][device._].ReadPage(block, page, byteOffset, byteCount, _BufferHal->ToPointer(outBuffer)));
 }
 
 void NandHal::WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer)
 {
-	_NandChannels[channel._][device._].WritePage(block, page, _BufferHal->ToBuffer(inBuffer));
+	_NandChannels[channel._][device._].WritePage(block, page, _BufferHal->ToPointer(inBuffer));
 }
 
 void NandHal::WritePage(const tChannel& channel,
@@ -74,7 +74,7 @@ void NandHal::WritePage(const tChannel& channel,
 	const tByteCount& byteCount,
     const Buffer &inBuffer)
 {
-	_NandChannels[channel._][device._].WritePage(block, page, byteOffset, byteCount, _BufferHal->ToBuffer(inBuffer));
+	_NandChannels[channel._][device._].WritePage(block, page, byteOffset, byteCount, _BufferHal->ToPointer(inBuffer));
 }
 
 void NandHal::EraseBlock(tChannel channel, tDeviceInChannel device, tBlockInDevice block)

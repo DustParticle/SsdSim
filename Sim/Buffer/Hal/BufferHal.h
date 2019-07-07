@@ -19,7 +19,7 @@ public:
     bool AllocateBuffer(const U32 &sectorCount, Buffer &buffer);
     void DeallocateBuffer(const Buffer &buffer);
 
-    U8* ToBuffer(const Buffer &buffer);
+    U8* ToPointer(const Buffer &buffer);
     void Memcpy(U8* const dest, const Buffer &src);
     void Memcpy(const Buffer &dest, const U8* const src);
 

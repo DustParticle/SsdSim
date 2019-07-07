@@ -66,13 +66,13 @@ TEST(NandHal, Basic) {
 
     Buffer writeBuffer, readBuffer;
     ASSERT_TRUE(bufferHal.AllocateBuffer(sectorsPerPage, writeBuffer));
-	U8 *pWriteData = bufferHal.ToBuffer(writeBuffer);
+	U8 *pWriteData = bufferHal.ToPointer(writeBuffer);
 	for (auto i(0); i < sizeof(pWriteData); ++i)
 	{
         pWriteData[i] = i % 255;
 	}
     ASSERT_TRUE(bufferHal.AllocateBuffer(sectorsPerPage, readBuffer));
-    U8 *pReadData = bufferHal.ToBuffer(readBuffer);
+    U8 *pReadData = bufferHal.ToPointer(readBuffer);
 	U8 pErasedBuffer[bytes];
 	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
 
@@ -137,7 +137,7 @@ TEST(NandHal, Basic_CommandQueue)
         ASSERT_TRUE(bufferHal.AllocateBuffer(sectorsPerPage, writeBuffers[i]));
         ASSERT_TRUE(bufferHal.AllocateBuffer(sectorsPerPage, readBuffers[i]));
 
-        U8* pBuffer = bufferHal.ToBuffer(writeBuffers[i]);
+        U8* pBuffer = bufferHal.ToPointer(writeBuffers[i]);
 		for (auto i(0); i < bytes; ++i)
 		{
 			pBuffer[i] = i % 255;

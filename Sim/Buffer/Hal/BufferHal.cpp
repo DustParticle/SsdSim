@@ -42,7 +42,7 @@ void BufferHal::DeallocateBuffer(const Buffer &buffer)
     _CurrentFreeSizeInSector += buffer.SizeInSector;
 }
 
-U8* BufferHal::ToBuffer(const Buffer &buffer)
+U8* BufferHal::ToPointer(const Buffer &buffer)
 {
     auto temp = _AllocatedBuffers->find(buffer.Handle);
     if (temp != _AllocatedBuffers->end())
@@ -54,10 +54,10 @@ U8* BufferHal::ToBuffer(const Buffer &buffer)
 
 void BufferHal::Memcpy(U8* const dest, const Buffer &src)
 {
-    memcpy(dest, ToBuffer(src), src.SizeInSector << SectorSizeInBits);
+    memcpy(dest, ToPointer(src), src.SizeInSector << SectorSizeInBits);
 }
 
 void BufferHal::Memcpy(const Buffer &dest, const U8* const src)
 {
-    memcpy(ToBuffer(dest), src, dest.SizeInSector << SectorSizeInBits);
+    memcpy(ToPointer(dest), src, dest.SizeInSector << SectorSizeInBits);
 }
