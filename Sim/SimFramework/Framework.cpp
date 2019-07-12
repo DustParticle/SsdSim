@@ -11,6 +11,7 @@ Framework::Framework() :
 	_State(State::Start)
 {
     _NandHal = std::make_shared<NandHal>();
+    _BufferHal = std::make_shared<BufferHal>();
     _FirmwareCore = std::make_shared<FirmwareCore>();
 }
 
@@ -26,6 +27,8 @@ void Framework::Init(const std::string& configFileName, std::string ipcNamesPref
 		throw Exception("Failed to parse " + configFileName);
 	}
 
+    // Keep this order
+    SetupBufferHal(parser);
 	SetupNandHal(parser);
 	GetFirmwareCoreInfo(parser);
 
@@ -147,7 +150,22 @@ void Framework::SetupNandHal(JSONParser& parser)
 	U32 bytes = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
 	_NandHal->PreInit(channels, devices, blocks, pages, bytes);
-	_NandHal->Init();
+	_NandHal->Init(_BufferHal.get());
+}
+
+void Framework::SetupBufferHal(JSONParser& parser)
+{
+    U32 maxBufferSizeInKB;
+    try
+    {
+        maxBufferSizeInKB = parser.GetValueIntForAttribute("BufferHalPreInit", "kbs");
+    }
+    catch (JSONParser::Exception e)
+    {
+        throw Exception("Failed to parse \'kbs\' value. Expecting an \'int\'");
+    }
+
+    _BufferHal->PreInit(maxBufferSizeInKB);
 }
 
 void Framework::GetFirmwareCoreInfo(JSONParser& parser)
@@ -168,7 +186,7 @@ void Framework::operator()()
 	std::future<void> firmwareMain;
 
     // Load ROM
-	_FirmwareCore->LinkNandHal(_NandHal);
+	_FirmwareCore->SetHalComponents(_NandHal, _BufferHal);
 	_FirmwareCore->SetExecute(this->_RomCodePath);
 
     while (State::Exit != _State)

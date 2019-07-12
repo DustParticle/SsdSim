@@ -5,6 +5,7 @@
 #include "BasicTypes.h"
 #include "SimFrameworkBase/FrameworkThread.h"
 #include "Nand/Hal/NandHal.h"
+#include "Buffer/Hal/BufferHal.h"
 
 class FirmwareCore : public FrameworkThread
 {
@@ -15,7 +16,7 @@ public:
     FirmwareCore();
     bool SetExecute(std::string Filename);
     void Unload();
-    void LinkNandHal(std::shared_ptr<NandHal> nandHal);
+    void SetHalComponents(std::shared_ptr<NandHal> nandHal, std::shared_ptr<BufferHal> bufferHal);
     void SetIpcNames(const std::string& customProtocolIpcName);
 
 private:
@@ -25,6 +26,7 @@ private:
     std::function<void()> _Execute;
     std::function<void()> _NewExecute;
     std::shared_ptr<NandHal> _NandHal;
+    std::shared_ptr<BufferHal> _BufferHal;
     std::string _CustomProtocolIpcName;
 };
 

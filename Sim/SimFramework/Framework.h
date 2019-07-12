@@ -5,6 +5,7 @@
 #include <exception>
 #include <string>
 
+#include "Buffer/Hal/BufferHal.h"
 #include "Nand/Hal/NandHal.h"
 #include "FirmwareCore.h"
 #include "HostComm/Ipc/MessageServer.hpp"
@@ -47,6 +48,7 @@ public:
 
 private:
     void SetupNandHal(JSONParser& parser);
+    void SetupBufferHal(JSONParser& parser);
     void GetFirmwareCoreInfo(JSONParser& parser);
 
 private:
@@ -62,6 +64,7 @@ private:
 private:
     std::shared_ptr<MessageServer<SimFrameworkCommand>> _SimServer;
     std::shared_ptr<MessageServer<CustomProtocolCommand>> _ProtocolServer;
+    std::shared_ptr<BufferHal> _BufferHal;
     std::shared_ptr<NandHal> _NandHal;
     std::shared_ptr<FirmwareCore> _FirmwareCore;
 	std::string _RomCodePath;

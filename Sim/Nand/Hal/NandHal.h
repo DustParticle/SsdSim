@@ -9,6 +9,7 @@
 
 #include "SimFrameworkBase/FrameworkThread.h"
 #include "Nand/Sim/NandChannel.h"
+#include "Buffer/Hal/BufferHal.h"
 
 class NandHal : public FrameworkThread
 {
@@ -20,7 +21,7 @@ public:
 	void PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerDevice, U32 pagesPerBlock, U32 bytesPerPage);
 	
 public:
-	void Init();
+	void Init(BufferHal *bufferHal);
 
 public:
     struct Geometry
@@ -65,9 +66,11 @@ public:
 		NandAddress Address;
 		Op Operation;
 		Status CommandStatus;
-		U8* Buffer;
+		Buffer Buffer;
 		tByteOffset ByteOffset;
 		tByteCount ByteCount;
+
+        U32 DescSectorIndex;
 	};
 
 	void QueueCommand(const CommandDesc& command);
@@ -75,7 +78,7 @@ public:
 	bool PopFinishedCommand(CommandDesc& command);
 
 public:
-	bool ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, U8* const pOutData);
+	bool ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer);
 	bool ReadPage(
 		const tChannel& channel,
 		const tDeviceInChannel& device,
@@ -83,9 +86,9 @@ public:
 		const tPageInBlock& page,
 		const tByteOffset& byteOffset, 
 		const tByteCount& byteCount, 
-		U8* const outBuffer);
+        const Buffer &outBuffer);
 
-	void WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const U8* const pInData);
+	void WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer);
 	void WritePage(
 		const tChannel& channel, 
 		const tDeviceInChannel& device, 
@@ -93,7 +96,7 @@ public:
 		const tPageInBlock& page, 
 		const tByteOffset& byteOffset, 
 		const tByteCount& byteCount, 
-		const U8* const inBuffer);
+        const Buffer &inBuffer);
 
 	void EraseBlock(tChannel channel, tDeviceInChannel chip, tBlockInDevice block);
 
@@ -102,6 +105,8 @@ protected:
 
 private:
 	std::vector<NandChannel> _NandChannels;
+
+    BufferHal *_BufferHal;
 
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _FinishedCommandQueue;
