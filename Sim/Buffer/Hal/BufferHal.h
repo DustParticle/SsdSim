@@ -2,6 +2,7 @@
 #define __BufferHal_h__
 
 #include <map>
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
 
 #include "BasicTypes.h"
 #include "Buffer/Types.h"
@@ -28,6 +29,8 @@ private:
     U32 _CurrentFreeSizeInSector;
     U32 _CurrentBufferHandle;
     std::unique_ptr<std::map<U32, std::unique_ptr<U8[]>>> _AllocatedBuffers;
+
+    boost::interprocess::interprocess_mutex _Mutex;
 };
 
 #endif

@@ -1,6 +1,9 @@
 #include <assert.h>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include "BufferHal.h"
+
+using namespace boost::interprocess;
 
 BufferHal::BufferHal() : _CurrentBufferHandle(0)
 {
@@ -15,6 +18,7 @@ void BufferHal::PreInit(const U32 &maxBufferSizeInKB)
 
 bool BufferHal::AllocateBuffer(const U32 &bufferSizeInSector, Buffer &buffer)
 {
+    scoped_lock<interprocess_mutex> lock(_Mutex);
     if (bufferSizeInSector > _CurrentFreeSizeInSector)
     {
         return false;
@@ -34,8 +38,10 @@ bool BufferHal::AllocateBuffer(const U32 &bufferSizeInSector, Buffer &buffer)
 
 void BufferHal::DeallocateBuffer(const Buffer &buffer)
 {
+    scoped_lock<interprocess_mutex> lock(_Mutex);
+
     assert(buffer.SizeInSector + _CurrentFreeSizeInSector <= _MaxBufferSizeInSector);
-    
+
     auto temp = _AllocatedBuffers->find(buffer.Handle);
     assert(_AllocatedBuffers->end() != temp);
     _AllocatedBuffers->erase(temp);
@@ -44,6 +50,8 @@ void BufferHal::DeallocateBuffer(const Buffer &buffer)
 
 U8* BufferHal::ToPointer(const Buffer &buffer)
 {
+    scoped_lock<interprocess_mutex> lock(_Mutex);
+
     auto temp = _AllocatedBuffers->find(buffer.Handle);
     if (temp != _AllocatedBuffers->end())
     {
