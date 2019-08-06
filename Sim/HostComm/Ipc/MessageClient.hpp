@@ -43,6 +43,7 @@ public:
 
     void Push(Message<TData>* message)
     {
+        message->_SubmitTime = std::chrono::high_resolution_clock::now();
         MessageBaseService<TData>::DoPush(MessageBaseService<TData>::_Queue, message);
     }
 

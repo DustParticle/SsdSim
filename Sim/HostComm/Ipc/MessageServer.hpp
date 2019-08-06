@@ -74,6 +74,7 @@ public:
             throw "This message doesn't need respond";
         }
 
+        message->_ResponseTime = std::chrono::high_resolution_clock::now();
         MessageBaseService<TData>::DoPush(MessageBaseService<TData>::_ResponseQueue, message);
     }
 

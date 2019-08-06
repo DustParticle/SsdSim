@@ -382,15 +382,18 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
 
     unsigned long totalBytesWrittenInSeconds = 0;
     double writeRate = 0;
-    duration<double> dataCmdTotalTime = duration<double>::zero();
-    std::map<U32, high_resolution_clock::time_point> t0s;
+    high_resolution_clock::time_point t0;
     for (auto i = 0; i < commandCount; ++i)
     {
         messages[i]->Data.Command = CustomProtocolCommand::Code::Write;
-        messages[i]->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+        messages[i]->Data.Descriptor.SimpleFtlPayload.Lba = lba + (i * sectorCount);
         messages[i]->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
         memset(messages[i]->Payload, 0xaa, messages[i]->PayloadSize);
-		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
+    }
+
+    t0 = high_resolution_clock::now();
+    for (auto i = 0; i < commandCount; ++i)
+    {
         CustomProtocolClient->Push(messages[i]);
     }
 
@@ -400,27 +403,27 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
         if (CustomProtocolClient->HasResponse())
         {
             messages[responseReceivedCount] = CustomProtocolClient->PopResponse();
-
-            auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0s.find(messages[responseReceivedCount]->Id())->second);
-            dataCmdTotalTime += deltaT;
             totalBytesWrittenInSeconds += messages[responseReceivedCount]->PayloadSize;
-
             responseReceivedCount++;
         }
     }
-    writeRate = (double)(totalBytesWrittenInSeconds / 1024 / 1024) / dataCmdTotalTime.count();
+    auto t1 = high_resolution_clock::now();
+    auto delta = duration<double>(t1 - t0);
+    writeRate = (double)(totalBytesWrittenInSeconds / 1024 / 1024) / delta.count();
 
     //--Read in benchmark
     unsigned long totalBytesReadInSeconds = 0;
     double readRate = 0;
-    dataCmdTotalTime = duration<double>::zero();
-    t0s.clear();
     for (auto i = 0; i < commandCount; ++i)
     {
         messages[i]->Data.Command = CustomProtocolCommand::Code::Read;
-        messages[i]->Data.Descriptor.SimpleFtlPayload.Lba = lba;
+        messages[i]->Data.Descriptor.SimpleFtlPayload.Lba = lba + (i * sectorCount);
         messages[i]->Data.Descriptor.SimpleFtlPayload.SectorCount = sectorCount;
-        t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
+    }
+
+    t0 = high_resolution_clock::now();;
+    for (auto i = 0; i < commandCount; ++i)
+    {
         CustomProtocolClient->Push(messages[i]);
     }
 
@@ -430,19 +433,18 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
         if (CustomProtocolClient->HasResponse())
         {
             messages[responseReceivedCount] = CustomProtocolClient->PopResponse();
-
-            auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0s.find(messages[responseReceivedCount]->Id())->second);
-            dataCmdTotalTime += deltaT;
             totalBytesReadInSeconds += messages[responseReceivedCount]->PayloadSize;
-
             responseReceivedCount++;
         }
     }
-    readRate = (double)(totalBytesReadInSeconds / 1024 / 1024) / dataCmdTotalTime.count();
+
+    t1 = high_resolution_clock::now();
+    delta = duration<double>(t1 - t0);
+    readRate = (double)(totalBytesReadInSeconds / 1024 / 1024) / delta.count();
 
     GOUT("Write/Read benchmark");
-    GOUT("   Write rate: " << writeRate << " MB/s");
-    GOUT("   Read rate: " << readRate << " MB/s");
+    GOUT("   Write rate: " << writeRate << " MiB/s");
+    GOUT("   Read rate: " << readRate << " MiB/s");
 
     //--Deallocate
     for (auto i = 0; i < commandCount; ++i)
