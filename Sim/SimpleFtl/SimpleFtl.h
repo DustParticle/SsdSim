@@ -29,10 +29,10 @@ private:
     void ReadFromNand(CustomProtocolCommand *command);
     void WriteToNand(CustomProtocolCommand *command);
 
-	void ReadPage(const U32& lba, const Buffer &outBuffer, const U32 &descSectorIndex);
-    void ReadPage(const U32& lba, const Buffer &outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount, const U32 &descSectorIndex);
-	void WritePage(const U32& lba, const Buffer &outBuffer);
-    void WritePage(const U32& lba, const Buffer &outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount);
+	void ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const U32 &descSectorIndex);
+	void WritePage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer);
+
+    bool SetSectorInfo(const SectorInfo &sectorInfo);
 
 private:
     NandHal *_NandHal;

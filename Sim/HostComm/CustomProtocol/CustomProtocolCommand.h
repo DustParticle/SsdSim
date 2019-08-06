@@ -2,6 +2,7 @@
 #define __CustomProtocolCommand_h__
 
 #include "HostComm/BasicTypes.h"
+#include "Buffer/Types.h"
 
 class CustomProtocolInterface;
 
@@ -28,8 +29,13 @@ struct SimpleFtlPayload
 struct DeviceInfoPayload
 {
     U32 TotalSector;
-    U32 BytesPerSector;
+    SectorInfo SectorInfo;
 	U8	SectorsPerPage;
+};
+
+struct SectorInfoPayload
+{
+    SectorInfo SectorInfo;
 };
 
 union CustomProtocolCommandDescriptor
@@ -38,6 +44,7 @@ union CustomProtocolCommandDescriptor
     BenchmarkPayload BenchmarkPayload;
     SimpleFtlPayload SimpleFtlPayload;
     DeviceInfoPayload DeviceInfoPayload;
+    SectorInfoPayload SectorInfoPayload;
 };
 
 typedef U32 CommandId;
@@ -54,14 +61,16 @@ struct CustomProtocolCommand
         Read,
 		LoopbackRead,
         GetDeviceInfo,
+        SetSectorSize,
         Nop
     };
 
-	enum class Status
-	{
-		Success,
-		ReadError,
-		WriteError,
+    enum class Status
+    {
+        Success,
+        ReadError,
+        WriteError,
+        Failed,
 	};
 
 public:

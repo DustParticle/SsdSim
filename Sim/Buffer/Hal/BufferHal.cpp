@@ -5,7 +5,7 @@
 
 using namespace boost::interprocess;
 
-BufferHal::BufferHal() : _CurrentBufferHandle(0)
+BufferHal::BufferHal() : _CurrentBufferHandle(0), _SectorInfo(DefaultSectorInfo)
 {
     _AllocatedBuffers = std::make_unique<std::map<U32, std::unique_ptr<U8[]>>>();
 }
@@ -16,7 +16,7 @@ void BufferHal::PreInit(const U32 &maxBufferSizeInKB)
     _CurrentFreeSizeInSector = _MaxBufferSizeInSector;
 }
 
-bool BufferHal::AllocateBuffer(const U32 &bufferSizeInSector, Buffer &buffer)
+bool BufferHal::AllocateBuffer(BufferType type, const U32 &bufferSizeInSector, Buffer &buffer)
 {
     scoped_lock<interprocess_mutex> lock(_Mutex);
     if (bufferSizeInSector > _CurrentFreeSizeInSector)
@@ -25,10 +25,12 @@ bool BufferHal::AllocateBuffer(const U32 &bufferSizeInSector, Buffer &buffer)
     }
 
     buffer.Handle = _CurrentBufferHandle;
+    buffer.Type = type;
     buffer.SizeInSector = bufferSizeInSector;
+    buffer.SizeInByte = ToByteIndexInTransfer(type, bufferSizeInSector);
 
     _AllocatedBuffers->insert(std::pair<U32, std::unique_ptr<U8[]>>(_CurrentBufferHandle,
-        std::make_unique<U8[]>(bufferSizeInSector << SectorSizeInBits)));
+        std::make_unique<U8[]>(buffer.SizeInByte)));
 
     ++_CurrentBufferHandle;
     _CurrentFreeSizeInSector -= bufferSizeInSector;
@@ -62,10 +64,32 @@ U8* BufferHal::ToPointer(const Buffer &buffer)
 
 void BufferHal::Memcpy(U8* const dest, const Buffer &src)
 {
-    memcpy(dest, ToPointer(src), src.SizeInSector << SectorSizeInBits);
+    memcpy(dest, ToPointer(src), src.SizeInByte);
 }
 
 void BufferHal::Memcpy(const Buffer &dest, const U8* const src)
 {
-    memcpy(ToPointer(dest), src, dest.SizeInSector << SectorSizeInBits);
+    memcpy(ToPointer(dest), src, dest.SizeInByte);
+}
+
+bool BufferHal::SetSectorInfo(const SectorInfo &sectorInfo)
+{
+    if (sectorInfo.CompactMode == true && (1 << sectorInfo.SectorSizeInBit) < sectorInfo.CompactSizeInByte)
+    {
+        return false;
+    }
+    _SectorInfo = sectorInfo;
+    return true;
+}
+
+SectorInfo BufferHal::GetSectorInfo() const
+{
+    return _SectorInfo;
+}
+
+U32 BufferHal::ToByteIndexInTransfer(BufferType type, const U32 &sectorIndex)
+{
+    return (type == BufferType::User && _SectorInfo.CompactMode)
+        ? sectorIndex * _SectorInfo.CompactSizeInByte
+        : sectorIndex << _SectorInfo.SectorSizeInBit;
 }

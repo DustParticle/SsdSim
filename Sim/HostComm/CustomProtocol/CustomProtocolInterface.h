@@ -18,7 +18,7 @@ public:
     void TransferOut(CustomProtocolCommand *command, const Buffer &outBuffer, const U32 &sectorIndex);
 
 private:
-    U8* GetBuffer(CustomProtocolCommand *command, U32 &bufferSizeInBytes, const U32 &sectorIndex);
+    U8* GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex);
 
 private:
     std::unique_ptr<MessageServer<CustomProtocolCommand>> _MessageServer;

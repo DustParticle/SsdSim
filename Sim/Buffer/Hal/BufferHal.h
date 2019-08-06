@@ -7,28 +7,35 @@
 #include "BasicTypes.h"
 #include "Buffer/Types.h"
 
-constexpr U8 SectorSizeInBits = 9;
+constexpr SectorInfo DefaultSectorInfo({ 9, false, 9 });
 
 class BufferHal
 {
+public:
 public:
     BufferHal();
 
     void PreInit(const U32 &maxBufferSizeInKB);
 
 public:
-    bool AllocateBuffer(const U32 &sectorCount, Buffer &buffer);
+    bool AllocateBuffer(BufferType type, const U32 &sectorCount, Buffer &buffer);
     void DeallocateBuffer(const Buffer &buffer);
 
     U8* ToPointer(const Buffer &buffer);
     void Memcpy(U8* const dest, const Buffer &src);
     void Memcpy(const Buffer &dest, const U8* const src);
 
+public:
+    bool SetSectorInfo(const SectorInfo &sectorInfo);
+    SectorInfo GetSectorInfo() const;
+    U32 ToByteIndexInTransfer(BufferType type, const U32 &sectorIndex);
+
 private:
     U32 _MaxBufferSizeInSector;
     U32 _CurrentFreeSizeInSector;
     U32 _CurrentBufferHandle;
     std::unique_ptr<std::map<U32, std::unique_ptr<U8[]>>> _AllocatedBuffers;
+    SectorInfo _SectorInfo;
 
     boost::interprocess::interprocess_mutex _Mutex;
 };

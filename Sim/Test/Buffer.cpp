@@ -13,7 +13,7 @@ TEST(BufferHal, Basic)
     bufferHal.PreInit(bufferSizeInKB);
 
     Buffer buffer;
-    ASSERT_TRUE(bufferHal.AllocateBuffer(requestingBufferSize, buffer));
+    ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, requestingBufferSize, buffer));
     ASSERT_EQ(buffer.SizeInSector, requestingBufferSize);
     ASSERT_NE(bufferHal.ToPointer(buffer), nullptr);
 
@@ -41,17 +41,17 @@ TEST(BufferHal, Exception)
     bufferHal.PreInit(bufferSizeInKB);
 
     Buffer buffer;
-    ASSERT_FALSE(bufferHal.AllocateBuffer(bufferSizeInSector + 1, buffer));     // Request a buffer that larger than BufferHal pool
+    ASSERT_FALSE(bufferHal.AllocateBuffer(BufferType::User, bufferSizeInSector + 1, buffer));     // Request a buffer that larger than BufferHal pool
     EXPECT_DEATH(bufferHal.DeallocateBuffer(buffer), "");                       // The bufferHal will assert
     ASSERT_EQ(bufferHal.ToPointer(buffer), nullptr);
 
     Buffer buffer1, buffer2;
-    ASSERT_TRUE(bufferHal.AllocateBuffer(bufferSizeInSector - 1, buffer1));
-    ASSERT_FALSE(bufferHal.AllocateBuffer(2, buffer2));                         // Don't have enough buffer
-    ASSERT_TRUE(bufferHal.AllocateBuffer(1, buffer2));
+    ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, bufferSizeInSector - 1, buffer1));
+    ASSERT_FALSE(bufferHal.AllocateBuffer(BufferType::User, 2, buffer2));                         // Don't have enough buffer
+    ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, 1, buffer2));
     ASSERT_NO_THROW(bufferHal.DeallocateBuffer(buffer1));
     
-    ASSERT_TRUE(bufferHal.AllocateBuffer(bufferSizeInSector - 3, buffer1));     // Request new buffer
+    ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, bufferSizeInSector - 3, buffer1));     // Request new buffer
     ASSERT_NO_THROW(bufferHal.DeallocateBuffer(buffer1));
     ASSERT_NO_THROW(bufferHal.DeallocateBuffer(buffer2));
 }
