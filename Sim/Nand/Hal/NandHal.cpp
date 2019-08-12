@@ -128,8 +128,4 @@ void NandHal::Run()
 		_FinishedCommandQueue->push(command);
 		_CommandQueue->pop();
 	}
-	else
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
 }
