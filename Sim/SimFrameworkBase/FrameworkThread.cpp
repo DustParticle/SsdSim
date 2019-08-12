@@ -1,5 +1,7 @@
 #include "FrameworkThread.h"
 
+#include "BasicTypes.h"
+
 FrameworkThread::FrameworkThread() :
 	_StopFuture(_StopSignal.get_future())
 {
@@ -8,8 +10,16 @@ FrameworkThread::FrameworkThread() :
 
 void FrameworkThread::operator()()
 {
-	while (false == IsStopRequested())
+    U32 counter = 0;
+    bool quit = false;
+	while (false == quit)
 	{
+        ++counter;
+        if (counter == 1000)
+        {
+            quit = IsStopRequested();
+            counter = 0;
+        }
 		Run();
 	}
 }
@@ -21,7 +31,7 @@ void FrameworkThread::Stop()
 
 bool FrameworkThread::IsStopRequested()
 {
-	if (_StopFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout)
+	if (_StopFuture.wait_for(std::chrono::nanoseconds(0)) == std::future_status::timeout)
 	{
 		return false;
 	}
