@@ -239,5 +239,8 @@ void Framework::operator()()
 	_FirmwareCore->Stop();
 	_NandHal->Stop();
 
+    firmwareMain.wait();
+    nandHal.wait();
+
     _FirmwareCore->Unload();
 }
