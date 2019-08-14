@@ -14,7 +14,7 @@ public:
 public:
     void Reset();
     void WritePage(tPageInBlock page);
-    bool IsPageWritten(tPageInBlock page);
+    bool IsPageCorrupted(tPageInBlock page);
 
 private:
     constexpr U32 CalculatingBitmapSize(U32 papgesPerBlock)
@@ -27,7 +27,7 @@ private:
     U32 _BitmapSize;
     tPageInBlock _PageWrittenMarker;
 
-    std::unique_ptr<U8[]> _PageWrittenBitmap;
+    std::unique_ptr<U8[]> _CorruptedPagesBitmap;
 };
 
 #endif

@@ -46,8 +46,8 @@ void NandBlock::WritePage(const tPageInBlock& page, const tSectorInPage& sector,
 
 bool NandBlock::ReadPage(tPageInBlock page, const Buffer &outBuffer)
 {
-    // If page is written then return false to indicate ReadPage failed
-    if (true == _NandBlockTracker.IsPageWritten(page))
+    // If page is corrupted then return false to indicate ReadPage failed
+    if (true == _NandBlockTracker.IsPageCorrupted(page))
     {
         return (false);
     }
@@ -60,8 +60,8 @@ bool NandBlock::ReadPage(tPageInBlock page, const Buffer &outBuffer)
 
 bool NandBlock::ReadPage(const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &outBuffer)
 {
-    // If page is written then return false to indicate ReadPage failed
-    if (true == _NandBlockTracker.IsPageWritten(page))
+    // If page is corrupted then return false to indicate ReadPage failed
+    if (true == _NandBlockTracker.IsPageCorrupted(page))
     {
         return (false);
     }

@@ -440,7 +440,6 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
     constexpr U32 commandCount = 10;
     constexpr U32 lba = 0;
     constexpr U32 sectorCount = 256;
-    U32 simulatedPayloadSize = sectorCount << DeviceInfo.SectorInfo.SectorSizeInBit;
     U32 payloadSize = sectorCount * SectorSizeInTransfer;
     Message<CustomProtocolCommand>* messages[commandCount];
     for (auto i = 0; i < commandCount; ++i)
@@ -451,13 +450,16 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
 
     unsigned long totalBytesWrittenInSeconds = 0;
     double writeRate = 0;
-    duration<double> dataCmdTotalTime = duration<double>::zero();
-    std::map<U32, high_resolution_clock::time_point> t0s;
+    high_resolution_clock::time_point t0;
     for (auto i = 0; i < commandCount; ++i)
     {
-        SetReadWriteCommand(messages[i]->Data, CustomProtocolCommand::Code::Write, lba, sectorCount);
+        SetReadWriteCommand(messages[i]->Data, CustomProtocolCommand::Code::Write, lba + (i * sectorCount), sectorCount);
         memset(messages[i]->Payload, 0xaa, messages[i]->PayloadSize);
-		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
+    }
+
+    t0 = high_resolution_clock::now();
+    for (auto i = 0; i < commandCount; ++i)
+    {
         CustomProtocolClient->Push(messages[i]);
     }
 
@@ -467,25 +469,25 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
         if (CustomProtocolClient->HasResponse())
         {
             messages[responseReceivedCount] = CustomProtocolClient->PopResponse();
-
-            auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0s.find(messages[responseReceivedCount]->Id())->second);
-            dataCmdTotalTime += deltaT;
             totalBytesWrittenInSeconds += messages[responseReceivedCount]->Data.Descriptor.SimpleFtlPayload.SectorCount << DeviceInfo.SectorInfo.SectorSizeInBit;
-
             responseReceivedCount++;
         }
     }
-    writeRate = (double)totalBytesWrittenInSeconds / 1024 / 1024 / dataCmdTotalTime.count();
+    auto t1 = high_resolution_clock::now();
+    auto delta = duration<double>(t1 - t0);
+    writeRate = (double)(totalBytesWrittenInSeconds / 1024 / 1024) / delta.count();
 
     //--Read in benchmark
     unsigned long totalBytesReadInSeconds = 0;
     double readRate = 0;
-    dataCmdTotalTime = duration<double>::zero();
-    t0s.clear();
     for (auto i = 0; i < commandCount; ++i)
     {
-        SetReadWriteCommand(messages[i]->Data, CustomProtocolCommand::Code::Read, lba, sectorCount); 
-        t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
+        SetReadWriteCommand(messages[i]->Data, CustomProtocolCommand::Code::Read, lba + (i * sectorCount), sectorCount);
+    }
+
+    t0 = high_resolution_clock::now();;
+    for (auto i = 0; i < commandCount; ++i)
+    {
         CustomProtocolClient->Push(messages[i]);
     }
 
@@ -495,19 +497,18 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
         if (CustomProtocolClient->HasResponse())
         {
             messages[responseReceivedCount] = CustomProtocolClient->PopResponse();
-
-            auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0s.find(messages[responseReceivedCount]->Id())->second);
-            dataCmdTotalTime += deltaT;
-            totalBytesReadInSeconds += simulatedPayloadSize;
-
+            totalBytesReadInSeconds += messages[responseReceivedCount]->Data.Descriptor.SimpleFtlPayload.SectorCount << DeviceInfo.SectorInfo.SectorSizeInBit;
             responseReceivedCount++;
         }
     }
-    readRate = (double)totalBytesReadInSeconds / 1024 / 1024 / dataCmdTotalTime.count();
+
+    t1 = high_resolution_clock::now();
+    delta = duration<double>(t1 - t0);
+    readRate = (double)(totalBytesReadInSeconds / 1024 / 1024) / delta.count();
 
     GOUT("Write/Read benchmark");
-    GOUT("   Write rate: " << writeRate << " MB/s");
-    GOUT("   Read rate: " << readRate << " MB/s");
+    GOUT("   Write rate: " << writeRate << " MiB/s");
+    GOUT("   Read rate: " << readRate << " MiB/s");
 
     //--Deallocate
     for (auto i = 0; i < commandCount; ++i)
