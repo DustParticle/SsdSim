@@ -150,8 +150,8 @@ void Framework::SetupNandHal(JSONParser& parser)
 	constexpr U32 minBytesValue = 4 * 1024;
     geometry.BytesPerPage = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
-	_NandHal->PreInit(geometry);
-	_NandHal->Init(_BufferHal.get());
+	_NandHal->PreInit(geometry, _BufferHal);
+	_NandHal->Init();
 }
 
 void Framework::SetupBufferHal(JSONParser& parser)

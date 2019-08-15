@@ -6,12 +6,13 @@ NandHal::NandHal()
 	_FinishedCommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>>(new boost::lockfree::spsc_queue<CommandDesc>{ 1024 });
 }
 
-void NandHal::PreInit(const Geometry &geometry)
+void NandHal::PreInit(const Geometry &geometry, std::shared_ptr<BufferHal> bufferHal)
 {
     _Geometry = geometry;
+    _BufferHal = bufferHal;
 }
 
-void NandHal::Init(BufferHal *bufferHal)
+void NandHal::Init()
 {
 	//Normally in hardware implementation we would query each device
 	//Here we rely on PreInit
@@ -19,7 +20,7 @@ void NandHal::Init(BufferHal *bufferHal)
 	for (U8 i(0); i < _Geometry.ChannelCount; ++i)
 	{
 		NandChannel nandChannel;
-		nandChannel.Init(bufferHal, _Geometry.DevicesPerChannel, _Geometry.BlocksPerDevice, _Geometry.PagesPerBlock, _Geometry.BytesPerPage);
+		nandChannel.Init(_BufferHal.get(), _Geometry.DevicesPerChannel, _Geometry.BlocksPerDevice, _Geometry.PagesPerBlock, _Geometry.BytesPerPage);
 		_NandChannels.push_back(std::move(nandChannel));
 	}
 }

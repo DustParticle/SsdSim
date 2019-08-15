@@ -28,10 +28,10 @@ public:
 
     //NOTE: With current design, we only support homogeneous NAND device configuration (i.e. all the NAND devices are the same).\
 	//PreInit is for simulation system only (i.e. there would be no equipvalent on target)
-	void PreInit(const Geometry &geometry);
+	void PreInit(const Geometry &geometry, std::shared_ptr<BufferHal> bufferHal);
 	
 public:
-	void Init(BufferHal *bufferHal);
+	void Init();
     void SetSectorInfo(const SectorInfo &sectorInfo);
 
 public:
@@ -106,6 +106,8 @@ protected:
 	virtual void Run() override;
 
 private:
+    std::shared_ptr<BufferHal> _BufferHal;
+
 	std::vector<NandChannel> _NandChannels;
 
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;

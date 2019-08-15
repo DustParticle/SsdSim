@@ -6,158 +6,178 @@
 #include "Nand/Sim/NandDevice.h"
 #include "Nand/Hal/NandHal.h"
 
-TEST(NandSim, Basic)
+class NandDeviceTest : public ::testing::Test
 {
-	constexpr U32 blockCount = 64;
-	constexpr U32 pagesPerBlock = 256;
-	constexpr U32 bytesPerPage = 8192;
-    constexpr U32 sectorsPerPage = bytesPerPage / 512;
-    constexpr U32 maxBufferSizeInKB = sectorsPerPage;
+protected:
+    void SetUp() override
+    {
+        _BufferHal = std::make_shared<BufferHal>();
+        _BufferHal->PreInit(maxBufferSizeInKB);
 
-    BufferHal bufferHal;
-    bufferHal.PreInit(maxBufferSizeInKB);
+        _NandDevice = std::make_unique<NandDevice>(_BufferHal.get(), blockCount, pagesPerBlock, bytesPerPage);
+    }
 
-	NandDevice nandDevice(&bufferHal, blockCount, pagesPerBlock, bytesPerPage);
+    void TearDown() override
+    {
+    }
 
+    static const U32 blockCount = 64;
+    static const U32 pagesPerBlock = 256;
+    static const U32 bytesPerPage = 8192;
+    static const U32 sectorsPerPage = bytesPerPage / 512;
+    static const U32 maxBufferSizeInKB = sectorsPerPage;
+
+    std::shared_ptr<BufferHal> _BufferHal;
+    std::unique_ptr<NandDevice> _NandDevice;
+};
+
+TEST_F(NandDeviceTest, Basic)
+{
     Buffer writeBuffer;
-    bufferHal.AllocateBuffer(BufferType::System, sectorsPerPage, writeBuffer);
-    U8 *pWriteBuffer = bufferHal.ToPointer(writeBuffer);
-	for (auto i(0); i < writeBuffer.SizeInByte; ++i)
-	{
+    _BufferHal->AllocateBuffer(BufferType::System, sectorsPerPage, writeBuffer);
+    U8 *pWriteBuffer = _BufferHal->ToPointer(writeBuffer);
+    for (auto i(0); i < writeBuffer.SizeInByte; ++i)
+    {
         pWriteBuffer[i] = i % 255;
-	}
+    }
 
     Buffer readBuffer;
-    bufferHal.AllocateBuffer(BufferType::System, sectorsPerPage, readBuffer);
-    U8 *pReadBuffer = bufferHal.ToPointer(readBuffer);
-	U8 pErasedBuffer[bytesPerPage];
-	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
+    _BufferHal->AllocateBuffer(BufferType::System, sectorsPerPage, readBuffer);
+    U8 *pReadBuffer = _BufferHal->ToPointer(readBuffer);
+    U8 pErasedBuffer[bytesPerPage];
+    std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
 
-	tBlockInDevice block;
-	block._ = 0;
-	for (; block._ < blockCount; ++block._)
-	{
-		tPageInBlock page;
-		page._ = 0;
-		for (; page._ < pagesPerBlock; ++page._)
-		{
-			nandDevice.WritePage(block, page, writeBuffer);
+    tBlockInDevice block;
+    block._ = 0;
+    for (; block._ < blockCount; ++block._)
+    {
+        tPageInBlock page;
+        page._ = 0;
+        for (; page._ < pagesPerBlock; ++page._)
+        {
+            _NandDevice->WritePage(block, page, writeBuffer);
 
-			nandDevice.ReadPage(block, page, readBuffer);
-			auto result = std::memcmp(pWriteBuffer, pReadBuffer, bytesPerPage);
-			ASSERT_EQ(0, result);
-		}
+            _NandDevice->ReadPage(block, page, readBuffer);
+            auto result = std::memcmp(pWriteBuffer, pReadBuffer, bytesPerPage);
+            ASSERT_EQ(0, result);
+        }
 
-		nandDevice.EraseBlock(block);
-		for (; page._ < pagesPerBlock; ++page._)
-		{
-			nandDevice.ReadPage(block, page, readBuffer);
-			auto result = std::memcmp(pErasedBuffer, pReadBuffer, bytesPerPage);
-			ASSERT_EQ(0, result);
-		}
-	}
+        _NandDevice->EraseBlock(block);
+        for (; page._ < pagesPerBlock; ++page._)
+        {
+            _NandDevice->ReadPage(block, page, readBuffer);
+            auto result = std::memcmp(pErasedBuffer, pReadBuffer, bytesPerPage);
+            ASSERT_EQ(0, result);
+        }
+    }
 
-    bufferHal.DeallocateBuffer(writeBuffer);
-    bufferHal.DeallocateBuffer(readBuffer);
+    _BufferHal->DeallocateBuffer(writeBuffer);
+    _BufferHal->DeallocateBuffer(readBuffer);
 }
 
-TEST(NandHal, Basic) {
-	constexpr U8 channels = 4;
-	constexpr U8 devices = 2;
-	constexpr U32 blocks = 64;
-	constexpr U32 pages = 256;
-	constexpr U32 bytes = 8192;
-    constexpr U32 sectorsPerPage = bytes / 512;
-    constexpr U32 maxBufferSizeInKB = sectorsPerPage;
-
-    BufferHal bufferHal;
-    bufferHal.PreInit(maxBufferSizeInKB);
-
-    NandHal::Geometry geometry;
-    geometry.ChannelCount = channels;
-    geometry.DevicesPerChannel = devices;
-    geometry.BlocksPerDevice = blocks;
-    geometry.PagesPerBlock = pages;
-    geometry.BytesPerPage = bytes;
-
-	NandHal nandHal;
-	nandHal.PreInit(geometry);
-	nandHal.Init(&bufferHal);
-
-    Buffer writeBuffer, readBuffer;
-    ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, sectorsPerPage, writeBuffer));
-	U8 *pWriteData = bufferHal.ToPointer(writeBuffer);
-	for (auto i(0); i < sizeof(pWriteData); ++i)
-	{
-        pWriteData[i] = i % 255;
-	}
-    ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, sectorsPerPage, readBuffer));
-    U8 *pReadData = bufferHal.ToPointer(readBuffer);
-	U8 pErasedBuffer[bytes];
-	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
-
-	tChannel channel;
-	channel._ = 0;
-	for (; channel._ < channels; ++channel._)
-	{
-		tDeviceInChannel device;
-		device._ = 0;
-		for (; device._ < devices; ++device._)
-		{
-			tBlockInDevice block;
-			block._ = 0;
-			for (; block._ < blocks; ++block._)
-			{
-				tPageInBlock page;
-				page._ = 0;
-				for (; page._ < pages; ++page._)
-				{
-					nandHal.WritePage(channel, device, block, page, writeBuffer);
-
-					nandHal.ReadPage(channel, device, block, page, readBuffer);
-					auto result = std::memcmp(pWriteData, pReadData, bytes);
-					ASSERT_EQ(0, result);
-				}
-
-				nandHal.EraseBlock(channel, device, block);
-				for (; page._ < pages; ++page._)
-				{
-					nandHal.ReadPage(channel, device, block, page, readBuffer);
-					auto result = std::memcmp(pErasedBuffer, pReadData, bytes);
-					ASSERT_EQ(0, result);
-				}
-			}
-		}
-	}
-
-    bufferHal.DeallocateBuffer(writeBuffer);
-    bufferHal.DeallocateBuffer(readBuffer);
-}
-
-TEST(NandHal, Basic_CommandQueue)
+class NandHalTest : public ::testing::Test
 {
-	constexpr U8 channels = 4;
-	constexpr U8 devices = 2;
-	constexpr U32 blocks = 64;
-	constexpr U32 pages = 256;
-	constexpr U32 bytes = 8192;
+protected:
+    void SetUp() override
+    {
+        _BufferHal = std::make_shared<BufferHal>();
+        _BufferHal->PreInit(maxBufferSizeInKB);
+
+        NandHal::Geometry geometry;
+        geometry.ChannelCount = channels;
+        geometry.DevicesPerChannel = devices;
+        geometry.BlocksPerDevice = blocks;
+        geometry.PagesPerBlock = pages;
+        geometry.BytesPerPage = bytes;
+
+        _NandHal = std::make_shared<NandHal>();
+        _NandHal->PreInit(geometry, _BufferHal);
+        _NandHal->Init();
+    }
+
+    void TearDown() override
+    {
+    }
+
+    static const U8 channels = 4;
+    static const U8 devices = 2;
+    static const U32 blocks = 64;
+    static const U32 pages = 256;
+    static const U32 bytes = 8192;
+    static const U32 sectorsPerPage = bytes / 512;
+    static const U32 maxBufferSizeInKB = 1024;
+
+    std::shared_ptr<BufferHal> _BufferHal;
+    std::shared_ptr<NandHal> _NandHal;
+};
+
+
+TEST_F(NandHalTest, Basic)
+{
+    Buffer writeBuffer, readBuffer;
+    ASSERT_TRUE(_BufferHal->AllocateBuffer(BufferType::User, sectorsPerPage, writeBuffer));
+    U8 *pWriteData = _BufferHal->ToPointer(writeBuffer);
+    for (auto i(0); i < sizeof(pWriteData); ++i)
+    {
+        pWriteData[i] = i % 255;
+    }
+    ASSERT_TRUE(_BufferHal->AllocateBuffer(BufferType::User, sectorsPerPage, readBuffer));
+    U8 *pReadData = _BufferHal->ToPointer(readBuffer);
+    U8 pErasedBuffer[bytes];
+    std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
+
+    tChannel channel;
+    channel._ = 0;
+    for (; channel._ < channels; ++channel._)
+    {
+        tDeviceInChannel device;
+        device._ = 0;
+        for (; device._ < devices; ++device._)
+        {
+            tBlockInDevice block;
+            block._ = 0;
+            for (; block._ < blocks; ++block._)
+            {
+                tPageInBlock page;
+                page._ = 0;
+                for (; page._ < pages; ++page._)
+                {
+                    _NandHal->WritePage(channel, device, block, page, writeBuffer);
+
+                    _NandHal->ReadPage(channel, device, block, page, readBuffer);
+                    auto result = std::memcmp(pWriteData, pReadData, bytes);
+                    ASSERT_EQ(0, result);
+                }
+
+                _NandHal->EraseBlock(channel, device, block);
+                for (; page._ < pages; ++page._)
+                {
+                    _NandHal->ReadPage(channel, device, block, page, readBuffer);
+                    auto result = std::memcmp(pErasedBuffer, pReadData, bytes);
+                    ASSERT_EQ(0, result);
+                }
+            }
+        }
+    }
+
+    _BufferHal->DeallocateBuffer(writeBuffer);
+    _BufferHal->DeallocateBuffer(readBuffer);
+}
+
+TEST_F(NandHalTest, Basic_CommandQueue)
+{
 	constexpr U8 bufferCount = channels * 4;
 	constexpr U32 commandCount = channels * devices * blocks * pages;
-    constexpr U32 sectorsPerPage = bytes / 512;
-    constexpr U32 maxBufferSizeInKB = sectorsPerPage * bufferCount;
-
-    BufferHal bufferHal;
-    bufferHal.PreInit(maxBufferSizeInKB);
 
 	std::array<Buffer, bufferCount> writeBuffers;
     std::array<Buffer, bufferCount> readBuffers;
 
     for (U32 i(0); i < bufferCount; ++i)
 	{
-        ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, sectorsPerPage, writeBuffers[i]));
-        ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, sectorsPerPage, readBuffers[i]));
+        ASSERT_TRUE(_BufferHal->AllocateBuffer(BufferType::User, sectorsPerPage, writeBuffers[i]));
+        ASSERT_TRUE(_BufferHal->AllocateBuffer(BufferType::User, sectorsPerPage, readBuffers[i]));
 
-        U8* pBuffer = bufferHal.ToPointer(writeBuffers[i]);
+        U8* pBuffer = _BufferHal->ToPointer(writeBuffers[i]);
 		for (auto i(0); i < bytes; ++i)
 		{
 			pBuffer[i] = i % 255;
@@ -167,20 +187,9 @@ TEST(NandHal, Basic_CommandQueue)
 	U8 pErasedBuffer[bytes];
 	std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
 
-    NandHal::Geometry geometry;
-    geometry.ChannelCount = channels;
-    geometry.DevicesPerChannel = devices;
-    geometry.BlocksPerDevice = blocks;
-    geometry.PagesPerBlock = pages;
-    geometry.BytesPerPage = bytes;
-
-	NandHal nandHal;
-	nandHal.PreInit(geometry);
-	nandHal.Init(&bufferHal);
-
 	std::future<void> nandHalFuture;
 
-	nandHalFuture = std::async(std::launch::async, &NandHal::operator(), &nandHal);
+	nandHalFuture = std::async(std::launch::async, &NandHal::operator(), _NandHal);
 
 	NandHal::CommandDesc commandDesc;
     NandHal::NandAddress& address = commandDesc.Address;
@@ -194,11 +203,11 @@ TEST(NandHal, Basic_CommandQueue)
 		{
 			commandDesc.Operation = NandHal::CommandDesc::Op::Write;
 			commandDesc.Buffer = writeBuffers[i];
-			nandHal.QueueCommand(commandDesc);
+			_NandHal->QueueCommand(commandDesc);
 
 			commandDesc.Operation = NandHal::CommandDesc::Op::Read;
 			commandDesc.Buffer = readBuffers[i];
-			nandHal.QueueCommand(commandDesc);
+			_NandHal->QueueCommand(commandDesc);
 
 			if (++address.Channel._ >= channels)
 			{
@@ -216,14 +225,15 @@ TEST(NandHal, Basic_CommandQueue)
 			}
 		}
 
-		while (false == nandHal.IsCommandQueueEmpty());
+		while (false == _NandHal->IsCommandQueueEmpty());
 	}
 
-	nandHal.Stop();
+	_NandHal->Stop();
+    nandHalFuture.wait();
 
     for (U32 i(0); i < bufferCount; ++i)
     {
-        bufferHal.DeallocateBuffer(writeBuffers[i]);
-        bufferHal.DeallocateBuffer(readBuffers[i]);
+        _BufferHal->DeallocateBuffer(writeBuffers[i]);
+        _BufferHal->DeallocateBuffer(readBuffers[i]);
     }
 }
