@@ -14,25 +14,27 @@
 class NandHal : public FrameworkThread
 {
 public:
-	NandHal();
-
-	//NOTE: With current design, we only support homogeneous NAND device configuration (i.e. all the NAND devices are the same).\
-	//PreInit is for simulation system only (i.e. there would be no equipvalent on target)
-	void PreInit(U8 channelCount, U8 deviceCount, U32 blocksPerDevice, U32 pagesPerBlock, U32 bytesPerPage);
-	
-public:
-	void Init(BufferHal *bufferHal);
-
-public:
     struct Geometry
     {
-        U8 _ChannelCount;
-        U8 _DevicesPerChannel;
-        U32 _BlocksPerDevice;
-        U32 _PagesPerBlock;
-        U32 _BytesPerPage;
+        U8 ChannelCount;
+        U8 DevicesPerChannel;
+        U32 BlocksPerDevice;
+        U32 PagesPerBlock;
+        U32 BytesPerPage;
     };
 
+public:
+	NandHal();
+
+    //NOTE: With current design, we only support homogeneous NAND device configuration (i.e. all the NAND devices are the same).\
+	//PreInit is for simulation system only (i.e. there would be no equipvalent on target)
+	void PreInit(const Geometry &geometry, std::shared_ptr<BufferHal> bufferHal);
+	
+public:
+	void Init();
+    void SetSectorInfo(const SectorInfo &sectorInfo);
+
+public:
     inline Geometry GetGeometry() const { return _Geometry; }
 
 public:
@@ -42,6 +44,8 @@ public:
         tDeviceInChannel Device;
         tBlockInDevice Block;
         tPageInBlock Page;
+        tSectorInPage Sector;
+        tSectorCount SectorCount;
     };
 
 	struct CommandDesc
@@ -67,8 +71,6 @@ public:
 		Op Operation;
 		Status CommandStatus;
 		Buffer Buffer;
-		tByteOffset ByteOffset;
-		tByteCount ByteCount;
 
         U32 DescSectorIndex;
 	};
@@ -84,8 +86,8 @@ public:
 		const tDeviceInChannel& device,
 		const tBlockInDevice& block,
 		const tPageInBlock& page,
-		const tByteOffset& byteOffset, 
-		const tByteCount& byteCount, 
+		const tSectorInPage& sector, 
+		const tSectorCount& sectorCount,
         const Buffer &outBuffer);
 
 	void WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer);
@@ -94,8 +96,8 @@ public:
 		const tDeviceInChannel& device, 
 		const tBlockInDevice& block, 
 		const tPageInBlock& page, 
-		const tByteOffset& byteOffset, 
-		const tByteCount& byteCount, 
+        const tSectorInPage& sector,
+        const tSectorCount& sectorCount,
         const Buffer &inBuffer);
 
 	void EraseBlock(tChannel channel, tDeviceInChannel chip, tBlockInDevice block);
@@ -104,14 +106,15 @@ protected:
 	virtual void Run() override;
 
 private:
-	std::vector<NandChannel> _NandChannels;
+    std::shared_ptr<BufferHal> _BufferHal;
 
-    BufferHal *_BufferHal;
+	std::vector<NandChannel> _NandChannels;
 
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _FinishedCommandQueue;
 
     Geometry _Geometry;
+    SectorInfo _SectorInfo;
 };
 
 #endif

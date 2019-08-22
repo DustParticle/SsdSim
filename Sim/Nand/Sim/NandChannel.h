@@ -6,10 +6,12 @@
 
 #include "Nand/Sim/NandDevice.h"
 
+#include "Buffer/Hal/BufferHal.h"
+
 class NandChannel
 {
 public:
-	void Init(U8 deviceCount, U32 blocksPerDevice, U32 pagesPerBlock, U32 bytesPerPage);
+	void Init(BufferHal *bufferHal, U8 deviceCount, U32 blocksPerDevice, U32 pagesPerBlock, U32 bytesPerPage);
 
 public:
 	NandDevice& operator[](const int index);

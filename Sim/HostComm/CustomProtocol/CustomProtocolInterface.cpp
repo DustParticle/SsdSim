@@ -38,30 +38,25 @@ void CustomProtocolInterface::SubmitResponse(CustomProtocolCommand *command)
 
 void CustomProtocolInterface::TransferIn(CustomProtocolCommand *command, const Buffer &inBuffer, const U32 &sectorIndex)
 {
-    U32 bufferSizeInBytes;
-    U8 *buffer = GetBuffer(command, bufferSizeInBytes, sectorIndex);
+    U8 *buffer = GetBuffer(command, sectorIndex);
     _BufferHal->Memcpy(inBuffer, buffer);
 }
 
 void CustomProtocolInterface::TransferOut(CustomProtocolCommand *command, const Buffer &outBuffer, const U32 &sectorIndex)
 {
-    U32 bufferSizeInBytes;
-    U8 *buffer = GetBuffer(command, bufferSizeInBytes, sectorIndex);
+    U8 *buffer = GetBuffer(command, sectorIndex);
     _BufferHal->Memcpy(buffer, outBuffer);
-
 }
 
-U8* CustomProtocolInterface::GetBuffer(CustomProtocolCommand *command, U32 &bufferSizeInBytes, const U32 &sectorIndex)
+U8* CustomProtocolInterface::GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex)
 {
     Message<CustomProtocolCommand>* msg = _MessageServer->GetMessage(command->CommandId);
     if (msg)
     {
-        bufferSizeInBytes = msg->PayloadSize;
-        U32 bufferIndex = sectorIndex << SectorSizeInBits;
-        assert(bufferSizeInBytes > bufferIndex);
+        U32 bufferIndex = _BufferHal->ToByteIndexInTransfer(BufferType::User, sectorIndex);
+        assert(msg->PayloadSize > bufferIndex);
         return ((U8*)msg->Payload) + bufferIndex;
     }
 
-    bufferSizeInBytes = 0;
     return nullptr;
 }

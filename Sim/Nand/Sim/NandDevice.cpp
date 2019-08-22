@@ -1,32 +1,32 @@
 #include "Nand/Sim/NandDevice.h"
 
-NandDevice::NandDevice(U32 blockCount, U32 pagesPerBlock, U32 bytesPerPage)
+NandDevice::NandDevice(BufferHal *bufferHal, U32 blockCount, U32 pagesPerBlock, U32 bytesPerPage)
 {
 	_Desc = std::unique_ptr<NandDeviceDesc>(new NandDeviceDesc(blockCount, pagesPerBlock, bytesPerPage));
 	for (U32 i = 0; i < blockCount; ++i)
 	{
-		_Blocks.push_back(std::move(NandBlock(_Desc->GetPagesPerBlock(), _Desc->GetBytesPerPage())));
+		_Blocks.push_back(std::move(NandBlock(bufferHal, _Desc->GetPagesPerBlock(), _Desc->GetBytesPerPage())));
 	}
 }
 
-bool NandDevice::ReadPage(tBlockInDevice block, tPageInBlock page, U8* const pOutData)
+bool NandDevice::ReadPage(tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer)
 {
-	return (_Blocks[block._].ReadPage(page, pOutData));
+	return (_Blocks[block._].ReadPage(page, outBuffer));
 }
 
-bool NandDevice::ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer)
+bool NandDevice::ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &outBuffer)
 {
-	return (_Blocks[block._].ReadPage(page, byteOffset, byteCount, outBuffer));
+	return (_Blocks[block._].ReadPage(page, sector, sectorCount, outBuffer));
 }
 
-void NandDevice::WritePage(tBlockInDevice block, tPageInBlock page, const U8* const pInData)
+void NandDevice::WritePage(tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer)
 {
-	_Blocks[block._].WritePage(page, pInData);
+	_Blocks[block._].WritePage(page, inBuffer);
 }
 
-void NandDevice::WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, const U8* const inBuffer)
+void NandDevice::WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &inBuffer)
 {
-	_Blocks[block._].WritePage(page, byteOffset, byteCount, inBuffer);
+	_Blocks[block._].WritePage(page, sector, sectorCount, inBuffer);
 }
 
 void NandDevice::EraseBlock(tBlockInDevice block)

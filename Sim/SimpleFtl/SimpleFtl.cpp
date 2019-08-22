@@ -9,9 +9,6 @@ void SimpleFtl::SetNandHal(NandHal *nandHal)
 {
     _NandHal = nandHal;
     NandHal::Geometry geometry = _NandHal->GetGeometry();
-    _SectorsPerPage = geometry._BytesPerPage >> SimpleFtlTranslation::SectorSizeInBits;
-    _TotalSectors = geometry._ChannelCount * geometry._DevicesPerChannel
-        * geometry._BlocksPerDevice * geometry._PagesPerBlock * _SectorsPerPage;
 
     SimpleFtlTranslation::SetGeometry(geometry);
 }
@@ -19,6 +16,22 @@ void SimpleFtl::SetNandHal(NandHal *nandHal)
 void SimpleFtl::SetBufferHal(BufferHal *bufferHal)
 {
     _BufferHal = bufferHal;
+    SetSectorInfo(DefaultSectorInfo);
+}
+
+bool SimpleFtl::SetSectorInfo(const SectorInfo &sectorInfo)
+{
+    if (_BufferHal->SetSectorInfo(sectorInfo) == false)
+    {
+        return false;
+    }
+
+    NandHal::Geometry geometry = _NandHal->GetGeometry();
+    _SectorsPerPage = geometry.BytesPerPage >> sectorInfo.SectorSizeInBit;
+    _TotalSectors = geometry.ChannelCount * geometry.DevicesPerChannel
+        * geometry.BlocksPerDevice * geometry.PagesPerBlock * _SectorsPerPage;
+    SimpleFtlTranslation::SetSectorSize(sectorInfo.SectorSizeInBit);
+    return true;
 }
 
 void SimpleFtl::operator()()
@@ -61,63 +74,54 @@ void SimpleFtl::operator()()
         case CustomProtocolCommand::Code::GetDeviceInfo:
         {
             command->Descriptor.DeviceInfoPayload.TotalSector = _TotalSectors;
-            command->Descriptor.DeviceInfoPayload.BytesPerSector = SimpleFtlTranslation::SectorSizeInBytes;
+            command->Descriptor.DeviceInfoPayload.SectorInfo = _BufferHal->GetSectorInfo();
             command->Descriptor.DeviceInfoPayload.SectorsPerPage = _SectorsPerPage;
 			command->CommandStatus = CustomProtocolCommand::Status::Success;
+            _CustomProtocolInterface->SubmitResponse(command);
+        } break;
+
+        case CustomProtocolCommand::Code::SetSectorSize:
+        {
+            SectorInfo sectorInfo = command->Descriptor.SectorInfoPayload.SectorInfo;
+            if (SetSectorInfo(sectorInfo))
+            {
+                command->CommandStatus = CustomProtocolCommand::Status::Success;
+            }
+            else
+            {
+                command->CommandStatus = CustomProtocolCommand::Status::Failed;
+            }
             _CustomProtocolInterface->SubmitResponse(command);
         } break;
         }
     }
 }
 
-void SimpleFtl::ReadPage(const U32& lba, const Buffer &outBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount, const U32 &descSectorIndex)
+void SimpleFtl::ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const U32 &descSectorIndex)
 {
-	assert((sectorOffset._ + sectorCount._) <= _SectorsPerPage);
+    assert((nandAddress.Sector._ + nandAddress.SectorCount._) <= _SectorsPerPage);
 
-    NandHal::CommandDesc commandDesc;
-    commandDesc.Operation = NandHal::CommandDesc::Op::ReadPartial;
-    SimpleFtlTranslation::LbaToNandAddress(lba, commandDesc.Address);
-	commandDesc.Buffer = outBuffer;
-    commandDesc.DescSectorIndex = descSectorIndex;
-	commandDesc.ByteOffset._ = sectorOffset._ * SimpleFtlTranslation::SectorSizeInBytes;
-	commandDesc.ByteCount._ = sectorCount._ * SimpleFtlTranslation::SectorSizeInBytes;
-
-    _NandHal->QueueCommand(commandDesc);
-}
-
-void SimpleFtl::ReadPage(const U32& lba, const Buffer &outBuffer, const U32 &descSectorIndex)
-{
 	NandHal::CommandDesc commandDesc;
-	commandDesc.Operation = NandHal::CommandDesc::Op::Read;
-	SimpleFtlTranslation::LbaToNandAddress(lba, commandDesc.Address);
+    commandDesc.Address = nandAddress;
+    commandDesc.Operation = (nandAddress.SectorCount._ == _SectorsPerPage)
+        ? NandHal::CommandDesc::Op::Read : NandHal::CommandDesc::Op::ReadPartial;
 	commandDesc.Buffer = outBuffer;
     commandDesc.DescSectorIndex = descSectorIndex;
 
 	_NandHal->QueueCommand(commandDesc);
 }
 
-void SimpleFtl::WritePage(const U32& lba, const Buffer &inBuffer)
+void SimpleFtl::WritePage(const NandHal::NandAddress &nandAddress, const Buffer &inBuffer)
 {
+    assert((nandAddress.Sector._ + nandAddress.SectorCount._) <= _SectorsPerPage);
+
     NandHal::CommandDesc commandDesc;
-    commandDesc.Operation = NandHal::CommandDesc::Op::Write;
-    SimpleFtlTranslation::LbaToNandAddress(lba, commandDesc.Address);
+    commandDesc.Address = nandAddress;
+    commandDesc.Operation = (nandAddress.SectorCount._ == _SectorsPerPage)
+        ? NandHal::CommandDesc::Op::Write : NandHal::CommandDesc::Op::WritePartial;
     commandDesc.Buffer = inBuffer;
 
     _NandHal->QueueCommand(commandDesc);
-}
-
-void SimpleFtl::WritePage(const U32& lba, const Buffer &inBuffer, const tSectorOffset& sectorOffset, const tSectorCount& sectorCount)
-{
-	assert((sectorOffset._ + sectorCount._) <= _SectorsPerPage);
-
-	NandHal::CommandDesc commandDesc;
-	commandDesc.Operation = NandHal::CommandDesc::Op::WritePartial;
-	SimpleFtlTranslation::LbaToNandAddress(lba, commandDesc.Address);
-	commandDesc.Buffer = inBuffer;
-	commandDesc.ByteOffset._ = sectorOffset._ * SimpleFtlTranslation::SectorSizeInBytes;
-	commandDesc.ByteCount._ = sectorCount._ * SimpleFtlTranslation::SectorSizeInBytes;
-
-	_NandHal->QueueCommand(commandDesc);
 }
 
 void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
@@ -125,47 +129,15 @@ void SimpleFtl::ReadFromNand(CustomProtocolCommand *command)
     U32 lba = command->Descriptor.SimpleFtlPayload.Lba;
     U32 sectorCount = command->Descriptor.SimpleFtlPayload.SectorCount;
 
-    tSectorOffset startSectorOffset;
-	startSectorOffset._ = lba % _SectorsPerPage;
-	U32 remainingSectors = sectorCount;
     Buffer buffer;
-	if (startSectorOffset._ != 0)
+    NandHal::NandAddress nandAddress;
+    U32 descSectorCount = 0;
+	while (sectorCount > 0)
 	{
-		tSectorCount sectorsToProcessThisPage;
-		if (startSectorOffset._ + sectorCount <= _SectorsPerPage)
-		{
-			sectorsToProcessThisPage._ = sectorCount;
-		}
-		else
-		{
-			sectorsToProcessThisPage._ = _SectorsPerPage - startSectorOffset._;
-		}
-
-        _BufferHal->AllocateBuffer(sectorsToProcessThisPage._, buffer);
-		ReadPage(lba, buffer, startSectorOffset, sectorsToProcessThisPage, 0);
-		remainingSectors -= sectorsToProcessThisPage._;
-
-		startSectorOffset._ = 0;
-		lba += sectorsToProcessThisPage._;
-	}
-
-	while (remainingSectors > 0)
-	{
-		if (remainingSectors >= _SectorsPerPage)
-		{
-            _BufferHal->AllocateBuffer(_SectorsPerPage, buffer);
-			ReadPage(lba, buffer, sectorCount - remainingSectors);
-			lba += _SectorsPerPage;
-			remainingSectors -= _SectorsPerPage;
-		}
-		else
-		{
-			tSectorOffset sectorOffset;	sectorOffset._ = 0;
-			tSectorCount tSectorCount; tSectorCount._ = remainingSectors;
-            _BufferHal->AllocateBuffer(remainingSectors, buffer);
-            ReadPage(lba, buffer, sectorOffset, tSectorCount, sectorCount - remainingSectors);
-			break;
-		}
+        SimpleFtlTranslation::LbaToNandAddress(lba, sectorCount, nandAddress, lba, sectorCount);
+        _BufferHal->AllocateBuffer(BufferType::User, nandAddress.SectorCount._, buffer);
+		ReadPage(nandAddress, buffer, descSectorCount);
+        descSectorCount += nandAddress.SectorCount._;
 	}
 
 	while (!_NandHal->IsCommandQueueEmpty());
@@ -190,50 +162,17 @@ void SimpleFtl::WriteToNand(CustomProtocolCommand *command)
     U32 lba = command->Descriptor.SimpleFtlPayload.Lba;
     U32 sectorCount = command->Descriptor.SimpleFtlPayload.SectorCount;
 
-	tSectorOffset startSectorOffset;
-	startSectorOffset._ = lba % _SectorsPerPage;
-	U32 remainingSectors = sectorCount;
     Buffer buffer;
-	if (startSectorOffset._ != 0)
-	{
-		tSectorCount sectorsToProcessThisPage;
-		if (startSectorOffset._ + sectorCount <= _SectorsPerPage)
-		{
-			sectorsToProcessThisPage._ = sectorCount;
-		}
-		else
-		{
-			sectorsToProcessThisPage._ = _SectorsPerPage - startSectorOffset._;
-		}
-        _BufferHal->AllocateBuffer(sectorsToProcessThisPage._, buffer);
-        _CustomProtocolInterface->TransferIn(command, buffer, 0);
-        WritePage(lba, buffer, startSectorOffset, sectorsToProcessThisPage);
-        remainingSectors -= sectorsToProcessThisPage._;
-
-		startSectorOffset._ = 0;
-		lba += sectorsToProcessThisPage._;
-	}
-
-	while (remainingSectors > 0)
-	{
-		if (remainingSectors >= _SectorsPerPage)
-		{
-            _BufferHal->AllocateBuffer(_SectorsPerPage, buffer);
-            _CustomProtocolInterface->TransferIn(command, buffer, sectorCount - remainingSectors);
-			WritePage(lba, buffer);
-            lba += _SectorsPerPage;
-			remainingSectors -= _SectorsPerPage;
-		}
-		else
-		{
-			tSectorOffset sectorOffset;	sectorOffset._ = 0;
-			tSectorCount tSectorCount; tSectorCount._ = remainingSectors;
-            _BufferHal->AllocateBuffer(remainingSectors, buffer);
-            _CustomProtocolInterface->TransferIn(command, buffer, sectorCount - remainingSectors);
-            WritePage(lba, buffer, sectorOffset, tSectorCount);
-            break;
-		}
-	}
+    NandHal::NandAddress nandAddress;
+    U32 srcSectorCount = 0;
+    while (sectorCount > 0)
+    {
+        SimpleFtlTranslation::LbaToNandAddress(lba, sectorCount, nandAddress, lba, sectorCount);
+        _BufferHal->AllocateBuffer(BufferType::User, nandAddress.SectorCount._, buffer);
+        _CustomProtocolInterface->TransferIn(command, buffer, srcSectorCount);
+        WritePage(nandAddress, buffer);
+        srcSectorCount += nandAddress.SectorCount._;
+    }
 
 	while (!_NandHal->IsCommandQueueEmpty());
 

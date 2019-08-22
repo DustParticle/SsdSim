@@ -88,6 +88,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	};
 
 	int retValue;
+    NandHal::Geometry geometry;
 
 	try
 	{
@@ -99,7 +100,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U8 maxChannelsValue = 8;
 	constexpr U8 minChannelsValue = 1;
-	U8 channels = validateValue(retValue, minChannelsValue, maxChannelsValue, "channels");
+	geometry.ChannelCount = validateValue(retValue, minChannelsValue, maxChannelsValue, "channels");
 
 	try
 	{
@@ -111,7 +112,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U8 maxDevicesValue = 8;
 	constexpr U8 minDevicesValue = 1;
-	U8 devices = validateValue(retValue, minDevicesValue, maxDevicesValue, "devices");
+    geometry.DevicesPerChannel = validateValue(retValue, minDevicesValue, maxDevicesValue, "devices");
 
 	try
 	{
@@ -123,7 +124,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U32 maxBlocksValue = 32 * 1024;
 	constexpr U32 minBlocksValue = 128;
-	U32 blocks = validateValue(retValue, minBlocksValue, maxBlocksValue, "blocks");
+    geometry.BlocksPerDevice = validateValue(retValue, minBlocksValue, maxBlocksValue, "blocks");
 
 	try
 	{
@@ -135,7 +136,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U32 maxPagesValue = 512;
 	constexpr U32 minPagesValue = 32;
-	U32 pages = validateValue(retValue, minPagesValue, maxPagesValue, "pages");
+    geometry.PagesPerBlock = validateValue(retValue, minPagesValue, maxPagesValue, "pages");
 
 	try
 	{
@@ -147,10 +148,10 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U32 maxBytesValue = 16 * 1024;
 	constexpr U32 minBytesValue = 4 * 1024;
-	U32 bytes = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
+    geometry.BytesPerPage = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
-	_NandHal->PreInit(channels, devices, blocks, pages, bytes);
-	_NandHal->Init(_BufferHal.get());
+	_NandHal->PreInit(geometry, _BufferHal);
+	_NandHal->Init();
 }
 
 void Framework::SetupBufferHal(JSONParser& parser)
@@ -164,7 +165,7 @@ void Framework::SetupBufferHal(JSONParser& parser)
     {
         throw Exception("Failed to parse \'kbs\' value. Expecting an \'int\'");
     }
-
+    
     _BufferHal->PreInit(maxBufferSizeInKB);
 }
 
