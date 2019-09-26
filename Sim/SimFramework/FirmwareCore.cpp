@@ -10,6 +10,7 @@ typedef void(__stdcall *fInitialize)(std::shared_ptr<NandHal> nandHal, std::shar
 typedef void(__stdcall *fSetIpcName)(const std::string& ipcName);
 typedef void(__stdcall *fExecute)();
 typedef void(__stdcall *fExecuteCallback)(std::function<bool(std::string)> callback);
+typedef void(__stdcall *fShutdown)();
 
 FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr), _NandHal(nullptr), _BufferHal(nullptr)
 {
@@ -77,6 +78,11 @@ void FirmwareCore::Unload()
 {
     if (_DllInstance)
     {
+        auto shutdown = (fShutdown)GetProcAddress(_DllInstance, "Shutdown");
+        if (shutdown)
+        {
+            shutdown();
+        }
         FreeLibrary(_DllInstance);
     }
 
@@ -90,6 +96,12 @@ void FirmwareCore::SwapExecute()
 {
     if (_DllInstance)
     {
+        auto shutdown = (fShutdown)GetProcAddress(_DllInstance, "Shutdown");
+        if (shutdown)
+        {
+            shutdown();
+        }
+
         // Wait for the current code completely
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         FreeLibrary(_DllInstance);

@@ -1,6 +1,3 @@
-// WriteRead.cpp : Defines the exported functions for the DLL application.
-//
-
 #include <memory>
 #include <functional>
 
@@ -8,9 +5,10 @@
 #include "Nand/Hal/NandHal.h"
 #include "SimpleFtl.h"
 
-std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
+std::shared_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
 std::shared_ptr<BufferHal> _BufferHal = nullptr;
 SimpleFtl _SimpleFtl;
+std::future<void> _CustomProtocolInterfaceFuture;
 
 extern "C"
 {
@@ -33,7 +31,21 @@ extern "C"
 
     void __declspec(dllexport) __stdcall SetCustomProtocolIpcName(const std::string& protocolIpcName)
     {
-        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>(protocolIpcName.c_str(), _BufferHal.get());
+        _CustomProtocolInterface = std::make_shared<CustomProtocolInterface>();
+        _CustomProtocolInterface->Init(protocolIpcName.c_str(), _BufferHal.get());
         _SimpleFtl.SetProtocol(_CustomProtocolInterface.get());
+
+        _CustomProtocolInterfaceFuture = std::async(std::launch::async, &CustomProtocolInterface::operator(), _CustomProtocolInterface);
+    }
+
+    void __declspec(dllexport) __stdcall Shutdown()
+    {
+        if (_CustomProtocolInterface == nullptr)
+        {
+            return;
+        }
+
+        _CustomProtocolInterface->Stop();
+        _CustomProtocolInterfaceFuture.wait();
     }
 };

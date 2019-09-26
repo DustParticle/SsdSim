@@ -146,6 +146,9 @@
     <ProjectReference Include="..\HostComm\HostComm.vcxproj">
       <Project>{fdf75646-6e43-4a8a-bc13-d597b68754c2}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\SimFrameworkBase\SimFrameworkBase.vcxproj">
+      <Project>{e2c37474-b57f-49f8-b5bb-eb427c95a2e1}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

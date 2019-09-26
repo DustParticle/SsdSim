@@ -475,7 +475,7 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
     }
     auto t1 = high_resolution_clock::now();
     auto delta = duration<double>(t1 - t0);
-    writeRate = (double)(totalBytesWrittenInSeconds / 1024.0 / 1024.0) / delta.count();
+    writeRate = (double)(totalBytesWrittenInSeconds / 1024 / 1024) / delta.count();
 
     //--Read in benchmark
     unsigned long totalBytesReadInSeconds = 0;
@@ -504,7 +504,7 @@ TEST_F(SimpleFtlTest, BasicWriteReadBenchmark)
 
     t1 = high_resolution_clock::now();
     delta = duration<double>(t1 - t0);
-    readRate = (double)(totalBytesReadInSeconds / 1024.0 / 1024.0) / delta.count();
+    readRate = (double)(totalBytesReadInSeconds / 1024 / 1024) / delta.count();
 
     GOUT("Write/Read benchmark");
     GOUT("   Write rate: " << writeRate << " MiB/s");

@@ -1,6 +1,12 @@
 #include "CustomProtocolInterface.h"
 
-CustomProtocolInterface::CustomProtocolInterface(const char *protocolIpcName, BufferHal *bufferHal)
+CustomProtocolInterface::CustomProtocolInterface()
+{
+    _TransferCommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<TransferCommandDesc>>(new boost::lockfree::spsc_queue<TransferCommandDesc>{ 1024 });
+    _FinishedTransferCommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<TransferCommandDesc>>(new boost::lockfree::spsc_queue<TransferCommandDesc>{ 1024 });
+}
+
+void CustomProtocolInterface::Init(const char *protocolIpcName, BufferHal *bufferHal)
 {
     _MessageServer = std::make_unique<MessageServer<CustomProtocolCommand>>(protocolIpcName);
     _BufferHal = bufferHal;
@@ -36,16 +42,14 @@ void CustomProtocolInterface::SubmitResponse(CustomProtocolCommand *command)
     }
 }
 
-void CustomProtocolInterface::TransferIn(CustomProtocolCommand *command, const Buffer &inBuffer, const U32 &sectorIndex)
+void CustomProtocolInterface::QueueCommand(const TransferCommandDesc& command)
 {
-    U8 *buffer = GetBuffer(command, sectorIndex);
-    _BufferHal->Memcpy(inBuffer, buffer);
+    _TransferCommandQueue->push(command);
 }
 
-void CustomProtocolInterface::TransferOut(CustomProtocolCommand *command, const Buffer &outBuffer, const U32 &sectorIndex)
+bool CustomProtocolInterface::PopFinishedCommand(TransferCommandDesc& command)
 {
-    U8 *buffer = GetBuffer(command, sectorIndex);
-    _BufferHal->Memcpy(buffer, outBuffer);
+    return (_FinishedTransferCommandQueue->pop(command));
 }
 
 U8* CustomProtocolInterface::GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex)
@@ -59,4 +63,24 @@ U8* CustomProtocolInterface::GetBuffer(CustomProtocolCommand *command, const U32
     }
 
     return nullptr;
+}
+
+void CustomProtocolInterface::Run()
+{
+    while (_TransferCommandQueue->empty() == false)
+    {
+        TransferCommandDesc& command = _TransferCommandQueue->front();
+        U8 *buffer = GetBuffer(command.Command, command.SectorIndex);
+        if (command.Direction == TransferCommandDesc::Direction::In)
+        {
+            _BufferHal->Memcpy(command.Buffer, buffer);
+        }
+        else
+        {
+            _BufferHal->Memcpy(buffer, command.Buffer);
+        }
+
+        _FinishedTransferCommandQueue->push(command);
+        _TransferCommandQueue->pop();
+    }
 }

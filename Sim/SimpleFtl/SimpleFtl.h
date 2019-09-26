@@ -8,7 +8,16 @@
 
 class SimpleFtl
 {
+private:
+    enum State
+    {
+        PROCESSING,
+        IDLE
+    };
+
 public:
+    SimpleFtl();
+
     void SetProtocol(CustomProtocolInterface *interface);
     void SetNandHal(NandHal *nandHal);
     void SetBufferHal(BufferHal *bufferHal);
@@ -26,13 +35,15 @@ private:
 	};
 
 private:
-    void ReadFromNand(CustomProtocolCommand *command);
-    void WriteToNand(CustomProtocolCommand *command);
+    bool ReadFromNand();
+    bool WriteToNand();
 
 	void ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const U32 &descSectorIndex);
 	void WritePage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer);
 
     bool SetSectorInfo(const SectorInfo &sectorInfo);
+
+    void CheckForCommand();
 
 private:
     NandHal *_NandHal;
@@ -40,6 +51,14 @@ private:
     CustomProtocolInterface *_CustomProtocolInterface;
     U32 _TotalSectors;
     U8 _SectorsPerPage;
+
+    State _CurrentState;
+
+    CustomProtocolCommand *_ProcessingCommand;
+    U32 _RemainingSectorCount;
+    U32 _ProcessedSectorCount;
+    U32 _CurrentLba;
+    U32 _PendingCommandCount;
 };
 
 #endif

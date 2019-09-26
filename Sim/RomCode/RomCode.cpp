@@ -46,7 +46,8 @@ extern "C"
 
     void __declspec(dllexport) __stdcall SetCustomProtocolIpcName(const std::string& protocolIpcName)
     {
-        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>(protocolIpcName.c_str());
+        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>();
+        _CustomProtocolInterface->Init(protocolIpcName.c_str());
     }
 
     void __declspec(dllexport) __stdcall SetExecuteCallback(std::function<bool(std::string)> setExecuteFunc)
