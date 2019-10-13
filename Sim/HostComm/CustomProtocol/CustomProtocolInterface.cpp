@@ -3,7 +3,6 @@
 CustomProtocolInterface::CustomProtocolInterface()
 {
     _TransferCommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<TransferCommandDesc>>(new boost::lockfree::spsc_queue<TransferCommandDesc>{ 1024 });
-    _FinishedTransferCommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<TransferCommandDesc>>(new boost::lockfree::spsc_queue<TransferCommandDesc>{ 1024 });
 }
 
 void CustomProtocolInterface::Init(const char *protocolIpcName, BufferHal *bufferHal)
@@ -47,11 +46,6 @@ void CustomProtocolInterface::QueueCommand(const TransferCommandDesc& command)
     _TransferCommandQueue->push(command);
 }
 
-bool CustomProtocolInterface::PopFinishedCommand(TransferCommandDesc& command)
-{
-    return (_FinishedTransferCommandQueue->pop(command));
-}
-
 U8* CustomProtocolInterface::GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex)
 {
     Message<CustomProtocolCommand>* msg = _MessageServer->GetMessage(command->CommandId);
@@ -80,7 +74,8 @@ void CustomProtocolInterface::Run()
             _BufferHal->Memcpy(buffer, command.Buffer);
         }
 
-        _FinishedTransferCommandQueue->push(command);
+        assert(command.Listener != nullptr);
+        command.Listener->HandleCommandCompleted(command);
         _TransferCommandQueue->pop();
     }
 }

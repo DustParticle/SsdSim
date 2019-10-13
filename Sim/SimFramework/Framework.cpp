@@ -230,8 +230,6 @@ void Framework::operator()()
 							_SimServer->PushResponse(message->Id());
 						} break;
 					}
-
-                    
 				}
 			} break;
 		}

@@ -26,6 +26,11 @@ extern "C"
             return;
         }
 
+        if (_CustomProtocolInterface->HasCommand() && !_SimpleFtl.IsProcessingCommand())
+        {
+            CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
+            _SimpleFtl.SubmitCustomProtocolCommand(command);
+        }
         _SimpleFtl();
     }
 

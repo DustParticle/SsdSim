@@ -3,7 +3,6 @@
 NandHal::NandHal()
 {
 	_CommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>>(new boost::lockfree::spsc_queue<CommandDesc>{ 1024 });
-	_FinishedCommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>>(new boost::lockfree::spsc_queue<CommandDesc>{ 1024 });
 }
 
 void NandHal::PreInit(const Geometry &geometry, std::shared_ptr<BufferHal> bufferHal)
@@ -38,11 +37,6 @@ void NandHal::QueueCommand(const CommandDesc& command)
 bool NandHal::IsCommandQueueEmpty() const
 {
 	return _CommandQueue->empty();
-}
-
-bool NandHal::PopFinishedCommand(CommandDesc& command)
-{
-	return (_FinishedCommandQueue->pop(command));
 }
 
 bool NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer)
@@ -125,7 +119,9 @@ void NandHal::Run()
 			}break;
 		}
 
-		_FinishedCommandQueue->push(command);
+        assert(command.Listener != nullptr);
+        command.Listener->HandleCommandCompleted(command);
+
 		_CommandQueue->pop();
 	}
 }
