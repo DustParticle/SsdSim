@@ -6,13 +6,13 @@
 HMODULE _DllInstance;
 HMODULE _NewDllInstance;
 
-typedef void(__stdcall *fInitialize)(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolInterface* customProtocolInterface);
+typedef void(__stdcall *fInitialize)(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolHal* CustomProtocolHal);
 typedef void(__stdcall *fSetIpcName)(const std::string& ipcName);
 typedef void(__stdcall *fExecute)();
 typedef void(__stdcall *fExecuteCallback)(std::function<bool(std::string)> callback);
 typedef void(__stdcall *fShutdown)();
 
-FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr), _NandHal(nullptr), _BufferHal(nullptr), _CustomProtocolInterface(nullptr)
+FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr), _NandHal(nullptr), _BufferHal(nullptr), _CustomProtocolHal(nullptr)
 {
     _DllInstance = NULL;
     _NewDllInstance = NULL;
@@ -30,7 +30,7 @@ bool FirmwareCore::SetExecute(std::string Filename)
     auto initialize = (fInitialize)GetProcAddress(_NewDllInstance, "Initialize");
     if (initialize)
     {
-        initialize(_NandHal, _BufferHal, _CustomProtocolInterface);
+        initialize(_NandHal, _BufferHal, _CustomProtocolHal);
     }
 
     auto execute = (fExecute)GetProcAddress(_NewDllInstance, "Execute");
@@ -104,9 +104,9 @@ void FirmwareCore::SwapExecute()
     _NewDllInstance = NULL;
 }
 
-void FirmwareCore::SetHalComponents(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolInterface* customProtocolInterface)
+void FirmwareCore::SetHalComponents(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolHal* CustomProtocolHal)
 {
     _NandHal = nandHal;
     _BufferHal = bufferHal;
-    _CustomProtocolInterface = customProtocolInterface;
+    _CustomProtocolHal = CustomProtocolHal;
 }

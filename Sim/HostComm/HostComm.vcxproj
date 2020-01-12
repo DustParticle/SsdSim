@@ -137,7 +137,7 @@
   <ItemGroup>
     <ClInclude Include="BasicTypes.h" />
     <ClInclude Include="CustomProtocol\CustomProtocolCommand.h" />
-    <ClInclude Include="CustomProtocol\CustomProtocolInterface.h" />
+    <ClInclude Include="CustomProtocol\CustomProtocolHal.h" />
     <ClInclude Include="Ipc\Constant.h" />
     <ClInclude Include="Ipc\Message.hpp" />
     <ClInclude Include="Ipc\MessageBaseService.hpp" />
@@ -146,7 +146,7 @@
     <ClInclude Include="Ipc\SynchronizedQueue.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CustomProtocol\CustomProtocolInterface.cpp" />
+    <ClCompile Include="CustomProtocol\CustomProtocolHal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

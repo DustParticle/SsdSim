@@ -4,11 +4,11 @@
 #include "boost/lockfree/queue.hpp"
 
 #include "Buffer/Hal/BufferHal.h"
-#include "HostComm/CustomProtocol/CustomProtocolInterface.h"
+#include "HostComm/CustomProtocol/CustomProtocolHal.h"
 #include "Nand/Hal/NandHal.h"
 #include "Translation.h"
 
-class SimpleFtl : public CustomProtocolInterface::TransferCommandListener, public NandHal::CommandListener
+class SimpleFtl : public CustomProtocolHal::TransferCommandListener, public NandHal::CommandListener
 {
 private:
     enum State
@@ -29,7 +29,7 @@ private:
         union Params
         {
             CustomProtocolCommand *CustomProtocolCommand;
-            CustomProtocolInterface::TransferCommandDesc TransferCommand;
+            CustomProtocolHal::TransferCommandDesc TransferCommand;
             NandHal::CommandDesc NandCommand;
         };
 
@@ -40,13 +40,13 @@ private:
 public:
     SimpleFtl();
 
-    void SetProtocol(CustomProtocolInterface *interface);
+    void SetProtocol(CustomProtocolHal *customProtocolHal);
     void SetNandHal(NandHal *nandHal);
     void SetBufferHal(BufferHal *bufferHal);
     void operator()();
 
     void SubmitCustomProtocolCommand(CustomProtocolCommand *command);
-    virtual void HandleCommandCompleted(const CustomProtocolInterface::TransferCommandDesc &command);
+    virtual void HandleCommandCompleted(const CustomProtocolHal::TransferCommandDesc &command);
     virtual void HandleCommandCompleted(const NandHal::CommandDesc &command);
 
     bool IsProcessingCommand();
@@ -74,7 +74,7 @@ private:
     bool SetSectorInfo(const SectorInfo &sectorInfo);
 
     void OnNewCustomProtocolCommand(CustomProtocolCommand *command);
-    void OnTransferCommandCompleted(const CustomProtocolInterface::TransferCommandDesc &command);
+    void OnTransferCommandCompleted(const CustomProtocolHal::TransferCommandDesc &command);
     void OnNandCommandCompleted(const NandHal::CommandDesc &command);
 
     void SubmitResponse();
@@ -82,7 +82,7 @@ private:
 private:
     NandHal *_NandHal;
     BufferHal *_BufferHal;
-    CustomProtocolInterface *_CustomProtocolInterface;
+    CustomProtocolHal *_CustomProtocolHal;
     U32 _TotalSectors;
     U8 _SectorsPerPage;
 

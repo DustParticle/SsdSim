@@ -5,9 +5,9 @@ SimpleFtl::SimpleFtl() : _ProcessingCommand(nullptr)
     _EventQueue = std::unique_ptr<boost::lockfree::queue<Event>>(new boost::lockfree::queue<Event>{ 1024 });
 }
 
-void SimpleFtl::SetProtocol(CustomProtocolInterface *interface)
+void SimpleFtl::SetProtocol(CustomProtocolHal *customProtocolHal)
 {
-    SimpleFtl::_CustomProtocolInterface = interface;
+    SimpleFtl::_CustomProtocolHal = customProtocolHal;
 }
 
 void SimpleFtl::SetNandHal(NandHal *nandHal)
@@ -166,14 +166,14 @@ void SimpleFtl::ReadNextLbas()
 
 void SimpleFtl::TransferOut(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const U32 &sectorIndex)
 {
-    CustomProtocolInterface::TransferCommandDesc transferCommand;
+    CustomProtocolHal::TransferCommandDesc transferCommand;
     transferCommand.Buffer = buffer;
     transferCommand.Command = _ProcessingCommand;
-    transferCommand.Direction = CustomProtocolInterface::TransferCommandDesc::Direction::Out;
+    transferCommand.Direction = CustomProtocolHal::TransferCommandDesc::Direction::Out;
     transferCommand.SectorIndex = sectorIndex;
     transferCommand.NandAddress = nandAddress;
     transferCommand.Listener = this;
-    _CustomProtocolInterface->QueueCommand(transferCommand);
+    _CustomProtocolHal->QueueCommand(transferCommand);
 }
 
 void SimpleFtl::ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const U32 &descSectorIndex)
@@ -217,14 +217,14 @@ void SimpleFtl::WriteNextLbas()
 
 void SimpleFtl::TransferIn(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const U32 &sectorIndex)
 {
-    CustomProtocolInterface::TransferCommandDesc transferCommand;
+    CustomProtocolHal::TransferCommandDesc transferCommand;
     transferCommand.Buffer = buffer;
     transferCommand.Command = _ProcessingCommand;
-    transferCommand.Direction = CustomProtocolInterface::TransferCommandDesc::Direction::In;
+    transferCommand.Direction = CustomProtocolHal::TransferCommandDesc::Direction::In;
     transferCommand.SectorIndex = sectorIndex;
     transferCommand.NandAddress = nandAddress;
     transferCommand.Listener = this;
-    _CustomProtocolInterface->QueueCommand(transferCommand);
+    _CustomProtocolHal->QueueCommand(transferCommand);
 }
 
 void SimpleFtl::WritePage(const NandHal::NandAddress &nandAddress, const Buffer &inBuffer)
@@ -241,7 +241,7 @@ void SimpleFtl::WritePage(const NandHal::NandAddress &nandAddress, const Buffer 
     _NandHal->QueueCommand(commandDesc);
 }
 
-void SimpleFtl::OnTransferCommandCompleted(const CustomProtocolInterface::TransferCommandDesc &command)
+void SimpleFtl::OnTransferCommandCompleted(const CustomProtocolHal::TransferCommandDesc &command)
 {
     if (CustomProtocolCommand::Code::Read == _ProcessingCommand->Command)
     {
@@ -302,7 +302,7 @@ void SimpleFtl::SubmitCustomProtocolCommand(CustomProtocolCommand *command)
     _EventQueue->push(event);
 }
 
-void SimpleFtl::HandleCommandCompleted(const CustomProtocolInterface::TransferCommandDesc &command)
+void SimpleFtl::HandleCommandCompleted(const CustomProtocolHal::TransferCommandDesc &command)
 {
     Event event;
     event.EventType = Event::Type::TransferCompleted;
@@ -326,6 +326,6 @@ bool SimpleFtl::IsProcessingCommand()
 void SimpleFtl::SubmitResponse()
 {
     assert(_ProcessingCommand != nullptr);
-    _CustomProtocolInterface->SubmitResponse(_ProcessingCommand);
+    _CustomProtocolHal->SubmitResponse(_ProcessingCommand);
     _ProcessingCommand = nullptr;
 }

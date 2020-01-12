@@ -1,22 +1,22 @@
-#include "CustomProtocolInterface.h"
+#include "CustomProtocolHal.h"
 
-CustomProtocolInterface::CustomProtocolInterface()
+CustomProtocolHal::CustomProtocolHal()
 {
     _TransferCommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<TransferCommandDesc>>(new boost::lockfree::spsc_queue<TransferCommandDesc>{ 1024 });
 }
 
-void CustomProtocolInterface::Init(const char *protocolIpcName, BufferHal *bufferHal)
+void CustomProtocolHal::Init(const char *protocolIpcName, BufferHal *bufferHal)
 {
     _MessageServer = std::make_unique<MessageServer<CustomProtocolCommand>>(protocolIpcName);
     _BufferHal = bufferHal;
 }
 
-bool CustomProtocolInterface::HasCommand()
+bool CustomProtocolHal::HasCommand()
 {
     return _MessageServer->HasMessage();
 }
 
-CustomProtocolCommand* CustomProtocolInterface::GetCommand()
+CustomProtocolCommand* CustomProtocolHal::GetCommand()
 {
     Message<CustomProtocolCommand>* msg = _MessageServer->Pop();
     if (msg)
@@ -28,7 +28,7 @@ CustomProtocolCommand* CustomProtocolInterface::GetCommand()
     return nullptr;
 }
 
-void CustomProtocolInterface::SubmitResponse(CustomProtocolCommand *command)
+void CustomProtocolHal::SubmitResponse(CustomProtocolCommand *command)
 {
     Message<CustomProtocolCommand> *message = _MessageServer->GetMessage(command->CommandId);
     if (message->ExpectsResponse())
@@ -41,12 +41,12 @@ void CustomProtocolInterface::SubmitResponse(CustomProtocolCommand *command)
     }
 }
 
-void CustomProtocolInterface::QueueCommand(const TransferCommandDesc& command)
+void CustomProtocolHal::QueueCommand(const TransferCommandDesc& command)
 {
     _TransferCommandQueue->push(command);
 }
 
-U8* CustomProtocolInterface::GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex)
+U8* CustomProtocolHal::GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex)
 {
     Message<CustomProtocolCommand>* msg = _MessageServer->GetMessage(command->CommandId);
     if (msg)
@@ -59,7 +59,7 @@ U8* CustomProtocolInterface::GetBuffer(CustomProtocolCommand *command, const U32
     return nullptr;
 }
 
-void CustomProtocolInterface::Run()
+void CustomProtocolHal::Run()
 {
     while (_TransferCommandQueue->empty() == false)
     {

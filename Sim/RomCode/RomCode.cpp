@@ -4,29 +4,29 @@
 #include <memory>
 #include <functional>
 
-#include "HostComm/CustomProtocol/CustomProtocolInterface.h"
+#include "HostComm/CustomProtocol/CustomProtocolHal.h"
 #include "Nand/Hal/NandHal.h"
 
 std::function<bool(std::string)> _SetExecuteFunc;
-CustomProtocolInterface* _CustomProtocolInterface = nullptr;
+CustomProtocolHal* _CustomProtocolHal = nullptr;
 
 extern "C"
 {
-    void __declspec(dllexport) __stdcall Initialize(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolInterface* customProtocolInterface)
+    void __declspec(dllexport) __stdcall Initialize(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolHal* CustomProtocolHal)
     {
-        _CustomProtocolInterface = customProtocolInterface;
+        _CustomProtocolHal = CustomProtocolHal;
     }
 
     void __declspec(dllexport) __stdcall Execute()
     {
-        if (_CustomProtocolInterface == nullptr)
+        if (_CustomProtocolHal == nullptr)
         {
             throw "CustomProtocol is null";
         }
 
-        if (_CustomProtocolInterface->HasCommand())
+        if (_CustomProtocolHal->HasCommand())
         {
-            CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
+            CustomProtocolCommand *command = _CustomProtocolHal->GetCommand();
 
             switch (command->Command)
             {
@@ -43,7 +43,7 @@ extern "C"
                     delete[] temp;
 
                     _SetExecuteFunc(filename);
-                    _CustomProtocolInterface->SubmitResponse(command);
+                    _CustomProtocolHal->SubmitResponse(command);
                 } break;
             }
         }

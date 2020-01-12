@@ -1,5 +1,5 @@
-#ifndef __CustomProtocolInterface_h__
-#define __CustomProtocolInterface_h__
+#ifndef __CustomProtocolHal_h__
+#define __CustomProtocolHal_h__
 
 #include "boost/lockfree/spsc_queue.hpp"
 
@@ -11,10 +11,10 @@
 #include "Buffer/Hal/BufferHal.h"
 #include "Nand/Hal/NandHal.h"
 
-class CustomProtocolInterface : public FrameworkThread
+class CustomProtocolHal : public FrameworkThread
 {
 public:
-    CustomProtocolInterface();
+    CustomProtocolHal();
     
     void Init(const char *protocolIpcName = nullptr, BufferHal *bufferHal = nullptr);
 
