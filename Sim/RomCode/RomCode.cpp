@@ -8,10 +8,15 @@
 #include "Nand/Hal/NandHal.h"
 
 std::function<bool(std::string)> _SetExecuteFunc;
-std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
+CustomProtocolInterface* _CustomProtocolInterface = nullptr;
 
 extern "C"
 {
+    void __declspec(dllexport) __stdcall Initialize(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolInterface* customProtocolInterface)
+    {
+        _CustomProtocolInterface = customProtocolInterface;
+    }
+
     void __declspec(dllexport) __stdcall Execute()
     {
         if (_CustomProtocolInterface == nullptr)
@@ -42,12 +47,6 @@ extern "C"
                 } break;
             }
         }
-    }
-
-    void __declspec(dllexport) __stdcall SetCustomProtocolIpcName(const std::string& protocolIpcName)
-    {
-        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>();
-        _CustomProtocolInterface->Init(protocolIpcName.c_str());
     }
 
     void __declspec(dllexport) __stdcall SetExecuteCallback(std::function<bool(std::string)> setExecuteFunc)
