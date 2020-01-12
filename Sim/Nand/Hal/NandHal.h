@@ -113,6 +113,9 @@ protected:
 	virtual void Run() override;
 
 private:
+    void ProcessNandOperation();
+
+private:
     std::shared_ptr<BufferHal> _BufferHal;
 
 	std::vector<NandChannel> _NandChannels;

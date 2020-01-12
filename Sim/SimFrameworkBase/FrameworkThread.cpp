@@ -15,11 +15,12 @@ void FrameworkThread::operator()()
 	while (false == quit)
 	{
         ++counter;
-        if (counter == 1000)
+        if (counter == 1000000)
         {
             quit = IsStopRequested();
             counter = 0;
         }
+
 		Run();
 	}
 }

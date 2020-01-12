@@ -63,6 +63,7 @@ private:
 	};
 
 private:
+    void ProcessEvent();
     void ReadNextLbas();
     void TransferOut(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const U32 &sectorIndex);
     void ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const U32 &descSectorIndex);

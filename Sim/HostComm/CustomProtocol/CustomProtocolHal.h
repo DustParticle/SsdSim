@@ -55,6 +55,7 @@ protected:
 
 private:
     U8* GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex);
+    void ProcessTransferCommand();
 
 private:
     std::unique_ptr<MessageServer<CustomProtocolCommand>> _MessageServer;

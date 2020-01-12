@@ -63,19 +63,24 @@ void CustomProtocolHal::Run()
 {
     while (_TransferCommandQueue->empty() == false)
     {
-        TransferCommandDesc& command = _TransferCommandQueue->front();
-        U8 *buffer = GetBuffer(command.Command, command.SectorIndex);
-        if (command.Direction == TransferCommandDesc::Direction::In)
-        {
-            _BufferHal->Memcpy(command.Buffer, buffer);
-        }
-        else
-        {
-            _BufferHal->Memcpy(buffer, command.Buffer);
-        }
-
-        assert(command.Listener != nullptr);
-        command.Listener->HandleCommandCompleted(command);
-        _TransferCommandQueue->pop();
+        ProcessTransferCommand();
     }
+}
+
+void CustomProtocolHal::ProcessTransferCommand()
+{
+    TransferCommandDesc& command = _TransferCommandQueue->front();
+    U8 *buffer = GetBuffer(command.Command, command.SectorIndex);
+    if (command.Direction == TransferCommandDesc::Direction::In)
+    {
+        _BufferHal->Memcpy(command.Buffer, buffer);
+    }
+    else
+    {
+        _BufferHal->Memcpy(buffer, command.Buffer);
+    }
+
+    assert(command.Listener != nullptr);
+    command.Listener->HandleCommandCompleted(command);
+    _TransferCommandQueue->pop();
 }

@@ -43,10 +43,16 @@ void SimpleFtl::operator()()
 {
     while (_EventQueue->empty() == false)
     {
-        Event event;
-        _EventQueue->pop(event);
-        switch (event.EventType)
-        {
+        ProcessEvent();
+    }
+}
+
+void SimpleFtl::ProcessEvent()
+{
+    Event event;
+    _EventQueue->pop(event);
+    switch (event.EventType)
+    {
         case Event::Type::CustomProtocolCommand:
         {
             OnNewCustomProtocolCommand(event.EventParams.CustomProtocolCommand);
@@ -65,7 +71,6 @@ void SimpleFtl::operator()()
         default:
         {
             assert(0);
-        }
         }
     }
 }
