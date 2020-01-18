@@ -3,7 +3,6 @@
 NandHal::NandHal()
 {
 	_CommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>>(new boost::lockfree::spsc_queue<CommandDesc>{ 1024 });
-	_FinishedCommandQueue = std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>>(new boost::lockfree::spsc_queue<CommandDesc>{ 1024 });
 }
 
 void NandHal::PreInit(const Geometry &geometry, std::shared_ptr<BufferHal> bufferHal)
@@ -38,11 +37,6 @@ void NandHal::QueueCommand(const CommandDesc& command)
 bool NandHal::IsCommandQueueEmpty() const
 {
 	return _CommandQueue->empty();
-}
-
-bool NandHal::PopFinishedCommand(CommandDesc& command)
-{
-	return (_FinishedCommandQueue->pop(command));
 }
 
 bool NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer)
@@ -86,46 +80,53 @@ void NandHal::Run()
 {
 	if (_CommandQueue->empty() == false)
 	{
-		CommandDesc& command = _CommandQueue->front();
-        NandAddress& address = command.Address;
-
-		// Set defaut return status is Success
-		command.CommandStatus = CommandDesc::Status::Success;
-
-		switch (command.Operation)
-		{
-			case CommandDesc::Op::Read:
-			{
-				if (false == ReadPage(address.Channel, address.Device, address.Block, address.Page, command.Buffer))
-				{
-					command.CommandStatus = CommandDesc::Status::Uecc;
-				}
-			}break;
-			case CommandDesc::Op::Write:
-			{
-				// TODO: Update command status
-				WritePage(address.Channel, address.Device, address.Block, address.Page, command.Buffer);
-			}break;
-			case CommandDesc::Op::Erase:
-			{
-				// TODO: Update command status
-				EraseBlock(address.Channel, address.Device, address.Block);
-			}break;
-			case CommandDesc::Op::ReadPartial:
-			{
-				if (false == ReadPage(address.Channel, address.Device, address.Block, address.Page, address.Sector, address.SectorCount, command.Buffer))
-				{
-					command.CommandStatus = CommandDesc::Status::Uecc;
-				}
-			}break;
-			case CommandDesc::Op::WritePartial:
-			{
-				// TODO: Update command status
-				WritePage(address.Channel, address.Device, address.Block, address.Page, address.Sector, address.SectorCount, command.Buffer);
-			}break;
-		}
-
-		_FinishedCommandQueue->push(command);
-		_CommandQueue->pop();
+        ProcessNandOperation();
 	}
+}
+
+void NandHal::ProcessNandOperation()
+{
+    CommandDesc& command = _CommandQueue->front();
+    NandAddress& address = command.Address;
+
+    // Set defaut return status is Success
+    command.CommandStatus = CommandDesc::Status::Success;
+
+    switch (command.Operation)
+    {
+    case CommandDesc::Op::Read:
+    {
+        if (false == ReadPage(address.Channel, address.Device, address.Block, address.Page, command.Buffer))
+        {
+            command.CommandStatus = CommandDesc::Status::Uecc;
+        }
+    }break;
+    case CommandDesc::Op::Write:
+    {
+        // TODO: Update command status
+        WritePage(address.Channel, address.Device, address.Block, address.Page, command.Buffer);
+    }break;
+    case CommandDesc::Op::Erase:
+    {
+        // TODO: Update command status
+        EraseBlock(address.Channel, address.Device, address.Block);
+    }break;
+    case CommandDesc::Op::ReadPartial:
+    {
+        if (false == ReadPage(address.Channel, address.Device, address.Block, address.Page, address.Sector, address.SectorCount, command.Buffer))
+        {
+            command.CommandStatus = CommandDesc::Status::Uecc;
+        }
+    }break;
+    case CommandDesc::Op::WritePartial:
+    {
+        // TODO: Update command status
+        WritePage(address.Channel, address.Device, address.Block, address.Page, address.Sector, address.SectorCount, command.Buffer);
+    }break;
+    }
+
+    assert(command.Listener != nullptr);
+    command.Listener->HandleCommandCompleted(command);
+
+    _CommandQueue->pop();
 }

@@ -75,8 +75,16 @@ TEST_F(NandDeviceTest, Basic)
     _BufferHal->DeallocateBuffer(readBuffer);
 }
 
-class NandHalTest : public ::testing::Test
+class NandHalTest : public ::testing::Test, public NandHal::CommandListener
 {
+public:
+    U32 _CompletedNandCount;
+
+    virtual void HandleCommandCompleted(const NandHal::CommandDesc &command)
+    {
+        ++_CompletedNandCount;
+    }
+
 protected:
     void SetUp() override
     {
@@ -93,6 +101,7 @@ protected:
         _NandHal = std::make_shared<NandHal>();
         _NandHal->PreInit(geometry, _BufferHal);
         _NandHal->Init();
+        _CompletedNandCount = 0;
     }
 
     void TearDown() override
@@ -110,7 +119,6 @@ protected:
     std::shared_ptr<BufferHal> _BufferHal;
     std::shared_ptr<NandHal> _NandHal;
 };
-
 
 TEST_F(NandHalTest, Basic)
 {
@@ -191,6 +199,7 @@ TEST_F(NandHalTest, Basic_CommandQueue)
 
 	nandHalFuture = std::async(std::launch::async, &NandHal::operator(), _NandHal);
 
+    U32 queuedCommand = 0;
 	NandHal::CommandDesc commandDesc;
     NandHal::NandAddress& address = commandDesc.Address;
 	address.Channel._ = 0;
@@ -203,11 +212,15 @@ TEST_F(NandHalTest, Basic_CommandQueue)
 		{
 			commandDesc.Operation = NandHal::CommandDesc::Op::Write;
 			commandDesc.Buffer = writeBuffers[i];
+            commandDesc.Listener = this;
 			_NandHal->QueueCommand(commandDesc);
+            ++queuedCommand;
 
 			commandDesc.Operation = NandHal::CommandDesc::Op::Read;
 			commandDesc.Buffer = readBuffers[i];
-			_NandHal->QueueCommand(commandDesc);
+            commandDesc.Listener = this;
+            _NandHal->QueueCommand(commandDesc);
+            ++queuedCommand;
 
 			if (++address.Channel._ >= channels)
 			{
@@ -228,6 +241,7 @@ TEST_F(NandHalTest, Basic_CommandQueue)
 		while (false == _NandHal->IsCommandQueueEmpty());
 	}
 
+    ASSERT_EQ(queuedCommand, _CompletedNandCount);
 	_NandHal->Stop();
     nandHalFuture.wait();
 

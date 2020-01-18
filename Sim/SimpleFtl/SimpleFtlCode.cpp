@@ -1,39 +1,40 @@
-// WriteRead.cpp : Defines the exported functions for the DLL application.
-//
-
 #include <memory>
 #include <functional>
 
-#include "HostComm/CustomProtocol/CustomProtocolInterface.h"
+#include "HostComm/CustomProtocol/CustomProtocolHal.h"
 #include "Nand/Hal/NandHal.h"
 #include "SimpleFtl.h"
 
-std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
-std::shared_ptr<BufferHal> _BufferHal = nullptr;
+CustomProtocolHal* _CustomProtocolHal = nullptr;
 SimpleFtl _SimpleFtl;
 
 extern "C"
 {
-    void __declspec(dllexport) __stdcall Initialize(std::shared_ptr<NandHal> nandHal, std::shared_ptr<BufferHal> bufferHal)
+    void __declspec(dllexport) __stdcall Initialize(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolHal* CustomProtocolHal)
     {
-        _SimpleFtl.SetNandHal(nandHal.get());
-        _SimpleFtl.SetBufferHal(bufferHal.get());
-        _BufferHal = bufferHal;
+        _SimpleFtl.SetNandHal(nandHal);
+        _SimpleFtl.SetBufferHal(bufferHal);
+        _SimpleFtl.SetProtocol(CustomProtocolHal);
+        _CustomProtocolHal = CustomProtocolHal;
     }
 
     void __declspec(dllexport) __stdcall Execute()
     {
-        if (_CustomProtocolInterface == nullptr)
+        if (_CustomProtocolHal == nullptr)
         {
             return;
         }
 
+        if (_CustomProtocolHal->HasCommand() && !_SimpleFtl.IsProcessingCommand())
+        {
+            CustomProtocolCommand *command = _CustomProtocolHal->GetCommand();
+            _SimpleFtl.SubmitCustomProtocolCommand(command);
+        }
         _SimpleFtl();
     }
 
-    void __declspec(dllexport) __stdcall SetCustomProtocolIpcName(const std::string& protocolIpcName)
+    void __declspec(dllexport) __stdcall Shutdown()
     {
-        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>(protocolIpcName.c_str(), _BufferHal.get());
-        _SimpleFtl.SetProtocol(_CustomProtocolInterface.get());
+        
     }
 };

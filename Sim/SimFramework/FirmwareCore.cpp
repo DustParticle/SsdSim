@@ -6,12 +6,13 @@
 HMODULE _DllInstance;
 HMODULE _NewDllInstance;
 
-typedef void(__stdcall *fInitialize)(std::shared_ptr<NandHal> nandHal, std::shared_ptr<BufferHal> bufferHal);
+typedef void(__stdcall *fInitialize)(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolHal* CustomProtocolHal);
 typedef void(__stdcall *fSetIpcName)(const std::string& ipcName);
 typedef void(__stdcall *fExecute)();
 typedef void(__stdcall *fExecuteCallback)(std::function<bool(std::string)> callback);
+typedef void(__stdcall *fShutdown)();
 
-FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr), _NandHal(nullptr), _BufferHal(nullptr)
+FirmwareCore::FirmwareCore() : _Execute(nullptr), _NewExecute(nullptr), _NandHal(nullptr), _BufferHal(nullptr), _CustomProtocolHal(nullptr)
 {
     _DllInstance = NULL;
     _NewDllInstance = NULL;
@@ -26,21 +27,12 @@ bool FirmwareCore::SetExecute(std::string Filename)
         return false;
     }
 
-    // search the Initialize and execute
     auto initialize = (fInitialize)GetProcAddress(_NewDllInstance, "Initialize");
     if (initialize)
     {
-        initialize(_NandHal, _BufferHal);
+        initialize(_NandHal, _BufferHal, _CustomProtocolHal);
     }
 
-    // search the SetIpcName functions and execute
-    auto setIpcName = (fSetIpcName)GetProcAddress(_NewDllInstance, "SetCustomProtocolIpcName");
-    if (setIpcName)
-    {
-        setIpcName(_CustomProtocolIpcName);
-    }
-
-    // resolve function address here
     auto execute = (fExecute)GetProcAddress(_NewDllInstance, "Execute");
     if (!execute)
     {
@@ -48,7 +40,6 @@ bool FirmwareCore::SetExecute(std::string Filename)
         return false;
     }
 
-    // search the SetExecuteCall and set
     auto setExecuteCallback = (fExecuteCallback)GetProcAddress(_NewDllInstance, "SetExecuteCallback");
     if (setExecuteCallback)
     {
@@ -77,6 +68,11 @@ void FirmwareCore::Unload()
 {
     if (_DllInstance)
     {
+        auto shutdown = (fShutdown)GetProcAddress(_DllInstance, "Shutdown");
+        if (shutdown)
+        {
+            shutdown();
+        }
         FreeLibrary(_DllInstance);
     }
 
@@ -90,6 +86,12 @@ void FirmwareCore::SwapExecute()
 {
     if (_DllInstance)
     {
+        auto shutdown = (fShutdown)GetProcAddress(_DllInstance, "Shutdown");
+        if (shutdown)
+        {
+            shutdown();
+        }
+
         // Wait for the current code completely
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         FreeLibrary(_DllInstance);
@@ -102,13 +104,9 @@ void FirmwareCore::SwapExecute()
     _NewDllInstance = NULL;
 }
 
-void FirmwareCore::SetHalComponents(std::shared_ptr<NandHal> nandHal, std::shared_ptr<BufferHal> bufferHal)
+void FirmwareCore::SetHalComponents(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolHal* CustomProtocolHal)
 {
     _NandHal = nandHal;
     _BufferHal = bufferHal;
-}
-
-void FirmwareCore::SetIpcNames(const std::string& customProtocolIpcName)
-{
-    _CustomProtocolIpcName = customProtocolIpcName;
+    _CustomProtocolHal = CustomProtocolHal;
 }

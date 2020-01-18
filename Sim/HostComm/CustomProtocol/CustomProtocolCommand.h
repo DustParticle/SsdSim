@@ -4,7 +4,7 @@
 #include "HostComm/BasicTypes.h"
 #include "Buffer/Types.h"
 
-class CustomProtocolInterface;
+class CustomProtocolHal;
 
 struct DownloadAndExecutePayload
 {
@@ -80,7 +80,7 @@ public:
 
 private:
     CommandId CommandId;
-    friend class CustomProtocolInterface;
+    friend class CustomProtocolHal;
 };
 
 #endif

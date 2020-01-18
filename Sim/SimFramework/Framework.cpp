@@ -70,7 +70,8 @@ void Framework::Init(const std::string& configFileName, std::string ipcNamesPref
         }
     }
 
-    _FirmwareCore->SetIpcNames(customProtocolIpcName);
+    _CustomProtocolHal = std::make_shared<CustomProtocolHal>();
+    _CustomProtocolHal->Init(customProtocolIpcName.c_str(), _BufferHal.get());
 }
 
 void Framework::SetupNandHal(JSONParser& parser)
@@ -184,10 +185,11 @@ void Framework::GetFirmwareCoreInfo(JSONParser& parser)
 void Framework::operator()()
 {
 	std::future<void> nandHal;
+    std::future<void> CustomProtocolHal;
 	std::future<void> firmwareMain;
 
     // Load ROM
-	_FirmwareCore->SetHalComponents(_NandHal, _BufferHal);
+	_FirmwareCore->SetHalComponents(_NandHal.get(), _BufferHal.get(), _CustomProtocolHal.get());
 	_FirmwareCore->SetExecute(this->_RomCodePath);
 
     while (State::Exit != _State)
@@ -197,6 +199,7 @@ void Framework::operator()()
 			case State::Start:
 			{
 				nandHal = std::async(std::launch::async, &NandHal::operator(), _NandHal);
+                CustomProtocolHal = std::async(std::launch::async, &CustomProtocolHal::operator(), _CustomProtocolHal);
 				firmwareMain = std::async(std::launch::async, &FirmwareCore::operator(), _FirmwareCore);
 
 				_State = State::Run;
@@ -230,8 +233,6 @@ void Framework::operator()()
 							_SimServer->PushResponse(message->Id());
 						} break;
 					}
-
-                    
 				}
 			} break;
 		}
@@ -239,9 +240,11 @@ void Framework::operator()()
 
 	_FirmwareCore->Stop();
 	_NandHal->Stop();
+    _CustomProtocolHal->Stop();
 
     firmwareMain.wait();
     nandHal.wait();
+    CustomProtocolHal.wait();
 
     _FirmwareCore->Unload();
 }

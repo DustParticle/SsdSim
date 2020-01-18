@@ -48,6 +48,13 @@ public:
         tSectorCount SectorCount;
     };
 
+    struct CommandDesc;
+    class CommandListener
+    {
+    public:
+        virtual void HandleCommandCompleted(const CommandDesc &command) = 0;
+    };
+
 	struct CommandDesc
 	{
 		enum class Op
@@ -73,11 +80,11 @@ public:
 		Buffer Buffer;
 
         U32 DescSectorIndex;
+        CommandListener *Listener;
 	};
 
 	void QueueCommand(const CommandDesc& command);
 	bool IsCommandQueueEmpty() const;
-	bool PopFinishedCommand(CommandDesc& command);
 
 public:
 	bool ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer);
@@ -106,12 +113,14 @@ protected:
 	virtual void Run() override;
 
 private:
+    void ProcessNandOperation();
+
+private:
     std::shared_ptr<BufferHal> _BufferHal;
 
 	std::vector<NandChannel> _NandChannels;
 
 	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _CommandQueue;
-	std::unique_ptr<boost::lockfree::spsc_queue<CommandDesc>> _FinishedCommandQueue;
 
     Geometry _Geometry;
     SectorInfo _SectorInfo;
