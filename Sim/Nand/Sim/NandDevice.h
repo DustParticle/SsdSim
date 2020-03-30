@@ -18,10 +18,12 @@ public:
 
 public:
 	bool ReadPage(tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer);
-	bool ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &outBuffer);
+	bool ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, 
+        const Buffer &outBuffer, const tSectorOffset& bufferOffset);
 
 	void WritePage(tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer);
-	void WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &inBuffer);
+	void WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, 
+        const Buffer &inBuffer, const tSectorOffset& bufferOffset);
 
 	void EraseBlock(tBlockInDevice block);
 

@@ -296,7 +296,7 @@ TEST_F(SimpleFtlTest, BasicWriteReadVerify)
 
 	//Write a buffer with lba and sector count
     constexpr U32 lba = 12345;
-    U32 sectorCount = 35;
+    U32 sectorCount = 25;
     U32 payloadSize = sectorCount * SectorSizeInTransfer;
     auto writeMessage = AllocateMessage<CustomProtocolCommand>(CustomProtocolClient, payloadSize, true);
     ASSERT_NE(writeMessage, nullptr);
@@ -327,7 +327,20 @@ TEST_F(SimpleFtlTest, BasicWriteReadVerify)
 
     //Get message read buffer to verify with the write buffer
     int compareResult = std::memcmp(responseMessageWrite->Payload, responseMessageRead->Payload, payloadSize);
-    ASSERT_EQ(0, compareResult);
+    if (compareResult != 0)
+    {
+        for (auto i(0); i < sectorCount; ++i)
+        {
+            auto writeBuffer = &(static_cast<U8*>(responseMessageWrite->Payload)[i * SectorSizeInTransfer]);
+            auto readBuffer = &(static_cast<U8*>(responseMessageRead->Payload)[i * SectorSizeInTransfer]);
+            auto result = std::memcmp(writeBuffer, readBuffer, SectorSizeInTransfer);
+            if (result != 0)
+            {
+                GOUT("Miscompare at sector " << i);
+            }
+        }
+        FAIL();
+    }
 
     //--Deallocate
 	CustomProtocolClient->DeallocateMessage(responseMessageWrite);

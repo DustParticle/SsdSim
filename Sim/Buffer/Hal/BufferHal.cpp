@@ -62,14 +62,18 @@ U8* BufferHal::ToPointer(const Buffer &buffer)
     return nullptr;
 }
 
-void BufferHal::Memcpy(U8* const dest, const Buffer &src)
+void BufferHal::Memcpy(U8* const dest, const Buffer &src, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount)
 {
-    memcpy(dest, ToPointer(src), src.SizeInByte);
+    auto byteOffset = ToByteIndexInTransfer(src.Type, bufferOffset._);
+    auto byteCount = ToByteIndexInTransfer(src.Type, sectorCount._);
+    memcpy(dest, ToPointer(src) + byteOffset, byteCount);
 }
 
-void BufferHal::Memcpy(const Buffer &dest, const U8* const src)
+void BufferHal::Memcpy(const Buffer &dest, const tSectorOffset& bufferOffset, const U8* const src, const tSectorCount& sectorCount)
 {
-    memcpy(ToPointer(dest), src, dest.SizeInByte);
+    auto byteOffset = ToByteIndexInTransfer(dest.Type, bufferOffset._);
+    auto byteCount = ToByteIndexInTransfer(dest.Type, sectorCount._);
+    memcpy(ToPointer(dest) + byteOffset, src, byteCount);
 }
 
 bool BufferHal::SetSectorInfo(const SectorInfo &sectorInfo)
@@ -87,9 +91,9 @@ SectorInfo BufferHal::GetSectorInfo() const
     return _SectorInfo;
 }
 
-U32 BufferHal::ToByteIndexInTransfer(BufferType type, const U32 &sectorIndex)
+U32 BufferHal::ToByteIndexInTransfer(BufferType type, U32 offset)
 {
     return (type == BufferType::User && _SectorInfo.CompactMode)
-        ? sectorIndex * _SectorInfo.CompactSizeInByte
-        : sectorIndex << _SectorInfo.SectorSizeInBit;
+        ? offset * _SectorInfo.CompactSizeInByte
+        : offset << _SectorInfo.SectorSizeInBit;
 }

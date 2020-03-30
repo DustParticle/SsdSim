@@ -22,13 +22,13 @@ public:
     void DeallocateBuffer(const Buffer &buffer);
 
     U8* ToPointer(const Buffer &buffer);
-    void Memcpy(U8* const dest, const Buffer &src);
-    void Memcpy(const Buffer &dest, const U8* const src);
+    void Memcpy(U8* const dest, const Buffer &src, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount);
+    void Memcpy(const Buffer &dest, const tSectorOffset& bufferOffset, const U8* const src, const tSectorCount& sectorCount);
 
 public:
     bool SetSectorInfo(const SectorInfo &sectorInfo);
     SectorInfo GetSectorInfo() const;
-    U32 ToByteIndexInTransfer(BufferType type, const U32 &sectorIndex);
+    U32 ToByteIndexInTransfer(BufferType type, U32 offset);
 
 private:
     U32 _MaxBufferSizeInSector;

@@ -52,24 +52,13 @@ public:
     bool IsProcessingCommand();
 
 private:
-	struct tSectorOffset
-	{
-		U8 _;
-	};
-
-	struct tSectorCount
-	{
-		U8 _;
-	};
-
-private:
     void ProcessEvent();
     void ReadNextLbas();
-    void TransferOut(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const U32 &sectorIndex);
-    void ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const U32 &descSectorIndex);
+    void TransferOut(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const tSectorOffset& commandOffset, const tSectorCount& sectorCount);
+    void ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const tSectorOffset& descSectorIndex);
 
     void WriteNextLbas();
-    void TransferIn(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const U32 &sectorIndex);
+    void TransferIn(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const tSectorOffset& commandOffset, const tSectorCount& sectorCount);
 	void WritePage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer);
 
     bool SetSectorInfo(const SectorInfo &sectorInfo);
@@ -92,6 +81,8 @@ private:
     U32 _ProcessedSectorCount;
     U32 _CurrentLba;
     U32 _PendingCommandCount;
+
+    U8 _SectorsPerSegment;
 
     bip::interprocess_mutex *_Mutex;
 

@@ -36,6 +36,9 @@ bool SimpleFtl::SetSectorInfo(const SectorInfo &sectorInfo)
     _TotalSectors = geometry.ChannelCount * geometry.DevicesPerChannel
         * geometry.BlocksPerDevice * geometry.PagesPerBlock * _SectorsPerPage;
     SimpleFtlTranslation::SetSectorSize(sectorInfo.SectorSizeInBit);
+
+    _SectorsPerSegment = _SectorsPerPage;
+
     return true;
 }
 
@@ -154,9 +157,11 @@ void SimpleFtl::ReadNextLbas()
     while (_RemainingSectorCount > 0)
     {
         SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, _RemainingSectorCount, nandAddress, nextLba, remainingSectorCount);
-        if (_BufferHal->AllocateBuffer(BufferType::User, nandAddress.SectorCount._, buffer))
+        if (_BufferHal->AllocateBuffer(BufferType::User, _SectorsPerSegment, buffer))
         {
-            ReadPage(nandAddress, buffer, _ProcessedSectorCount);
+            tSectorOffset sectorOffset;
+            sectorOffset._ = _ProcessedSectorCount;
+            ReadPage(nandAddress, buffer, sectorOffset);
             _ProcessedSectorCount += nandAddress.SectorCount._;
             _CurrentLba = nextLba;
             _RemainingSectorCount = remainingSectorCount;
@@ -169,19 +174,21 @@ void SimpleFtl::ReadNextLbas()
     }
 }
 
-void SimpleFtl::TransferOut(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const U32 &sectorIndex)
+void SimpleFtl::TransferOut(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const tSectorOffset& commandOffset, const tSectorCount& sectorCount)
 {
     CustomProtocolHal::TransferCommandDesc transferCommand;
     transferCommand.Buffer = buffer;
+    transferCommand.BufferOffset._ = nandAddress.Sector._;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
     transferCommand.Command = _ProcessingCommand;
     transferCommand.Direction = CustomProtocolHal::TransferCommandDesc::Direction::Out;
-    transferCommand.SectorIndex = sectorIndex;
+    transferCommand.CommandOffset = commandOffset;
+    transferCommand.SectorCount = sectorCount;
     transferCommand.NandAddress = nandAddress;
     transferCommand.Listener = this;
     _CustomProtocolHal->QueueCommand(transferCommand);
 }
 
-void SimpleFtl::ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const U32 &descSectorIndex)
+void SimpleFtl::ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const tSectorOffset& descSectorIndex)
 {
     assert((nandAddress.Sector._ + nandAddress.SectorCount._) <= _SectorsPerPage);
 
@@ -190,6 +197,7 @@ void SimpleFtl::ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &
     commandDesc.Operation = (nandAddress.SectorCount._ == _SectorsPerPage)
         ? NandHal::CommandDesc::Op::Read : NandHal::CommandDesc::Op::ReadPartial;
     commandDesc.Buffer = outBuffer;
+    commandDesc.BufferOffset._ = nandAddress.Sector._;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
     commandDesc.DescSectorIndex = descSectorIndex;
     commandDesc.Listener = this;
 
@@ -205,9 +213,11 @@ void SimpleFtl::WriteNextLbas()
     while (_RemainingSectorCount > 0)
     {
         SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, _RemainingSectorCount, nandAddress, nextLba, remainingSectorCount);
-        if (_BufferHal->AllocateBuffer(BufferType::User, nandAddress.SectorCount._, buffer))
+        if (_BufferHal->AllocateBuffer(BufferType::User, _SectorsPerSegment, buffer))
         {
-            TransferIn(buffer, nandAddress, _ProcessedSectorCount);
+            tSectorOffset commandOffset;
+            commandOffset._ = _ProcessedSectorCount;
+            TransferIn(buffer, nandAddress, commandOffset, nandAddress.SectorCount);
             _ProcessedSectorCount += nandAddress.SectorCount._;
             _CurrentLba = nextLba;
             _RemainingSectorCount = remainingSectorCount;
@@ -220,13 +230,15 @@ void SimpleFtl::WriteNextLbas()
     }
 }
 
-void SimpleFtl::TransferIn(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const U32 &sectorIndex)
+void SimpleFtl::TransferIn(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const tSectorOffset& commandOffset, const tSectorCount& sectorCount)
 {
     CustomProtocolHal::TransferCommandDesc transferCommand;
     transferCommand.Buffer = buffer;
+    transferCommand.BufferOffset._ = nandAddress.Sector._;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
     transferCommand.Command = _ProcessingCommand;
     transferCommand.Direction = CustomProtocolHal::TransferCommandDesc::Direction::In;
-    transferCommand.SectorIndex = sectorIndex;
+    transferCommand.CommandOffset = commandOffset;
+    transferCommand.SectorCount = sectorCount;
     transferCommand.NandAddress = nandAddress;
     transferCommand.Listener = this;
     _CustomProtocolHal->QueueCommand(transferCommand);
@@ -241,6 +253,7 @@ void SimpleFtl::WritePage(const NandHal::NandAddress &nandAddress, const Buffer 
     commandDesc.Operation = (nandAddress.SectorCount._ == _SectorsPerPage)
         ? NandHal::CommandDesc::Op::Write : NandHal::CommandDesc::Op::WritePartial;
     commandDesc.Buffer = inBuffer;
+    commandDesc.BufferOffset._ = nandAddress.Sector._;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
     commandDesc.Listener = this;
 
     _NandHal->QueueCommand(commandDesc);
@@ -272,7 +285,7 @@ void SimpleFtl::OnNandCommandCompleted(const NandHal::CommandDesc &command)
 {
     if (CustomProtocolCommand::Code::Read == _ProcessingCommand->Command)
     {
-        TransferOut(command.Buffer, command.Address, command.DescSectorIndex);
+        TransferOut(command.Buffer, command.Address, command.DescSectorIndex, command.Address.SectorCount);
 
         if (NandHal::CommandDesc::Status::Success != command.CommandStatus)
         {
