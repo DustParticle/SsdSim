@@ -28,9 +28,4 @@ struct tSectorInPage
 	U8	_;
 };
 
-struct tSectorCount
-{
-    U8 _;
-};
-
 #endif

@@ -39,10 +39,12 @@ public:
         };
 
         CustomProtocolCommand *Command;
-        U32 SectorIndex;
+        tSectorOffset CommandOffset;
+        tSectorCount SectorCount;
 
         Direction Direction;
         Buffer Buffer;
+        tSectorOffset BufferOffset;
         NandHal::NandAddress NandAddress;
         TransferCommandListener *Listener;
     };
@@ -54,7 +56,7 @@ protected:
     virtual void Run() override;
 
 private:
-    U8* GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex);
+    U8* GetBuffer(CustomProtocolCommand *command, const tSectorOffset& offset);
     void ProcessTransferCommand();
 
 private:

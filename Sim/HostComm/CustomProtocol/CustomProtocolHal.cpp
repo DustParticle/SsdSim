@@ -46,12 +46,12 @@ void CustomProtocolHal::QueueCommand(const TransferCommandDesc& command)
     _TransferCommandQueue->push(command);
 }
 
-U8* CustomProtocolHal::GetBuffer(CustomProtocolCommand *command, const U32 &sectorIndex)
+U8* CustomProtocolHal::GetBuffer(CustomProtocolCommand *command, const tSectorOffset& offset)
 {
     Message<CustomProtocolCommand>* msg = _MessageServer->GetMessage(command->CommandId);
     if (msg)
     {
-        U32 bufferIndex = _BufferHal->ToByteIndexInTransfer(BufferType::User, sectorIndex);
+        U32 bufferIndex = _BufferHal->ToByteIndexInTransfer(BufferType::User, offset._);
         assert(msg->PayloadSize > bufferIndex);
         return ((U8*)msg->Payload) + bufferIndex;
     }
@@ -70,14 +70,14 @@ void CustomProtocolHal::Run()
 void CustomProtocolHal::ProcessTransferCommand()
 {
     TransferCommandDesc& command = _TransferCommandQueue->front();
-    U8 *buffer = GetBuffer(command.Command, command.SectorIndex);
+    U8 *buffer = GetBuffer(command.Command, command.CommandOffset);
     if (command.Direction == TransferCommandDesc::Direction::In)
     {
-        _BufferHal->Memcpy(command.Buffer, buffer);
+        _BufferHal->Memcpy(command.Buffer, command.BufferOffset, buffer, command.SectorCount);
     }
     else
     {
-        _BufferHal->Memcpy(buffer, command.Buffer);
+        _BufferHal->Memcpy(buffer, command.Buffer, command.BufferOffset, command.SectorCount);
     }
 
     assert(command.Listener != nullptr);

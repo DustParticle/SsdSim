@@ -22,11 +22,15 @@ TEST(BufferHal, Basic)
     {
         memset(&tempBuffer[i * 512], i, 512);
     }
-    bufferHal.Memcpy(buffer, tempBuffer);
+    tSectorCount sectorCount;
+    sectorCount._ = buffer.SizeInSector;
+    tSectorOffset sectorOffset;
+    sectorOffset._ = 0;
+    bufferHal.Memcpy(buffer, sectorOffset, tempBuffer, sectorCount);
     ASSERT_EQ(memcmp(bufferHal.ToPointer(buffer), tempBuffer, requestingBufferSizeInByte), 0);
 
     U8 tempBuffer1[requestingBufferSizeInByte];
-    bufferHal.Memcpy(tempBuffer1, buffer);
+    bufferHal.Memcpy(tempBuffer1, buffer, sectorOffset, sectorCount);
     ASSERT_EQ(memcmp(tempBuffer, tempBuffer1, requestingBufferSizeInByte), 0);
 
     ASSERT_NO_THROW(bufferHal.DeallocateBuffer(buffer));

@@ -50,9 +50,10 @@ bool NandHal::ReadPage(const tChannel& channel,
 	const tPageInBlock& page,
     const tSectorInPage& sector,
     const tSectorCount& sectorCount,
-    const Buffer &outBuffer)
+    const Buffer &outBuffer,
+    const tSectorOffset& bufferOffset)
 {
-	return (_NandChannels[channel._][device._].ReadPage(block, page, sector, sectorCount, outBuffer));
+	return (_NandChannels[channel._][device._].ReadPage(block, page, sector, sectorCount, outBuffer, bufferOffset));
 }
 
 void NandHal::WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer)
@@ -66,9 +67,10 @@ void NandHal::WritePage(const tChannel& channel,
 	const tPageInBlock& page,
     const tSectorInPage& sector,
     const tSectorCount& sectorCount,
-    const Buffer &inBuffer)
+    const Buffer &inBuffer,
+    const tSectorOffset& bufferOffset)
 {
-	_NandChannels[channel._][device._].WritePage(block, page, sector, sectorCount, inBuffer);
+	_NandChannels[channel._][device._].WritePage(block, page, sector, sectorCount, inBuffer, bufferOffset);
 }
 
 void NandHal::EraseBlock(tChannel channel, tDeviceInChannel device, tBlockInDevice block)
@@ -113,7 +115,7 @@ void NandHal::ProcessNandOperation()
     }break;
     case CommandDesc::Op::ReadPartial:
     {
-        if (false == ReadPage(address.Channel, address.Device, address.Block, address.Page, address.Sector, address.SectorCount, command.Buffer))
+        if (false == ReadPage(address.Channel, address.Device, address.Block, address.Page, address.Sector, address.SectorCount, command.Buffer, command.BufferOffset))
         {
             command.CommandStatus = CommandDesc::Status::Uecc;
         }
@@ -121,7 +123,7 @@ void NandHal::ProcessNandOperation()
     case CommandDesc::Op::WritePartial:
     {
         // TODO: Update command status
-        WritePage(address.Channel, address.Device, address.Block, address.Page, address.Sector, address.SectorCount, command.Buffer);
+        WritePage(address.Channel, address.Device, address.Block, address.Page, address.Sector, address.SectorCount, command.Buffer, command.BufferOffset);
     }break;
     }
 

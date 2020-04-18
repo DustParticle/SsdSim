@@ -8,4 +8,14 @@ using U8 = std::uint_fast8_t;
 using U16 = std::uint_fast16_t;
 using U32 = std::uint_fast32_t;
 
+struct tSectorCount
+{
+    U32 _;
+};
+
+struct tSectorOffset
+{
+    U32 _;
+};
+
 #endif

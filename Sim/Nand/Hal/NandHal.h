@@ -78,8 +78,9 @@ public:
 		Op Operation;
 		Status CommandStatus;
 		Buffer Buffer;
+        tSectorOffset BufferOffset;
 
-        U32 DescSectorIndex;
+        tSectorOffset DescSectorIndex;
         CommandListener *Listener;
 	};
 
@@ -95,7 +96,8 @@ public:
 		const tPageInBlock& page,
 		const tSectorInPage& sector, 
 		const tSectorCount& sectorCount,
-        const Buffer &outBuffer);
+        const Buffer &outBuffer,
+        const tSectorOffset& bufferOffset);
 
 	void WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer);
 	void WritePage(
@@ -105,7 +107,8 @@ public:
 		const tPageInBlock& page, 
         const tSectorInPage& sector,
         const tSectorCount& sectorCount,
-        const Buffer &inBuffer);
+        const Buffer &inBuffer,
+        const tSectorOffset& bufferOffset);
 
 	void EraseBlock(tChannel channel, tDeviceInChannel chip, tBlockInDevice block);
 

@@ -20,10 +20,10 @@ public:
 	void Erase();
 
 	void WritePage(tPageInBlock page, const Buffer &inBuffer);
-	void WritePage(const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &inBuffer);
+	void WritePage(const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &inBuffer, const tSectorOffset& bufferOffset);
 
 	bool ReadPage(tPageInBlock page, const Buffer &outBuffer);
-	bool ReadPage(const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &outBuffer);
+	bool ReadPage(const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &outBuffer, const tSectorOffset& bufferOffset);
 
 public:
 	static const U8 ERASED_PATTERN = 0xff;

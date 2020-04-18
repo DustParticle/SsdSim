@@ -14,9 +14,9 @@ bool NandDevice::ReadPage(tBlockInDevice block, tPageInBlock page, const Buffer 
 	return (_Blocks[block._].ReadPage(page, outBuffer));
 }
 
-bool NandDevice::ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &outBuffer)
+bool NandDevice::ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &outBuffer, const tSectorOffset& bufferOffset)
 {
-	return (_Blocks[block._].ReadPage(page, sector, sectorCount, outBuffer));
+	return (_Blocks[block._].ReadPage(page, sector, sectorCount, outBuffer, bufferOffset));
 }
 
 void NandDevice::WritePage(tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer)
@@ -24,9 +24,9 @@ void NandDevice::WritePage(tBlockInDevice block, tPageInBlock page, const Buffer
 	_Blocks[block._].WritePage(page, inBuffer);
 }
 
-void NandDevice::WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &inBuffer)
+void NandDevice::WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &inBuffer, const tSectorOffset& bufferOffset)
 {
-	_Blocks[block._].WritePage(page, sector, sectorCount, inBuffer);
+	_Blocks[block._].WritePage(page, sector, sectorCount, inBuffer, bufferOffset);
 }
 
 void NandDevice::EraseBlock(tBlockInDevice block)
