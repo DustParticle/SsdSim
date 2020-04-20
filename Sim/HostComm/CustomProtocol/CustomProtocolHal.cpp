@@ -73,11 +73,11 @@ void CustomProtocolHal::ProcessTransferCommand()
     U8 *buffer = GetBuffer(command.Command, command.CommandOffset);
     if (command.Direction == TransferCommandDesc::Direction::In)
     {
-        _BufferHal->Memcpy(command.Buffer, command.BufferOffset, buffer, command.SectorCount);
+        _BufferHal->CopyToBuffer(buffer, command.Buffer, command.BufferOffset, command.SectorCount);
     }
     else
     {
-        _BufferHal->Memcpy(buffer, command.Buffer, command.BufferOffset, command.SectorCount);
+        _BufferHal->CopyFromBuffer(buffer, command.Buffer, command.BufferOffset, command.SectorCount);
     }
 
     assert(command.Listener != nullptr);

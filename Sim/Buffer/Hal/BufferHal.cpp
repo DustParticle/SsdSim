@@ -8,12 +8,18 @@ using namespace boost::interprocess;
 BufferHal::BufferHal() : _CurrentBufferHandle(0), _SectorInfo(DefaultSectorInfo)
 {
     _AllocatedBuffers = std::make_unique<std::map<U32, std::unique_ptr<U8[]>>>();
+    SetImplicitAllocationSectorCount(1);
 }
 
 void BufferHal::PreInit(const U32 &maxBufferSizeInKB)
 {
     _MaxBufferSizeInSector = maxBufferSizeInKB * 2;
     _CurrentFreeSizeInSector = _MaxBufferSizeInSector;
+}
+
+void BufferHal::SetImplicitAllocationSectorCount(const U32& sectorCount)
+{
+    _ImplicitAllocationSectorCount = sectorCount;
 }
 
 bool BufferHal::AllocateBuffer(BufferType type, const U32 &bufferSizeInSector, Buffer &buffer)
@@ -36,6 +42,11 @@ bool BufferHal::AllocateBuffer(BufferType type, const U32 &bufferSizeInSector, B
     _CurrentFreeSizeInSector -= bufferSizeInSector;
 
     return true;
+}
+
+bool BufferHal::AllocateBuffer(BufferType type, Buffer& buffer)
+{
+    return AllocateBuffer(type, _ImplicitAllocationSectorCount, buffer);
 }
 
 void BufferHal::DeallocateBuffer(const Buffer &buffer)
@@ -62,18 +73,18 @@ U8* BufferHal::ToPointer(const Buffer &buffer)
     return nullptr;
 }
 
-void BufferHal::Memcpy(U8* const dest, const Buffer &src, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount)
+void BufferHal::CopyFromBuffer(U8* const dest, const Buffer& buffer, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount)
 {
-    auto byteOffset = ToByteIndexInTransfer(src.Type, bufferOffset._);
-    auto byteCount = ToByteIndexInTransfer(src.Type, sectorCount._);
-    memcpy(dest, ToPointer(src) + byteOffset, byteCount);
+    auto byteOffset = ToByteIndexInTransfer(buffer.Type, bufferOffset._);
+    auto byteCount = ToByteIndexInTransfer(buffer.Type, sectorCount._);
+    memcpy(dest, ToPointer(buffer) + byteOffset, byteCount);
 }
 
-void BufferHal::Memcpy(const Buffer &dest, const tSectorOffset& bufferOffset, const U8* const src, const tSectorCount& sectorCount)
+void BufferHal::CopyToBuffer(const U8* const src, const Buffer& buffer, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount)
 {
-    auto byteOffset = ToByteIndexInTransfer(dest.Type, bufferOffset._);
-    auto byteCount = ToByteIndexInTransfer(dest.Type, sectorCount._);
-    memcpy(ToPointer(dest) + byteOffset, src, byteCount);
+    auto byteOffset = ToByteIndexInTransfer(buffer.Type, bufferOffset._);
+    auto byteCount = ToByteIndexInTransfer(buffer.Type, sectorCount._);
+    memcpy(ToPointer(buffer) + byteOffset, src, byteCount);
 }
 
 bool BufferHal::SetSectorInfo(const SectorInfo &sectorInfo)

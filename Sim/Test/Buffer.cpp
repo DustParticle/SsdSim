@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "Test/gtest-cout.h"
+
 #include "Buffer/Hal/BufferHal.h"
 
 TEST(BufferHal, Basic)
@@ -7,7 +9,8 @@ TEST(BufferHal, Basic)
     constexpr U32 bufferSizeInKB = 16;
     constexpr U32 bufferSizeInSector = bufferSizeInKB * 2;
     constexpr U32 requestingBufferSize = 10;
-    constexpr U32 requestingBufferSizeInByte = 10 * 512;
+    constexpr U32 bytesPerSector = 512;
+    constexpr U32 requestingBufferSizeInByte = 10 * bytesPerSector;
 
     BufferHal bufferHal;
     bufferHal.PreInit(bufferSizeInKB);
@@ -17,21 +20,60 @@ TEST(BufferHal, Basic)
     ASSERT_EQ(buffer.SizeInSector, requestingBufferSize);
     ASSERT_NE(bufferHal.ToPointer(buffer), nullptr);
 
-    U8 tempBuffer[requestingBufferSizeInByte];
+    U8 source[requestingBufferSizeInByte];
     for (U8 i = 0; i < requestingBufferSize; ++i)
     {
-        memset(&tempBuffer[i * 512], i, 512);
+        memset(&source[i * bytesPerSector], 0xa0 + i, bytesPerSector);
     }
+
+    U8 dest[requestingBufferSizeInByte];
+
+    U8 zeros[requestingBufferSizeInByte];
+    memset(&zeros, 0, requestingBufferSizeInByte);
+
+    U8 comparer[requestingBufferSizeInByte];
+
     tSectorCount sectorCount;
-    sectorCount._ = buffer.SizeInSector;
     tSectorOffset sectorOffset;
     sectorOffset._ = 0;
-    bufferHal.Memcpy(buffer, sectorOffset, tempBuffer, sectorCount);
-    ASSERT_EQ(memcmp(bufferHal.ToPointer(buffer), tempBuffer, requestingBufferSizeInByte), 0);
+    for ( ; sectorOffset._ < (buffer.SizeInSector - 1); ++sectorOffset._)
+    {
+        sectorCount._ = 1;
+        for (; sectorCount._ < buffer.SizeInSector - sectorOffset._; ++sectorCount._)
+        {
+            tSectorOffset zso{ 0 };
+            tSectorCount zsc{ buffer.SizeInSector };
+            bufferHal.CopyToBuffer(zeros, buffer, zso, zsc);
+            ASSERT_EQ(memcmp(bufferHal.ToPointer(buffer), zeros, requestingBufferSizeInByte), 0);
 
-    U8 tempBuffer1[requestingBufferSizeInByte];
-    bufferHal.Memcpy(tempBuffer1, buffer, sectorOffset, sectorCount);
-    ASSERT_EQ(memcmp(tempBuffer, tempBuffer1, requestingBufferSizeInByte), 0);
+            memset(&comparer, 0, requestingBufferSizeInByte);
+            memcpy(comparer + (sectorOffset._ * bytesPerSector), source, sectorCount._ * bytesPerSector);
+
+            bufferHal.CopyToBuffer(source, buffer, sectorOffset, sectorCount);
+            if (0 != memcmp(bufferHal.ToPointer(buffer), comparer, requestingBufferSizeInByte))
+            {
+                GOUT("Memcpy to buffer miscompared!");
+                GOUT("SectorOffset " << sectorOffset._);
+                GOUT("SectorCount " << sectorCount._);
+
+                FAIL();
+            }
+
+            memset(&comparer, 0, requestingBufferSizeInByte);
+            memcpy(comparer, source, sectorCount._ * bytesPerSector);
+
+            memset(&dest, 0, requestingBufferSizeInByte);
+            bufferHal.CopyFromBuffer(dest, buffer, sectorOffset, sectorCount);
+            if (0 != memcmp(comparer, dest, requestingBufferSizeInByte))
+            {
+                GOUT("Memcpy from buffer miscompared!");
+                GOUT("SectorOffset " << sectorOffset._);
+                GOUT("SectorCount " << sectorCount._);
+                
+                FAIL();
+            }
+        }
+    }
 
     ASSERT_NO_THROW(bufferHal.DeallocateBuffer(buffer));
 }

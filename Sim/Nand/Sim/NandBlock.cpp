@@ -31,7 +31,7 @@ void NandBlock::WritePage(tPageInBlock page, const Buffer &inBuffer)
     sectorCount._ = sectorsPerPage;
     tSectorOffset sectorOffset;
     sectorOffset._ = 0;
-    _BufferHal->Memcpy((U8*)&_Buffer[page._ * _TotalBytesPerPage], inBuffer, sectorOffset, sectorCount);
+    _BufferHal->CopyFromBuffer((U8*)&_Buffer[page._ * _TotalBytesPerPage], inBuffer, sectorOffset, sectorCount);
 	_NandBlockTracker.WritePage(page);
 }
 
@@ -45,7 +45,7 @@ void NandBlock::WritePage(const tPageInBlock& page, const tSectorInPage& sector,
 		_Buffer = std::unique_ptr<U8[]>(new U8[_PagesPerBlock * _TotalBytesPerPage]);
 	}
     
-    _BufferHal->Memcpy((U8*)&_Buffer[page._ * _TotalBytesPerPage + _BufferHal->ToByteIndexInTransfer(inBuffer.Type, sector._)], inBuffer, bufferOffset, sectorCount);
+    _BufferHal->CopyFromBuffer((U8*)&_Buffer[page._ * _TotalBytesPerPage + _BufferHal->ToByteIndexInTransfer(inBuffer.Type, sector._)], inBuffer, bufferOffset, sectorCount);
 	_NandBlockTracker.WritePage(page);
 }
 
@@ -64,7 +64,7 @@ bool NandBlock::ReadPage(tPageInBlock page, const Buffer &outBuffer)
     sectorCount._ = sectorsPerPage;
     tSectorOffset sectorOffset;
     sectorOffset._ = 0;
-    _BufferHal->Memcpy(outBuffer, sectorOffset, pData, sectorCount);
+    _BufferHal->CopyToBuffer(pData, outBuffer, sectorOffset, sectorCount);
 	return (true);
 }
 
@@ -81,6 +81,6 @@ bool NandBlock::ReadPage(const tPageInBlock& page, const tSectorInPage& sector, 
 
 	auto data = (nullptr == _Buffer) ? &_ErasedBuffer[0] : &_Buffer[(page._ * _TotalBytesPerPage) + _BufferHal->ToByteIndexInTransfer(outBuffer.Type, sector._)];
 
-    _BufferHal->Memcpy(outBuffer, bufferOffset, data, sectorCount);
+    _BufferHal->CopyToBuffer(data, outBuffer, bufferOffset, sectorCount);
 	return (true);
 }

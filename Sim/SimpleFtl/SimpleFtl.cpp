@@ -39,6 +39,8 @@ bool SimpleFtl::SetSectorInfo(const SectorInfo &sectorInfo)
 
     _SectorsPerSegment = _SectorsPerPage;
 
+    _BufferHal->SetImplicitAllocationSectorCount(_SectorsPerSegment);
+
     return true;
 }
 
@@ -157,7 +159,7 @@ void SimpleFtl::ReadNextLbas()
     while (_RemainingSectorCount > 0)
     {
         SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, _RemainingSectorCount, nandAddress, nextLba, remainingSectorCount);
-        if (_BufferHal->AllocateBuffer(BufferType::User, _SectorsPerSegment, buffer))
+        if (_BufferHal->AllocateBuffer(BufferType::User, buffer))
         {
             tSectorOffset sectorOffset;
             sectorOffset._ = _ProcessedSectorCount;
@@ -213,7 +215,7 @@ void SimpleFtl::WriteNextLbas()
     while (_RemainingSectorCount > 0)
     {
         SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, _RemainingSectorCount, nandAddress, nextLba, remainingSectorCount);
-        if (_BufferHal->AllocateBuffer(BufferType::User, _SectorsPerSegment, buffer))
+        if (_BufferHal->AllocateBuffer(BufferType::User, buffer))
         {
             tSectorOffset commandOffset;
             commandOffset._ = _ProcessedSectorCount;
