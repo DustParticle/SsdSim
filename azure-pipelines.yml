@@ -1,0 +1,65 @@
+jobs:
+- job: BUILD_SSDSIM
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - visualstudio
+    - vstest
+  steps:
+  - script: 'npm install'
+  - script: 'node updateJobStatus.js "InProgress"'
+    env:
+      MAPPED_API_KEY: $(WaterfallsApiKey)
+    condition: always() # this step will always run, even if the pipeline is failed or cannceled
+  - script: echo '##vso[task.setvariable variable=AZUREDEVOPSBUILDID;isOutput=true]$(Build.BuildId)
+    name: stepSetAzureDevopsBuildID
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+  - task: VSBuild@1
+    displayName: 'Build solution **/*.sln'
+    inputs:
+      configuration: release
+      platform: x64
+  - task: PublishBuildArtifacts@1
+    inputs:
+      artifactName: x64Release
+      pathtoPublish: ./SsdSim/x64/Release/
+  - script: 'node updateJobStatus.js $(Agent.JobStatus)'
+    env:
+      MAPPED_API_KEY: $(WaterfallsApiKey)
+    condition: always() # this step will always run, even if the pipeline is failed or cannceled
+
+- job: UNIT_TEST
+  dependsOn: BUILD_SSDSIM
+  variables:
+    # Define the variable AZUREDEVOPSBUILDID from the previous job
+    AZUREDEVOPSBUILDID: $[ dependencies.BUILD_SSDSIM.outputs['stepSetAzureDevopsBuildID.AZUREDEVOPSBUILDID'] ]
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - visualstudio
+    - vstest
+  steps:
+  - script: 'npm install'
+  - script: 'node updateJobStatus.js "InProgress"'
+    env:
+      MAPPED_API_KEY: $(WaterfallsApiKey)
+    condition: always() # this step will always run, even if the pipeline is failed or cannceled
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'specific'
+      project: 'SsdSim'
+      pipeline: $(System.DefinitionName)
+      buildVersionToDownload: 'specific'
+      buildId: $(AZUREDEVOPSBUILDID)
+      artifactName: x64Release
+      downloadPath: $(System.DefaultWorkingDirectory)
+  - powershell: ./Test.exe
+    workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
+  - script: 'node updateJobStatus.js $(Agent.JobStatus)'
+    env:
+      MAPPED_API_KEY: $(WaterfallsApiKey)
+    condition: always() # this step will always run, even if the pipeline is failed or cannceled
