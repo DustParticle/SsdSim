@@ -11,6 +11,7 @@ Framework::Framework() :
 	_State(State::Start)
 {
     _NandHal = std::make_shared<NandHal>();
+    _BufferHal = std::make_shared<BufferHal>();
     _FirmwareCore = std::make_shared<FirmwareCore>();
 }
 
@@ -26,6 +27,8 @@ void Framework::Init(const std::string& configFileName, std::string ipcNamesPref
 		throw Exception("Failed to parse " + configFileName);
 	}
 
+    // Keep this order
+    SetupBufferHal(parser);
 	SetupNandHal(parser);
 	GetFirmwareCoreInfo(parser);
 
@@ -67,7 +70,8 @@ void Framework::Init(const std::string& configFileName, std::string ipcNamesPref
         }
     }
 
-    _FirmwareCore->SetIpcNames(customProtocolIpcName);
+    _CustomProtocolHal = std::make_shared<CustomProtocolHal>();
+    _CustomProtocolHal->Init(customProtocolIpcName.c_str(), _BufferHal.get());
 }
 
 void Framework::SetupNandHal(JSONParser& parser)
@@ -85,6 +89,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	};
 
 	int retValue;
+    NandHal::Geometry geometry;
 
 	try
 	{
@@ -96,7 +101,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U8 maxChannelsValue = 8;
 	constexpr U8 minChannelsValue = 1;
-	U8 channels = validateValue(retValue, minChannelsValue, maxChannelsValue, "channels");
+	geometry.ChannelCount = validateValue(retValue, minChannelsValue, maxChannelsValue, "channels");
 
 	try
 	{
@@ -108,7 +113,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U8 maxDevicesValue = 8;
 	constexpr U8 minDevicesValue = 1;
-	U8 devices = validateValue(retValue, minDevicesValue, maxDevicesValue, "devices");
+    geometry.DevicesPerChannel = validateValue(retValue, minDevicesValue, maxDevicesValue, "devices");
 
 	try
 	{
@@ -120,7 +125,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U32 maxBlocksValue = 32 * 1024;
 	constexpr U32 minBlocksValue = 128;
-	U32 blocks = validateValue(retValue, minBlocksValue, maxBlocksValue, "blocks");
+    geometry.BlocksPerDevice = validateValue(retValue, minBlocksValue, maxBlocksValue, "blocks");
 
 	try
 	{
@@ -132,7 +137,7 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U32 maxPagesValue = 512;
 	constexpr U32 minPagesValue = 32;
-	U32 pages = validateValue(retValue, minPagesValue, maxPagesValue, "pages");
+    geometry.PagesPerBlock = validateValue(retValue, minPagesValue, maxPagesValue, "pages");
 
 	try
 	{
@@ -144,10 +149,25 @@ void Framework::SetupNandHal(JSONParser& parser)
 	}
 	constexpr U32 maxBytesValue = 16 * 1024;
 	constexpr U32 minBytesValue = 4 * 1024;
-	U32 bytes = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
+    geometry.BytesPerPage = validateValue(retValue, minBytesValue, maxBytesValue, "bytes");
 
-	_NandHal->PreInit(channels, devices, blocks, pages, bytes);
+	_NandHal->PreInit(geometry, _BufferHal);
 	_NandHal->Init();
+}
+
+void Framework::SetupBufferHal(JSONParser& parser)
+{
+    U32 maxBufferSizeInKB;
+    try
+    {
+        maxBufferSizeInKB = parser.GetValueIntForAttribute("BufferHalPreInit", "kbs");
+    }
+    catch (JSONParser::Exception e)
+    {
+        throw Exception("Failed to parse \'kbs\' value. Expecting an \'int\'");
+    }
+    
+    _BufferHal->PreInit(maxBufferSizeInKB);
 }
 
 void Framework::GetFirmwareCoreInfo(JSONParser& parser)
@@ -165,10 +185,11 @@ void Framework::GetFirmwareCoreInfo(JSONParser& parser)
 void Framework::operator()()
 {
 	std::future<void> nandHal;
+    std::future<void> CustomProtocolHal;
 	std::future<void> firmwareMain;
 
     // Load ROM
-	_FirmwareCore->LinkNandHal(_NandHal);
+	_FirmwareCore->SetHalComponents(_NandHal.get(), _BufferHal.get(), _CustomProtocolHal.get());
 	_FirmwareCore->SetExecute(this->_RomCodePath);
 
     while (State::Exit != _State)
@@ -178,6 +199,7 @@ void Framework::operator()()
 			case State::Start:
 			{
 				nandHal = std::async(std::launch::async, &NandHal::operator(), _NandHal);
+                CustomProtocolHal = std::async(std::launch::async, &CustomProtocolHal::operator(), _CustomProtocolHal);
 				firmwareMain = std::async(std::launch::async, &FirmwareCore::operator(), _FirmwareCore);
 
 				_State = State::Run;
@@ -211,8 +233,6 @@ void Framework::operator()()
 							_SimServer->PushResponse(message->Id());
 						} break;
 					}
-
-                    
 				}
 			} break;
 		}
@@ -220,6 +240,11 @@ void Framework::operator()()
 
 	_FirmwareCore->Stop();
 	_NandHal->Stop();
+    _CustomProtocolHal->Stop();
+
+    firmwareMain.wait();
+    nandHal.wait();
+    CustomProtocolHal.wait();
 
     _FirmwareCore->Unload();
 }

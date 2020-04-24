@@ -45,19 +45,19 @@
     <ClInclude Include="CustomProtocol\CustomProtocolCommand.h">
       <Filter>Header Files\CustomProtocol</Filter>
     </ClInclude>
-    <ClInclude Include="CustomProtocol\CustomProtocolInterface.h">
-      <Filter>Header Files\CustomProtocol</Filter>
-    </ClInclude>
     <ClInclude Include="Ipc\SynchronizedQueue.hpp">
       <Filter>Header Files\Ipc</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="CustomProtocol\CustomProtocolInterface.cpp">
-      <Filter>Source Files\CustomProtocol</Filter>
-    </ClCompile>
+    <ClInclude Include="CustomProtocol\CustomProtocolHal.h">
+      <Filter>Header Files\CustomProtocol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CustomProtocol\CustomProtocolHal.cpp">
+      <Filter>Source Files\CustomProtocol</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

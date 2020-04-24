@@ -144,6 +144,11 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HostComm\HostComm.vcxproj">
+      <Project>{fdf75646-6e43-4a8a-bc13-d597b68754c2}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\tencent.rapidjson.1.1.1\build\tencent.rapidjson.targets" Condition="Exists('..\..\packages\tencent.rapidjson.1.1.1\build\tencent.rapidjson.targets')" />

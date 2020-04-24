@@ -8,7 +8,7 @@ NandBlockTracker::NandBlockTracker(U32 pagesPerBlock)
     _PagesPerBlock = pagesPerBlock;
     _BitmapSize = CalculatingBitmapSize(pagesPerBlock);
 
-    _PageWrittenBitmap = std::unique_ptr<U8[]>(new U8[_BitmapSize]);
+    _CorruptedPagesBitmap = std::unique_ptr<U8[]>(new U8[_BitmapSize]);
 
     Reset();
 }
@@ -16,7 +16,7 @@ NandBlockTracker::NandBlockTracker(U32 pagesPerBlock)
 void NandBlockTracker::Reset()
 {
     _PageWrittenMarker._ = 0;
-    std::memset(_PageWrittenBitmap.get(), 0, _BitmapSize);
+    std::memset(_CorruptedPagesBitmap.get(), 0, _BitmapSize);
 }
 
 void NandBlockTracker::WritePage(tPageInBlock page)
@@ -29,16 +29,16 @@ void NandBlockTracker::WritePage(tPageInBlock page)
         // Mark the page is corrupted because this is write twice or write backward
         U32 byteIndex = page._ >> 3;
         U32 bitIndex = page._ & 7;
-        _PageWrittenBitmap[byteIndex] |= (1 << bitIndex);
+        _CorruptedPagesBitmap[byteIndex] |= (1 << bitIndex);
     }
 }
 
-bool NandBlockTracker::IsPageWritten(tPageInBlock page)
+bool NandBlockTracker::IsPageCorrupted(tPageInBlock page)
 {
     U32 byteIndex = page._ >> 3;
     U32 bitIndex = page._ & 7;
 
-    if (0 != (_PageWrittenBitmap[byteIndex] & (1 << bitIndex)))
+    if (0 != (_CorruptedPagesBitmap[byteIndex] & (1 << bitIndex)))
     {
         return (true);
     }

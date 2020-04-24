@@ -60,6 +60,7 @@ TEST(SimFramework, Basic_Benchmark)
 
 	using namespace std::chrono;
 	high_resolution_clock::time_point t0;
+	high_resolution_clock::time_point t1;
 	duration<double> allocMaxDuration = duration<double>::min();
 	duration<double> allocMinDuration = duration<double>::max();
 	duration<double> allocTotalTime = duration<double>::zero();
@@ -71,7 +72,8 @@ TEST(SimFramework, Basic_Benchmark)
 	{
 		t0 = high_resolution_clock::now();
 		messages[i] = AllocateMessage<SimFrameworkCommand>(client, payloadSize, true);
-		auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0);
+		t1 = high_resolution_clock::now();
+		auto deltaT = duration_cast<duration<double>>(t1 - t0);
 		if (deltaT < allocMinDuration) { allocMinDuration = deltaT; }
 		if (deltaT > allocMaxDuration) { allocMaxDuration = deltaT; }
 		allocTotalTime += deltaT;
@@ -81,17 +83,17 @@ TEST(SimFramework, Basic_Benchmark)
 
 	GOUT("Message allocation benchmark");
 	GOUT("   Operations per second: " << (double)commandCount / allocTotalTime.count());
-	GOUT("   Min time per operation: " << allocMinDuration.count());
-	GOUT("   Max time per operation: " << allocMaxDuration.count());
+	GOUT("   Min time per operation: " << duration_cast<microseconds>(allocMinDuration).count() << "us");
+	GOUT("   Max time per operation: " << duration_cast<microseconds>(allocMaxDuration).count() << "us");
 
 	duration<double> dataCmdMaxDuration = duration<double>::min();
 	duration<double> dataCmdMinDuration = duration<double>::max();
 	duration<double> dataCmdTotalTime = duration<double>::zero();
-	std::map<U32, high_resolution_clock::time_point> t0s;
+
+	t0 = high_resolution_clock::now();
 	for (auto i = 0; i < commandCount; ++i)
 	{
 		messages[i]->Data.Code = SimFrameworkCommand::Code::DataOutLoopback;
-		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
 		memset(messages[i]->Payload, 0xaa, messages[i]->PayloadSize);
 		client->Push(messages[i]);
 	}
@@ -102,30 +104,28 @@ TEST(SimFramework, Basic_Benchmark)
 		if (client->HasResponse())
 		{
 			messages[responseReceivedCount] = client->PopResponse();
-			
-			auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0s.find(messages[responseReceivedCount]->Id())->second);
+			auto deltaT = messages[responseReceivedCount]->GetLatency();
 			if (deltaT < dataCmdMinDuration) { dataCmdMinDuration = deltaT; }
 			if (deltaT > dataCmdMaxDuration) { dataCmdMaxDuration = deltaT; }
-			dataCmdTotalTime += deltaT;
-			
 			responseReceivedCount++;
 		}
 	}
 
+	t1 = high_resolution_clock::now();
+	auto delta = duration<double>(t1 - t0);
 	GOUT("Data out benchmark");
-	GOUT("   Operations per second: " << (double)commandCount / dataCmdTotalTime.count());
-	GOUT("   Min time per operation: " << dataCmdMinDuration.count());
-	GOUT("   Max time per operation: " << dataCmdMaxDuration.count());
+	GOUT("   Operations per second: " << (double)commandCount / delta.count());
+	GOUT("   Min time per operation: " << duration_cast<microseconds>(dataCmdMinDuration).count() << "us");
+	GOUT("   Max time per operation: " << duration_cast<microseconds>(dataCmdMaxDuration).count() << "us");
 
 	//--Data in benchmark
 	dataCmdMaxDuration = duration<double>::min();
 	dataCmdMinDuration = duration<double>::max();
 	dataCmdTotalTime = duration<double>::zero();
-	t0s.clear();
+	t0 = high_resolution_clock::now();
 	for (auto i = 0; i < commandCount; ++i)
 	{
 		messages[i]->Data.Code = SimFrameworkCommand::Code::DataInLoopback;
-		t0s.insert(std::make_pair(messages[i]->Id(), high_resolution_clock::now()));
 		client->Push(messages[i]);
 	}
 
@@ -135,20 +135,20 @@ TEST(SimFramework, Basic_Benchmark)
 		if (client->HasResponse())
 		{
 			messages[responseReceivedCount] = client->PopResponse();
-
-			auto deltaT = duration_cast<duration<double>>(high_resolution_clock::now() - t0s.find(messages[responseReceivedCount]->Id())->second);
+			auto deltaT = messages[responseReceivedCount]->GetLatency();
 			if (deltaT < dataCmdMinDuration) { dataCmdMinDuration = deltaT; }
 			if (deltaT > dataCmdMaxDuration) { dataCmdMaxDuration = deltaT; }
-			dataCmdTotalTime += deltaT;
-
 			responseReceivedCount++;
 		}
 	}
 
+	t1 = high_resolution_clock::now();
+	delta = duration<double>(t1 - t0);
+
 	GOUT("Data in benchmark");
-	GOUT("   Operations per second: " << (double)commandCount / dataCmdTotalTime.count());
-	GOUT("   Min time per operation: " << dataCmdMinDuration.count());
-	GOUT("   Max time per operation: " << dataCmdMaxDuration.count());
+	GOUT("   Operations per second: " << (double)commandCount / delta.count());
+	GOUT("   Min time per operation: " << duration_cast<microseconds>(dataCmdMinDuration).count() << "us");
+	GOUT("   Max time per operation: " << duration_cast<microseconds>(dataCmdMaxDuration).count() << "us");
 
 	//--Deallocate
 	for (auto i = 0; i < commandCount; ++i)

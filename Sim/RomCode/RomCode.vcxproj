@@ -116,6 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Sim</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -140,8 +141,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Buffer\Buffer.vcxproj">
+      <Project>{f0a74866-ef22-4f3c-9656-2e5be6d76d67}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\HostComm\HostComm.vcxproj">
       <Project>{fdf75646-6e43-4a8a-bc13-d597b68754c2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SimFrameworkBase\SimFrameworkBase.vcxproj">
+      <Project>{e2c37474-b57f-49f8-b5bb-eb427c95a2e1}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

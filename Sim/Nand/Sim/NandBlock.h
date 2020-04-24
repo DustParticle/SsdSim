@@ -7,20 +7,23 @@
 #include "Nand/Sim/NandBlockTracker.h"
 #include "Nand/Sim/NandDeviceDesc.h"
 
+#include "Buffer/Types.h"
+#include "Buffer/Hal/BufferHal.h"
+
 class NandBlock
 {
 public:
-	NandBlock(U32 pagesPerBlock, U32 totalBytesPerPage);
+	NandBlock(BufferHal *bufferHal, U32 pagesPerBlock, U32 totalBytesPerPage);
 	NandBlock(NandBlock&& rhs) = default;
 
 public:
 	void Erase();
 
-	void WritePage(tPageInBlock page, const U8* const pInData);
-	void WritePage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, const U8* const inBuffer);
+	void WritePage(tPageInBlock page, const Buffer &inBuffer);
+	void WritePage(const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &inBuffer, const tSectorOffset& bufferOffset);
 
-	bool ReadPage(tPageInBlock page, U8* const pOutData);
-	bool ReadPage(const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer);
+	bool ReadPage(tPageInBlock page, const Buffer &outBuffer);
+	bool ReadPage(const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &outBuffer, const tSectorOffset& bufferOffset);
 
 public:
 	static const U8 ERASED_PATTERN = 0xff;
@@ -28,6 +31,7 @@ public:
 private:
 	NandBlockTracker _NandBlockTracker;
 
+    BufferHal *_BufferHal;
 	U32 _PagesPerBlock;
 	U32 _TotalBytesPerPage;
 

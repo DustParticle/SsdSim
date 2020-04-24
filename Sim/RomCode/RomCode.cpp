@@ -4,24 +4,29 @@
 #include <memory>
 #include <functional>
 
-#include "HostComm/CustomProtocol/CustomProtocolInterface.h"
+#include "HostComm/CustomProtocol/CustomProtocolHal.h"
 #include "Nand/Hal/NandHal.h"
 
 std::function<bool(std::string)> _SetExecuteFunc;
-std::unique_ptr<CustomProtocolInterface> _CustomProtocolInterface = nullptr;
+CustomProtocolHal* _CustomProtocolHal = nullptr;
 
 extern "C"
 {
+    void __declspec(dllexport) __stdcall Initialize(NandHal* nandHal, BufferHal* bufferHal, CustomProtocolHal* CustomProtocolHal)
+    {
+        _CustomProtocolHal = CustomProtocolHal;
+    }
+
     void __declspec(dllexport) __stdcall Execute()
     {
-        if (_CustomProtocolInterface == nullptr)
+        if (_CustomProtocolHal == nullptr)
         {
             throw "CustomProtocol is null";
         }
 
-        if (_CustomProtocolInterface->HasCommand())
+        if (_CustomProtocolHal->HasCommand())
         {
-            CustomProtocolCommand *command = _CustomProtocolInterface->GetCommand();
+            CustomProtocolCommand *command = _CustomProtocolHal->GetCommand();
 
             switch (command->Command)
             {
@@ -38,15 +43,10 @@ extern "C"
                     delete[] temp;
 
                     _SetExecuteFunc(filename);
-                    _CustomProtocolInterface->SubmitResponse(command);
+                    _CustomProtocolHal->SubmitResponse(command);
                 } break;
             }
         }
-    }
-
-    void __declspec(dllexport) __stdcall SetCustomProtocolIpcName(const std::string& protocolIpcName)
-    {
-        _CustomProtocolInterface = std::make_unique<CustomProtocolInterface>(protocolIpcName.c_str());
     }
 
     void __declspec(dllexport) __stdcall SetExecuteCallback(std::function<bool(std::string)> setExecuteFunc)

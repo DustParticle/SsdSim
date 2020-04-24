@@ -54,6 +54,7 @@
     <ClInclude Include="SsdSimApp.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="HostComm.cpp" />
     <ClCompile Include="Nand.cpp" />
     <ClCompile Include="pch.cpp">
@@ -67,6 +68,9 @@
     <ClCompile Include="SsdSimApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Buffer\Buffer.vcxproj">
+      <Project>{f0a74866-ef22-4f3c-9656-2e5be6d76d67}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\HostComm\HostComm.vcxproj">
       <Project>{fdf75646-6e43-4a8a-bc13-d597b68754c2}</Project>
     </ProjectReference>
@@ -89,9 +93,9 @@
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
     <Import Project="..\..\packages\boost.1.69.0.0\build\boost.targets" Condition="Exists('..\..\packages\boost.1.69.0.0\build\boost.targets')" />
     <Import Project="..\..\packages\boost_date_time-vc141.1.69.0.0\build\boost_date_time-vc141.targets" Condition="Exists('..\..\packages\boost_date_time-vc141.1.69.0.0\build\boost_date_time-vc141.targets')" />
+    <Import Project="..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets" Condition="Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" />
   </ImportGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -177,8 +181,8 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
     <Error Condition="!Exists('..\..\packages\boost.1.69.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost.1.69.0.0\build\boost.targets'))" />
     <Error Condition="!Exists('..\..\packages\boost_date_time-vc141.1.69.0.0\build\boost_date_time-vc141.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\boost_date_time-vc141.1.69.0.0\build\boost_date_time-vc141.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.targets'))" />
   </Target>
 </Project>

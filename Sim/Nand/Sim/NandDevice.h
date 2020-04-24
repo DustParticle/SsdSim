@@ -7,18 +7,23 @@
 #include "Nand/Sim/NandDeviceDesc.h"
 #include "Nand/Sim/NandBlock.h"
 
+#include "Buffer/Types.h"
+#include "Buffer/Hal/BufferHal.h"
+
 class NandDevice
 {
 public:
-	NandDevice(U32 blockCount, U32 pagesPerBlock, U32 bytesPerPage);
+	NandDevice(BufferHal *bufferHal, U32 blockCount, U32 pagesPerBlock, U32 bytesPerPage);
 	NandDevice(NandDevice&& rhs) = default;
 
 public:
-	bool ReadPage(tBlockInDevice block, tPageInBlock page, U8* const pOutData);
-	bool ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, U8* const outBuffer);
+	bool ReadPage(tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer);
+	bool ReadPage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, 
+        const Buffer &outBuffer, const tSectorOffset& bufferOffset);
 
-	void WritePage(tBlockInDevice block, tPageInBlock page, const U8* const pInData);
-	void WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tByteOffset& byteOffset, const tByteCount& byteCount, const U8* const inBuffer);
+	void WritePage(tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer);
+	void WritePage(const tBlockInDevice& block, const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, 
+        const Buffer &inBuffer, const tSectorOffset& bufferOffset);
 
 	void EraseBlock(tBlockInDevice block);
 

@@ -20,6 +20,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Nand", "Sim\Nand\Nand.vcxpr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimFramework", "Sim\SimFramework\SimFramework.vcxproj", "{89F1CB64-54C0-4448-8D36-7BFC3D7A8CC4}"
 	ProjectSection(ProjectDependencies) = postProject
+		{FDF75646-6E43-4A8A-BC13-D597B68754C2} = {FDF75646-6E43-4A8A-BC13-D597B68754C2}
 		{E2C37474-B57F-49F8-B5BB-EB427C95A2E1} = {E2C37474-B57F-49F8-B5BB-EB427C95A2E1}
 	EndProjectSection
 EndProject
@@ -36,6 +37,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RomCode", "Sim\RomCode\RomC
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleFtl", "Sim\SimpleFtl\SimpleFtl.vcxproj", "{DB5E97FA-28B3-487C-B91E-53484A16281D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Buffer", "Sim\Buffer\Buffer.vcxproj", "{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -109,6 +112,14 @@ Global
 		{DB5E97FA-28B3-487C-B91E-53484A16281D}.Release|x64.Build.0 = Release|x64
 		{DB5E97FA-28B3-487C-B91E-53484A16281D}.Release|x86.ActiveCfg = Release|Win32
 		{DB5E97FA-28B3-487C-B91E-53484A16281D}.Release|x86.Build.0 = Release|Win32
+		{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}.Debug|x64.ActiveCfg = Debug|x64
+		{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}.Debug|x64.Build.0 = Debug|x64
+		{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}.Debug|x86.ActiveCfg = Debug|Win32
+		{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}.Debug|x86.Build.0 = Debug|Win32
+		{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}.Release|x64.ActiveCfg = Release|x64
+		{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}.Release|x64.Build.0 = Release|x64
+		{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}.Release|x86.ActiveCfg = Release|Win32
+		{F0A74866-EF22-4F3C-9656-2E5BE6D76D67}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
