@@ -8,7 +8,7 @@ jobs:
     - vstest
   steps:
   - script: 'npm install'
-  - script: 'node updateJobStatus.js "InProgress"'
+  - script: 'node updateJobStatus.js "SsdSim" "InProgress"'
     env:
       MAPPED_API_KEY: $(WaterfallsApiKey)
     condition: always() # this step will always run, even if the pipeline is failed or cannceled
@@ -26,7 +26,7 @@ jobs:
     inputs:
       artifactName: x64Release
       pathtoPublish: ./x64/Release/
-  - script: 'node updateJobStatus.js $(Agent.JobStatus)'
+  - script: 'node updateJobStatus.js "SsdSim" $(Agent.JobStatus)'
     env:
       MAPPED_API_KEY: $(WaterfallsApiKey)
     condition: always() # this step will always run, even if the pipeline is failed or cannceled
@@ -44,14 +44,14 @@ jobs:
     - vstest
   steps:
   - script: 'npm install'
-  - script: 'node updateJobStatus.js "InProgress"'
+  - script: 'node updateJobStatus.js "SsdSim" "InProgress"'
     env:
       MAPPED_API_KEY: $(WaterfallsApiKey)
     condition: always() # this step will always run, even if the pipeline is failed or cannceled
   - task: DownloadBuildArtifacts@0
     inputs:
       buildType: 'specific'
-      project: 'SsdSim'
+      project: $(System.TeamProject)
       pipeline: $(System.DefinitionName)
       buildVersionToDownload: 'specific'
       buildId: $(AZUREDEVOPSBUILDID)
@@ -59,7 +59,7 @@ jobs:
       downloadPath: $(System.DefaultWorkingDirectory)
   - powershell: ./Test.exe
     workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
-  - script: 'node updateJobStatus.js $(Agent.JobStatus)'
+  - script: 'node updateJobStatus.js "SsdSim" $(Agent.JobStatus)'
     env:
       MAPPED_API_KEY: $(WaterfallsApiKey)
     condition: always() # this step will always run, even if the pipeline is failed or cannceled

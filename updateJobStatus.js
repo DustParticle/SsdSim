@@ -31,7 +31,7 @@ var configuration = {
 var jobParams = {
     jobId: process.env.AGENT_JOBNAME + '|' + process.env.BUILD_BUILDNUMBER + '|' + configuration.Configuration,
     jobName: process.env.AGENT_JOBNAME,
-    projectName: "SsdSim", // Temperary hardcode project name
+    projectName: process.argv[2],
     commitSet: "", // TODO: Need to re-define commit set
     lastCommitPayload: lastCommitPayload,
     ciConfiguration: configuration,
@@ -42,7 +42,7 @@ var jobParams = {
 
 // TODO: We have to convert AGENT_JOBSTATUS from Azure Pipeline style to "out style"
 // Should we change to be same to Azure ??????
-var status = process.argv[2];
+var status = process.argv[3];
 if (status === "Succeeded" || status === "SucceededWithIssues")
 {
     status = "Success";
