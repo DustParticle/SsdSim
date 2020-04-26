@@ -1,0 +1,16 @@
+parameters:
+- name: 'projectName'
+  type: string
+  default: false
+- name: 'status'
+  type: string
+  default: false
+
+steps:
+- script: 'npm install'
+  workingDirectory: DevOps\DustStream
+- script: 'node updateJobStatus.js ${{parameters.projectName}} ${{parameters.status}}'
+  workingDirectory: DevOps\DustStream
+  env:
+    MAPPED_API_KEY: $(WaterfallsApiKey)
+  condition: always()
