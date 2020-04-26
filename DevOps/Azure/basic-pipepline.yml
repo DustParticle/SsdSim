@@ -7,8 +7,7 @@ jobs:
     - visualstudio
     - vstest
   steps:
-  - template: updateJobStatus.yml
-    workingDirectory: DevOps\DustStream
+  - template: DustStream/updateJobStatus.yml
     parameters:
       projectName: 'SsdSim'
       status: 'InProgress'
@@ -26,8 +25,7 @@ jobs:
     inputs:
       artifactName: x64Release
       pathtoPublish: ./x64/Release/
-  - template: updateJobStatus.yml
-    workingDirectory: DevOps\DustStream
+  - template: DustStream/updateJobStatus.yml
     parameters:
       projectName: 'SsdSim'
       status: $(Agent.JobStatus)
@@ -44,8 +42,7 @@ jobs:
     - visualstudio
     - vstest
   steps:
-  - template: updateJobStatus.yml
-    workingDirectory: DevOps\DustStream
+  - template: DustStream/updateJobStatus.yml
     parameters:
       projectName: 'SsdSim'
       status: 'InProgress'
@@ -60,8 +57,7 @@ jobs:
       downloadPath: $(System.DefaultWorkingDirectory)
   - powershell: ./Test.exe
     workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
-  - template: updateJobStatus.yml
-    workingDirectory: DevOps\DustStream
+  - template: DustStream/updateJobStatus.yml
     parameters:
       projectName: 'SsdSim'
       status: $(Agent.JobStatus)
