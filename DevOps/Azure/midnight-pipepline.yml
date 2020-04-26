@@ -8,7 +8,7 @@ jobs:
     - vstest
   steps:
   - script: 'echo $(Agent.JobName)'
-  - template: DustStream/updateJobStatus.yml
+  - template: updateJobStatus.yml
     parameters:
       projectName: 'SsdSim'
       status: $(Agent.JobStatus)
@@ -23,7 +23,7 @@ jobs:
     - vstest
   steps:
   - script: 'echo $(Agent.JobName)'
-  - template: DustStream/updateJobStatus.yml
+  - template: updateJobStatus.yml
     parameters:
       projectName: 'SsdSim'
       status: $(Agent.JobStatus)
