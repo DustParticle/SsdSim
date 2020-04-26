@@ -1,0 +1,29 @@
+jobs:
+- job: MIDNIGHT_TEST_01
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - visualstudio
+    - vstest
+  steps:
+  - script: 'echo $(Agent.JobName)'
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: $(Agent.JobStatus)
+
+- job: MIDNIGHT_TEST_02
+  dependsOn: MIDNIGHT_TEST_01
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - visualstudio
+    - vstest
+  steps:
+  - script: 'echo $(Agent.JobName)'
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: $(Agent.JobStatus)
