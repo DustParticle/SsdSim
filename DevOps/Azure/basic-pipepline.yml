@@ -1,0 +1,63 @@
+jobs:
+- job: BUILD_SSDSIM
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - visualstudio
+    - vstest
+  steps:
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: 'InProgress'
+  - script: echo '##vso[task.setvariable variable=AZUREDEVOPSBUILDID;isOutput=true]$(Build.BuildId)
+    name: stepSetAzureDevopsBuildID
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+  - task: VSBuild@1
+    displayName: 'Build solution **/*.sln'
+    inputs:
+      configuration: release
+      platform: x64
+  - task: PublishBuildArtifacts@1
+    inputs:
+      artifactName: x64Release
+      pathtoPublish: ./x64/Release/
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: $(Agent.JobStatus)
+
+- job: UNIT_TEST
+  dependsOn: BUILD_SSDSIM
+  variables:
+    # Define the variable AZUREDEVOPSBUILDID from the previous job
+    AZUREDEVOPSBUILDID: $[ dependencies.BUILD_SSDSIM.outputs['stepSetAzureDevopsBuildID.AZUREDEVOPSBUILDID'] ]
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - visualstudio
+    - vstest
+  steps:
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: 'InProgress'
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'specific'
+      project: $(System.TeamProject)
+      pipeline: $(System.DefinitionName)
+      buildVersionToDownload: 'specific'
+      buildId: $(AZUREDEVOPSBUILDID)
+      artifactName: x64Release
+      downloadPath: $(System.DefaultWorkingDirectory)
+  - powershell: ./Test.exe
+    workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: $(Agent.JobStatus)
