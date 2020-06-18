@@ -30,6 +30,70 @@ jobs:
       projectName: 'SsdSim'
       status: $(Agent.JobStatus)
 
+- job: SimFramework_UT
+  dependsOn: BUILD_SSDSIM
+  variables:
+    # Define the variable AZUREDEVOPSBUILDID from the previous job
+    AZUREDEVOPSBUILDID: $[ dependencies.BUILD_SSDSIM.outputs['stepSetAzureDevopsBuildID.AZUREDEVOPSBUILDID'] ]
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - visualstudio
+    - vstest
+  steps:
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: 'InProgress'
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'specific'
+      project: $(System.TeamProject)
+      pipeline: $(System.DefinitionName)
+      buildVersionToDownload: 'specific'
+      buildId: $(AZUREDEVOPSBUILDID)
+      artifactName: x64Release
+      downloadPath: $(System.DefaultWorkingDirectory)
+  - powershell: ./Test.exe -gtest_filter=*SimFramework*
+    workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: $(Agent.JobStatus)
+
+- job: SimApp_UT
+  dependsOn: BUILD_SSDSIM
+  variables:
+    # Define the variable AZUREDEVOPSBUILDID from the previous job
+    AZUREDEVOPSBUILDID: $[ dependencies.BUILD_SSDSIM.outputs['stepSetAzureDevopsBuildID.AZUREDEVOPSBUILDID'] ]
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - visualstudio
+    - vstest
+  steps:
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: 'InProgress'
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'specific'
+      project: $(System.TeamProject)
+      pipeline: $(System.DefinitionName)
+      buildVersionToDownload: 'specific'
+      buildId: $(AZUREDEVOPSBUILDID)
+      artifactName: x64Release
+      downloadPath: $(System.DefaultWorkingDirectory)
+  - powershell: ./Test.exe -gtest_filter=*SsdSimApp*
+    workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
+  - template: updateJobStatus.yml
+    parameters:
+      projectName: 'SsdSim'
+      status: $(Agent.JobStatus)
+
 - job: UNIT_TEST
   dependsOn: BUILD_SSDSIM
   variables:
@@ -55,7 +119,7 @@ jobs:
       buildId: $(AZUREDEVOPSBUILDID)
       artifactName: x64Release
       downloadPath: $(System.DefaultWorkingDirectory)
-  - powershell: ./Test.exe
+  - powershell: ./Test.exe -gtest_filter=-*SimFramework*:*SsdSimApp*
     workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
   - template: updateJobStatus.yml
     parameters:
