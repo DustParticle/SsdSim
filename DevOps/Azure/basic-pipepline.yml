@@ -55,7 +55,7 @@ jobs:
       buildId: $(AZUREDEVOPSBUILDID)
       artifactName: x64Release
       downloadPath: $(System.DefaultWorkingDirectory)
-  - powershell: ./Test.exe -gtest_filter=*SimFramework*
+  - powershell: ./Test.exe --gtest_filter=*SimFramework*
     workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
   - template: updateJobStatus.yml
     parameters:
@@ -87,7 +87,7 @@ jobs:
       buildId: $(AZUREDEVOPSBUILDID)
       artifactName: x64Release
       downloadPath: $(System.DefaultWorkingDirectory)
-  - powershell: ./Test.exe -gtest_filter=*SsdSimApp*
+  - powershell: ./Test.exe --gtest_filter=*SsdSimApp*
     workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
   - template: updateJobStatus.yml
     parameters:
@@ -119,7 +119,7 @@ jobs:
       buildId: $(AZUREDEVOPSBUILDID)
       artifactName: x64Release
       downloadPath: $(System.DefaultWorkingDirectory)
-  - powershell: ./Test.exe -gtest_filter=-*SimFramework*:*SsdSimApp*
+  - powershell: ./Test.exe --gtest_filter=-*SimFramework*:*SsdSimApp*
     workingDirectory: $(System.DefaultWorkingDirectory)/x64Release
   - template: updateJobStatus.yml
     parameters:
