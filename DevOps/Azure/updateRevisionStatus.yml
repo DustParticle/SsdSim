@@ -1,0 +1,15 @@
+parameters:
+- name: 'projectName'
+  type: string
+  default: false
+- name: 'status'
+  type: string
+  default: false
+
+steps:
+- script: 'npm install duststream-azure-pipelines'
+- script: 'node updateRevisionStatus.js ${{parameters.projectName}} ${{parameters.status}}'
+  workingDirectory: node_modules\duststream-azure-pipelines
+  env:
+    MAPPED_API_KEY: $(WaterfallsApiKey)
+  condition: always()
