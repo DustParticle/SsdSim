@@ -41,7 +41,7 @@ bool NandHal::IsCommandQueueEmpty() const
 
 bool NandHal::ReadPage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &outBuffer)
 {
-	return (_NandChannels[channel._][device._].ReadPage(block, page, outBuffer));
+	return (_NandChannels[channel][device].ReadPage(block, page, outBuffer));
 }
 
 bool NandHal::ReadPage(const tChannel& channel,
@@ -53,12 +53,12 @@ bool NandHal::ReadPage(const tChannel& channel,
     const Buffer &outBuffer,
     const tSectorOffset& bufferOffset)
 {
-	return (_NandChannels[channel._][device._].ReadPage(block, page, sector, sectorCount, outBuffer, bufferOffset));
+	return (_NandChannels[channel][device].ReadPage(block, page, sector, sectorCount, outBuffer, bufferOffset));
 }
 
 void NandHal::WritePage(tChannel channel, tDeviceInChannel device, tBlockInDevice block, tPageInBlock page, const Buffer &inBuffer)
 {
-	_NandChannels[channel._][device._].WritePage(block, page, inBuffer);
+	_NandChannels[channel][device].WritePage(block, page, inBuffer);
 }
 
 void NandHal::WritePage(const tChannel& channel,
@@ -70,12 +70,12 @@ void NandHal::WritePage(const tChannel& channel,
     const Buffer &inBuffer,
     const tSectorOffset& bufferOffset)
 {
-	_NandChannels[channel._][device._].WritePage(block, page, sector, sectorCount, inBuffer, bufferOffset);
+	_NandChannels[channel][device].WritePage(block, page, sector, sectorCount, inBuffer, bufferOffset);
 }
 
 void NandHal::EraseBlock(tChannel channel, tDeviceInChannel device, tBlockInDevice block)
 {
-	_NandChannels[channel._][device._].EraseBlock(block);
+	_NandChannels[channel][device].EraseBlock(block);
 }
 
 void NandHal::Run()

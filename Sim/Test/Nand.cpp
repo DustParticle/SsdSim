@@ -36,7 +36,7 @@ TEST_F(NandDeviceTest, Basic)
     Buffer writeBuffer;
     _BufferHal->AllocateBuffer(BufferType::System, sectorsPerPage, writeBuffer);
     U8 *pWriteBuffer = _BufferHal->ToPointer(writeBuffer);
-    for (auto i(0); i < writeBuffer.SizeInByte; ++i)
+    for (decltype(writeBuffer.SizeInByte) i{ 0 }; i < writeBuffer.SizeInByte; ++i)
     {
         pWriteBuffer[i] = i % 255;
     }
@@ -47,13 +47,9 @@ TEST_F(NandDeviceTest, Basic)
     U8 pErasedBuffer[bytesPerPage];
     std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
 
-    tBlockInDevice block;
-    block._ = 0;
-    for (; block._ < blockCount; ++block._)
+    for (tBlockInDevice block{ 0 }; block < blockCount; ++block)
     {
-        tPageInBlock page;
-        page._ = 0;
-        for (; page._ < pagesPerBlock; ++page._)
+        for (tPageInBlock page{ 0 }; page < pagesPerBlock; ++page)
         {
             _NandDevice->WritePage(block, page, writeBuffer);
 
@@ -63,7 +59,8 @@ TEST_F(NandDeviceTest, Basic)
         }
 
         _NandDevice->EraseBlock(block);
-        for (; page._ < pagesPerBlock; ++page._)
+
+        for (tPageInBlock page{ 0 }; page < pagesPerBlock; ++page)
         {
             _NandDevice->ReadPage(block, page, readBuffer);
             auto result = std::memcmp(pErasedBuffer, pReadBuffer, bytesPerPage);
@@ -134,21 +131,13 @@ TEST_F(NandHalTest, Basic)
     U8 pErasedBuffer[bytes];
     std::memset(pErasedBuffer, NandBlock::ERASED_PATTERN, sizeof(pErasedBuffer));
 
-    tChannel channel;
-    channel._ = 0;
-    for (; channel._ < channels; ++channel._)
+    for (tChannel channel{ 0 }; channel < channels; ++channel)
     {
-        tDeviceInChannel device;
-        device._ = 0;
-        for (; device._ < devices; ++device._)
+        for (tDeviceInChannel device{ 0 }; device < devices; ++device)
         {
-            tBlockInDevice block;
-            block._ = 0;
-            for (; block._ < blocks; ++block._)
+            for (tBlockInDevice block{ 0 }; block < blocks; ++block)
             {
-                tPageInBlock page;
-                page._ = 0;
-                for (; page._ < pages; ++page._)
+                for (tPageInBlock page{ 0 }; page < pages; ++page)
                 {
                     _NandHal->WritePage(channel, device, block, page, writeBuffer);
 
@@ -158,7 +147,8 @@ TEST_F(NandHalTest, Basic)
                 }
 
                 _NandHal->EraseBlock(channel, device, block);
-                for (; page._ < pages; ++page._)
+
+                for (tPageInBlock page{ 0 }; page < pages; ++page)
                 {
                     _NandHal->ReadPage(channel, device, block, page, readBuffer);
                     auto result = std::memcmp(pErasedBuffer, pReadData, bytes);
@@ -202,10 +192,10 @@ TEST_F(NandHalTest, Basic_CommandQueue)
     U32 queuedCommand = 0;
 	NandHal::CommandDesc commandDesc;
     NandHal::NandAddress& address = commandDesc.Address;
-	address.Channel._ = 0;
-	address.Device._ = 0;
-	address.Block._ = 0;
-	address.Page._ = 0;
+	address.Channel = 0;
+	address.Device = 0;
+	address.Block = 0;
+	address.Page = 0;
 	for (auto c(0); c < commandCount;)
 	{
 		for (auto i(0); i < bufferCount; ++i, ++c)
@@ -222,17 +212,17 @@ TEST_F(NandHalTest, Basic_CommandQueue)
             _NandHal->QueueCommand(commandDesc);
             ++queuedCommand;
 
-			if (++address.Channel._ >= channels)
+			if (++address.Channel >= channels)
 			{
-                address.Channel._ = 0;
-				if (++address.Device._ >= devices)
+                address.Channel = 0;
+				if (++address.Device >= devices)
 				{
-                    address.Device._ = 0;
-					if (++address.Page._ >= pages)
+                    address.Device = 0;
+					if (++address.Page >= pages)
 					{
-                        address.Page._ = 0;
-						ASSERT_TRUE(address.Block._ < blocks);	//let's not go pass this boundary
-						++address.Block._;
+                        address.Page = 0;
+						ASSERT_TRUE(address.Block < blocks);	//let's not go pass this boundary
+						++address.Block;
 					}
 				}
 			}
@@ -245,7 +235,7 @@ TEST_F(NandHalTest, Basic_CommandQueue)
 	_NandHal->Stop();
     nandHalFuture.wait();
 
-    for (U32 i(0); i < bufferCount; ++i)
+    for (U32 i{ 0 }; i < bufferCount; ++i)
     {
         _BufferHal->DeallocateBuffer(writeBuffers[i]);
         _BufferHal->DeallocateBuffer(readBuffers[i]);

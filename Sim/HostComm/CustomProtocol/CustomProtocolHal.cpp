@@ -51,7 +51,7 @@ U8* CustomProtocolHal::GetBuffer(CustomProtocolCommand *command, const tSectorOf
     Message<CustomProtocolCommand>* msg = _MessageServer->GetMessage(command->CommandId);
     if (msg)
     {
-        U32 bufferIndex = _BufferHal->ToByteIndexInTransfer(BufferType::User, offset._);
+        U32 bufferIndex = _BufferHal->ToByteIndexInTransfer(BufferType::User, offset);
         assert(msg->PayloadSize > bufferIndex);
         return ((U8*)msg->Payload) + bufferIndex;
     }

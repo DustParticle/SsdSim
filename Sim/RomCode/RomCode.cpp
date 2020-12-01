@@ -19,10 +19,7 @@ extern "C"
 
     void __declspec(dllexport) __stdcall Execute()
     {
-        if (_CustomProtocolHal == nullptr)
-        {
-            throw "CustomProtocol is null";
-        }
+        assert(_CustomProtocolHal != nullptr);
 
         if (_CustomProtocolHal->HasCommand())
         {

@@ -75,21 +75,21 @@ U8* BufferHal::ToPointer(const Buffer &buffer)
 
 void BufferHal::CopyFromBuffer(U8* const dest, const Buffer& buffer, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount)
 {
-    auto byteOffset = ToByteIndexInTransfer(buffer.Type, bufferOffset._);
-    auto byteCount = ToByteIndexInTransfer(buffer.Type, sectorCount._);
+    auto byteOffset = ToByteIndexInTransfer(buffer.Type, bufferOffset);
+    auto byteCount = ToByteIndexInTransfer(buffer.Type, sectorCount);
     memcpy(dest, ToPointer(buffer) + byteOffset, byteCount);
 }
 
 void BufferHal::CopyToBuffer(const U8* const src, const Buffer& buffer, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount)
 {
-    auto byteOffset = ToByteIndexInTransfer(buffer.Type, bufferOffset._);
-    auto byteCount = ToByteIndexInTransfer(buffer.Type, sectorCount._);
+    auto byteOffset = ToByteIndexInTransfer(buffer.Type, bufferOffset);
+    auto byteCount = ToByteIndexInTransfer(buffer.Type, sectorCount);
     memcpy(ToPointer(buffer) + byteOffset, src, byteCount);
 }
 
 bool BufferHal::SetSectorInfo(const SectorInfo &sectorInfo)
 {
-    if (sectorInfo.CompactMode == true && (1 << sectorInfo.SectorSizeInBit) < sectorInfo.CompactSizeInByte)
+    if (sectorInfo.CompactMode == true && (decltype(sectorInfo.CompactSizeInByte))(1 << sectorInfo.SectorSizeInBit) < sectorInfo.CompactSizeInByte)
     {
         return false;
     }

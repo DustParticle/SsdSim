@@ -28,24 +28,24 @@ void NandBlock::WritePage(tPageInBlock page, const Buffer &inBuffer)
 
     auto sectorsPerPage = _TotalBytesPerPage >> _BufferHal->GetSectorInfo().SectorSizeInBit;
     tSectorCount sectorCount;
-    sectorCount._ = sectorsPerPage;
+    sectorCount = sectorsPerPage;
     tSectorOffset sectorOffset;
-    sectorOffset._ = 0;
-    _BufferHal->CopyFromBuffer((U8*)&_Buffer[page._ * _TotalBytesPerPage], inBuffer, sectorOffset, sectorCount);
+    sectorOffset = 0;
+    _BufferHal->CopyFromBuffer((U8*)&_Buffer[page * _TotalBytesPerPage], inBuffer, sectorOffset, sectorCount);
 	_NandBlockTracker.WritePage(page);
 }
 
 void NandBlock::WritePage(const tPageInBlock& page, const tSectorInPage& sector, const tSectorCount& sectorCount, const Buffer &inBuffer, const tSectorOffset& bufferOffset)
 {
-	assert(sector._ >= 0);
-	assert(_BufferHal->ToByteIndexInTransfer(inBuffer.Type, sector._ + sectorCount._) <= _TotalBytesPerPage);
+	assert(sector >= 0);
+	assert(_BufferHal->ToByteIndexInTransfer(inBuffer.Type, sector + sectorCount) <= _TotalBytesPerPage);
 
 	if (nullptr == _Buffer)
 	{
 		_Buffer = std::unique_ptr<U8[]>(new U8[_PagesPerBlock * _TotalBytesPerPage]);
 	}
     
-    _BufferHal->CopyFromBuffer((U8*)&_Buffer[page._ * _TotalBytesPerPage + _BufferHal->ToByteIndexInTransfer(inBuffer.Type, sector._)], inBuffer, bufferOffset, sectorCount);
+    _BufferHal->CopyFromBuffer((U8*)&_Buffer[page * _TotalBytesPerPage + _BufferHal->ToByteIndexInTransfer(inBuffer.Type, sector)], inBuffer, bufferOffset, sectorCount);
 	_NandBlockTracker.WritePage(page);
 }
 
@@ -57,13 +57,13 @@ bool NandBlock::ReadPage(tPageInBlock page, const Buffer &outBuffer)
         return (false);
     }
 
-	auto pData = (nullptr == _Buffer) ? &_ErasedBuffer[0] : &_Buffer[page._ * _TotalBytesPerPage];
+	auto pData = (nullptr == _Buffer) ? &_ErasedBuffer[0] : &_Buffer[page * _TotalBytesPerPage];
 
     auto sectorsPerPage = _TotalBytesPerPage >> _BufferHal->GetSectorInfo().SectorSizeInBit;
     tSectorCount sectorCount;
-    sectorCount._ = sectorsPerPage;
+    sectorCount = sectorsPerPage;
     tSectorOffset sectorOffset;
-    sectorOffset._ = 0;
+    sectorOffset = 0;
     _BufferHal->CopyToBuffer(pData, outBuffer, sectorOffset, sectorCount);
 	return (true);
 }
@@ -76,10 +76,10 @@ bool NandBlock::ReadPage(const tPageInBlock& page, const tSectorInPage& sector, 
         return (false);
     }
 
-	assert(sector._ >= 0);
-	assert(_BufferHal->ToByteIndexInTransfer(outBuffer.Type, sector._ + sectorCount._) <= _TotalBytesPerPage);
+	assert(sector >= 0);
+	assert(_BufferHal->ToByteIndexInTransfer(outBuffer.Type, sector + sectorCount) <= _TotalBytesPerPage);
 
-	auto data = (nullptr == _Buffer) ? &_ErasedBuffer[0] : &_Buffer[(page._ * _TotalBytesPerPage) + _BufferHal->ToByteIndexInTransfer(outBuffer.Type, sector._)];
+	auto data = (nullptr == _Buffer) ? &_ErasedBuffer[0] : &_Buffer[(page * _TotalBytesPerPage) + _BufferHal->ToByteIndexInTransfer(outBuffer.Type, sector)];
 
     _BufferHal->CopyToBuffer(data, outBuffer, bufferOffset, sectorCount);
 	return (true);

@@ -34,12 +34,12 @@ void VerifyLbaToNand(const U32 &lba, const U32 &sectorCount,
     U32 remainingSector;
     SimpleFtlTranslation::LbaToNandAddress(lba, sectorCount, address, nextLba, remainingSector);
 
-    ASSERT_EQ(address.Channel._, expectedAddress.Channel._);
-    ASSERT_EQ(address.Device._, expectedAddress.Device._);
-    ASSERT_EQ(address.Block._, expectedAddress.Block._);
-    ASSERT_EQ(address.Page._, expectedAddress.Page._);
-    ASSERT_EQ(address.Sector._, expectedAddress.Sector._);
-    ASSERT_EQ(address.SectorCount._, expectedAddress.SectorCount._);
+    ASSERT_EQ(address.Channel, expectedAddress.Channel);
+    ASSERT_EQ(address.Device, expectedAddress.Device);
+    ASSERT_EQ(address.Block, expectedAddress.Block);
+    ASSERT_EQ(address.Page, expectedAddress.Page);
+    ASSERT_EQ(address.Sector, expectedAddress.Sector);
+    ASSERT_EQ(address.SectorCount, expectedAddress.SectorCount);
     ASSERT_EQ(nextLba, expectedLba);
     ASSERT_EQ(remainingSector, expectedSectorCount);
 }
@@ -146,12 +146,12 @@ TEST(SimpleFtl, Translation_LbaToNand)
                 for (U32 channel(0); channel < geometry.ChannelCount; ++channel)
                 {
                     SimpleFtlTranslation::LbaToNandAddress(lba, sectorsPerPage, address, nextLba, remainingSector);
-                    ASSERT_EQ(address.Channel._, channel);
-                    ASSERT_EQ(address.Device._, device);
-                    ASSERT_EQ(address.Page._, page);
-                    ASSERT_EQ(address.Block._, block);
-                    ASSERT_EQ(address.Sector._, 0);
-                    ASSERT_EQ(address.SectorCount._, sectorsPerPage);
+                    ASSERT_EQ(address.Channel, channel);
+                    ASSERT_EQ(address.Device, device);
+                    ASSERT_EQ(address.Page, page);
+                    ASSERT_EQ(address.Block, block);
+                    ASSERT_EQ(address.Sector, 0);
+                    ASSERT_EQ(address.SectorCount, sectorsPerPage);
                     lba += (geometry.BytesPerPage >> SectorSizeInBit);
                     ASSERT_EQ(lba, nextLba);
                     ASSERT_EQ(remainingSector, 0);
@@ -162,31 +162,31 @@ TEST(SimpleFtl, Translation_LbaToNand)
 
     // Unaligned lba and sector count
     NandHal::NandAddress expectedAddress;
-    expectedAddress.Channel._ = 0;
-    expectedAddress.Device._ = 0;
-    expectedAddress.Block._ = 0;
-    expectedAddress.Page._ = 0;
-    expectedAddress.Sector._ = 0;
-    expectedAddress.SectorCount._ = 0;
+    expectedAddress.Channel = 0;
+    expectedAddress.Device = 0;
+    expectedAddress.Block = 0;
+    expectedAddress.Page = 0;
+    expectedAddress.Sector = 0;
+    expectedAddress.SectorCount = 0;
 
-    expectedAddress.Sector._ = 1;
-    expectedAddress.SectorCount._ = sectorsPerPage - 2;
+    expectedAddress.Sector = 1;
+    expectedAddress.SectorCount = sectorsPerPage - 2;
     VerifyLbaToNand(1, sectorsPerPage - 2, expectedAddress, sectorsPerPage - 1, 0);
 
-    expectedAddress.Sector._ = 1;
-    expectedAddress.SectorCount._ = sectorsPerPage - 1;
+    expectedAddress.Sector = 1;
+    expectedAddress.SectorCount = sectorsPerPage - 1;
     VerifyLbaToNand(1, sectorsPerPage, expectedAddress, sectorsPerPage, 1);
 
-    expectedAddress.Sector._ = 1;
-    expectedAddress.SectorCount._ = sectorsPerPage - 1;
+    expectedAddress.Sector = 1;
+    expectedAddress.SectorCount = sectorsPerPage - 1;
     VerifyLbaToNand(1, 2 * sectorsPerPage - 2, expectedAddress, sectorsPerPage, sectorsPerPage - 1);
 
-    expectedAddress.Sector._ = 0;
-    expectedAddress.SectorCount._ = sectorsPerPage - 1;
+    expectedAddress.Sector = 0;
+    expectedAddress.SectorCount = sectorsPerPage - 1;
     VerifyLbaToNand(0, sectorsPerPage - 1, expectedAddress, sectorsPerPage - 1, 0);
 
-    expectedAddress.Sector._ = 0;
-    expectedAddress.SectorCount._ = sectorsPerPage;
+    expectedAddress.Sector = 0;
+    expectedAddress.SectorCount = sectorsPerPage;
     VerifyLbaToNand(0, 2 * sectorsPerPage - 1, expectedAddress, sectorsPerPage, sectorsPerPage - 1);
 }
 
@@ -235,7 +235,7 @@ TEST(SimpleFtl, BasicWriteReadVerify_App)
     auto writeMessage = AllocateMessage<CustomProtocolCommand>(clientCustomProtocolCmd, payloadSize, true);
     ASSERT_NE(writeMessage, nullptr);
     ASSERT_NE(writeMessage->Payload, nullptr);
-    for (auto i(0); i < sectorCount; ++i)
+    for (decltype(sectorCount) i{ 0 }; i < sectorCount; ++i)
     {
         auto buffer = &(static_cast<U8*>(writeMessage->Payload)[i * sectorSizeInTransfer]);
         memset((void*)buffer, lba + i, sectorSizeInTransfer);
@@ -301,7 +301,7 @@ TEST_F(SimpleFtlTest, BasicWriteReadVerify)
     auto writeMessage = AllocateMessage<CustomProtocolCommand>(CustomProtocolClient, payloadSize, true);
     ASSERT_NE(writeMessage, nullptr);
     ASSERT_NE(writeMessage->Payload, nullptr);
-    for (auto i(0); i < sectorCount; ++i)
+    for (decltype(sectorCount) i{ 0 }; i < sectorCount; ++i)
     {
         auto buffer = &(static_cast<U8*>(writeMessage->Payload)[i * SectorSizeInTransfer]);
         memset((void*)buffer, lba + i, SectorSizeInTransfer);
@@ -329,7 +329,7 @@ TEST_F(SimpleFtlTest, BasicWriteReadVerify)
     int compareResult = std::memcmp(responseMessageWrite->Payload, responseMessageRead->Payload, payloadSize);
     if (compareResult != 0)
     {
-        for (auto i(0); i < sectorCount; ++i)
+        for (decltype(sectorCount) i{ 0 }; i < sectorCount; ++i)
         {
             auto writeBuffer = &(static_cast<U8*>(responseMessageWrite->Payload)[i * SectorSizeInTransfer]);
             auto readBuffer = &(static_cast<U8*>(responseMessageRead->Payload)[i * SectorSizeInTransfer]);
@@ -544,7 +544,7 @@ TEST_F(SimpleFtlTest, BasicUnalignedWriteAlignedRead)
 	ASSERT_NE(writeMessage, nullptr);
 	ASSERT_NE(writeMessage->Payload, nullptr);
     SetReadWriteCommand(writeMessage->Data, CustomProtocolCommand::Code::Write, lba, sectorCount);
-	for (auto i(0); i < sectorCount; ++i)
+    for (decltype(sectorCount) i{ 0 }; i < sectorCount; ++i)
 	{
 		auto buffer = &(static_cast<U8*>(writeMessage->Payload)[i * bytesPerSector]);
 		memset((void*)buffer, lba + i, bytesPerSector);

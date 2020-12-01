@@ -161,10 +161,8 @@ void SimpleFtl::ReadNextLbas()
         SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, _RemainingSectorCount, nandAddress, nextLba, remainingSectorCount);
         if (_BufferHal->AllocateBuffer(BufferType::User, buffer))
         {
-            tSectorOffset sectorOffset;
-            sectorOffset._ = _ProcessedSectorCount;
-            ReadPage(nandAddress, buffer, sectorOffset);
-            _ProcessedSectorCount += nandAddress.SectorCount._;
+            ReadPage(nandAddress, buffer, tSectorOffset{ _ProcessedSectorCount });
+            _ProcessedSectorCount += nandAddress.SectorCount;
             _CurrentLba = nextLba;
             _RemainingSectorCount = remainingSectorCount;
             ++_PendingCommandCount;
@@ -180,7 +178,7 @@ void SimpleFtl::TransferOut(const Buffer &buffer, const NandHal::NandAddress &na
 {
     CustomProtocolHal::TransferCommandDesc transferCommand;
     transferCommand.Buffer = buffer;
-    transferCommand.BufferOffset._ = nandAddress.Sector._;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
+    transferCommand.BufferOffset = nandAddress.Sector;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
     transferCommand.Command = _ProcessingCommand;
     transferCommand.Direction = CustomProtocolHal::TransferCommandDesc::Direction::Out;
     transferCommand.CommandOffset = commandOffset;
@@ -192,14 +190,14 @@ void SimpleFtl::TransferOut(const Buffer &buffer, const NandHal::NandAddress &na
 
 void SimpleFtl::ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const tSectorOffset& descSectorIndex)
 {
-    assert((nandAddress.Sector._ + nandAddress.SectorCount._) <= _SectorsPerPage);
+    assert((nandAddress.Sector + nandAddress.SectorCount) <= _SectorsPerPage);
 
     NandHal::CommandDesc commandDesc;
     commandDesc.Address = nandAddress;
-    commandDesc.Operation = (nandAddress.SectorCount._ == _SectorsPerPage)
+    commandDesc.Operation = (nandAddress.SectorCount == _SectorsPerPage)
         ? NandHal::CommandDesc::Op::Read : NandHal::CommandDesc::Op::ReadPartial;
     commandDesc.Buffer = outBuffer;
-    commandDesc.BufferOffset._ = nandAddress.Sector._;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
+    commandDesc.BufferOffset = nandAddress.Sector;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
     commandDesc.DescSectorIndex = descSectorIndex;
     commandDesc.Listener = this;
 
@@ -217,10 +215,9 @@ void SimpleFtl::WriteNextLbas()
         SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, _RemainingSectorCount, nandAddress, nextLba, remainingSectorCount);
         if (_BufferHal->AllocateBuffer(BufferType::User, buffer))
         {
-            tSectorOffset commandOffset;
-            commandOffset._ = _ProcessedSectorCount;
+            tSectorOffset commandOffset{ _ProcessedSectorCount };
             TransferIn(buffer, nandAddress, commandOffset, nandAddress.SectorCount);
-            _ProcessedSectorCount += nandAddress.SectorCount._;
+            _ProcessedSectorCount += nandAddress.SectorCount;
             _CurrentLba = nextLba;
             _RemainingSectorCount = remainingSectorCount;
             ++_PendingCommandCount;
@@ -236,7 +233,7 @@ void SimpleFtl::TransferIn(const Buffer &buffer, const NandHal::NandAddress &nan
 {
     CustomProtocolHal::TransferCommandDesc transferCommand;
     transferCommand.Buffer = buffer;
-    transferCommand.BufferOffset._ = nandAddress.Sector._;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
+    transferCommand.BufferOffset = nandAddress.Sector;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
     transferCommand.Command = _ProcessingCommand;
     transferCommand.Direction = CustomProtocolHal::TransferCommandDesc::Direction::In;
     transferCommand.CommandOffset = commandOffset;
@@ -248,14 +245,14 @@ void SimpleFtl::TransferIn(const Buffer &buffer, const NandHal::NandAddress &nan
 
 void SimpleFtl::WritePage(const NandHal::NandAddress &nandAddress, const Buffer &inBuffer)
 {
-    assert((nandAddress.Sector._ + nandAddress.SectorCount._) <= _SectorsPerPage);
+    assert((nandAddress.Sector + nandAddress.SectorCount) <= _SectorsPerPage);
 
     NandHal::CommandDesc commandDesc;
     commandDesc.Address = nandAddress;
-    commandDesc.Operation = (nandAddress.SectorCount._ == _SectorsPerPage)
+    commandDesc.Operation = (nandAddress.SectorCount == _SectorsPerPage)
         ? NandHal::CommandDesc::Op::Write : NandHal::CommandDesc::Op::WritePartial;
     commandDesc.Buffer = inBuffer;
-    commandDesc.BufferOffset._ = nandAddress.Sector._;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
+    commandDesc.BufferOffset = nandAddress.Sector;  //NOTE: if NAND sector and buffer sector ever differ, need a conversion
     commandDesc.Listener = this;
 
     _NandHal->QueueCommand(commandDesc);

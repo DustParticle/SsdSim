@@ -33,13 +33,9 @@ TEST(BufferHal, Basic)
 
     U8 comparer[requestingBufferSizeInByte];
 
-    tSectorCount sectorCount;
-    tSectorOffset sectorOffset;
-    sectorOffset._ = 0;
-    for ( ; sectorOffset._ < (buffer.SizeInSector - 1); ++sectorOffset._)
+    for (tSectorOffset sectorOffset{ 0 }; sectorOffset < (buffer.SizeInSector - 1); ++sectorOffset)
     {
-        sectorCount._ = 1;
-        for (; sectorCount._ < buffer.SizeInSector - sectorOffset._; ++sectorCount._)
+        for (tSectorCount sectorCount{ 1 }; sectorCount < buffer.SizeInSector - sectorOffset; ++sectorCount)
         {
             tSectorOffset zso{ 0 };
             tSectorCount zsc{ buffer.SizeInSector };
@@ -47,28 +43,28 @@ TEST(BufferHal, Basic)
             ASSERT_EQ(memcmp(bufferHal.ToPointer(buffer), zeros, requestingBufferSizeInByte), 0);
 
             memset(&comparer, 0, requestingBufferSizeInByte);
-            memcpy(comparer + (sectorOffset._ * bytesPerSector), source, sectorCount._ * bytesPerSector);
+            memcpy(comparer + (sectorOffset * bytesPerSector), source, sectorCount * bytesPerSector);
 
             bufferHal.CopyToBuffer(source, buffer, sectorOffset, sectorCount);
             if (0 != memcmp(bufferHal.ToPointer(buffer), comparer, requestingBufferSizeInByte))
             {
                 GOUT("Memcpy to buffer miscompared!");
-                GOUT("SectorOffset " << sectorOffset._);
-                GOUT("SectorCount " << sectorCount._);
+                GOUT("SectorOffset " << sectorOffset);
+                GOUT("SectorCount " << sectorCount);
 
                 FAIL();
             }
 
             memset(&comparer, 0, requestingBufferSizeInByte);
-            memcpy(comparer, source, sectorCount._ * bytesPerSector);
+            memcpy(comparer, source, sectorCount * bytesPerSector);
 
             memset(&dest, 0, requestingBufferSizeInByte);
             bufferHal.CopyFromBuffer(dest, buffer, sectorOffset, sectorCount);
             if (0 != memcmp(comparer, dest, requestingBufferSizeInByte))
             {
                 GOUT("Memcpy from buffer miscompared!");
-                GOUT("SectorOffset " << sectorOffset._);
-                GOUT("SectorCount " << sectorCount._);
+                GOUT("SectorOffset " << sectorOffset);
+                GOUT("SectorCount " << sectorCount);
                 
                 FAIL();
             }
