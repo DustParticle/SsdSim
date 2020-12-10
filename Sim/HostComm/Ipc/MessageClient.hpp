@@ -5,7 +5,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/containers/deque.hpp>
 
-#include "HostComm/BasicTypes.h"
+#include "BasicTypes.h"
 #include "MessageBaseService.hpp"
 
 using namespace boost::interprocess;

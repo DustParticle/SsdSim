@@ -7,54 +7,33 @@ using U8 = std::uint_fast8_t;
 using U16 = std::uint_fast16_t;
 using U32 = std::uint_fast32_t;
 
-struct tSectorCount
+template<class T, class N>
+struct PrimitiveTemplate
 {
-    U32 _;
+    operator T() const { return _; }
 
-    operator U32() const { return _; }
-
-    void operator=(U32 v)
+    void operator=(T v)
     {
         _ = v;
     }
 
-    tSectorCount operator++()
+    PrimitiveTemplate<T, N> operator++()
     {
         ++_;
         return *this;
     }
 
-    tSectorCount operator++(int)
+    PrimitiveTemplate<T, N> operator++(int)
     {
-        const tSectorCount old(*this);
+        const PrimitiveTemplate<T, N> old(*this);
         ++_;
         return old;
     }
+
+    T _;
 };
 
-struct tSectorOffset
-{
-    U32 _;
-
-    operator U32() const { return _; }
-
-    void operator=(U32 v)
-    {
-        _ = v;
-    }
-
-    tSectorOffset operator++()
-    {
-        ++_;
-        return *this;
-    }
-
-    tSectorOffset operator++(int)
-    {
-        const tSectorOffset old(*this);
-        ++_;
-        return old;
-    }
-};
+using tSectorCount = PrimitiveTemplate<U32, struct SectorCount>;
+using tSectorOffset = PrimitiveTemplate<U32, struct SectorOffset>;
 
 #endif

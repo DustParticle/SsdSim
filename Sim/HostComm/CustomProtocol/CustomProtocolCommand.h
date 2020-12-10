@@ -1,7 +1,7 @@
 #ifndef __CustomProtocolCommand_h__
 #define __CustomProtocolCommand_h__
 
-#include "HostComm/BasicTypes.h"
+#include "BasicTypes.h"
 #include "Buffer/Types.h"
 
 class CustomProtocolHal;

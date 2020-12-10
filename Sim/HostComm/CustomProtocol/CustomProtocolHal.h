@@ -5,7 +5,7 @@
 
 #include "SimFrameworkBase/FrameworkThread.h"
 
-#include "HostComm/BasicTypes.h"
+#include "BasicTypes.h"
 #include "CustomProtocolCommand.h"
 #include "HostComm/Ipc/MessageServer.hpp"
 #include "Buffer/Hal/BufferHal.h"

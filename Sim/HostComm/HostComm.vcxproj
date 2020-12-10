@@ -135,7 +135,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BasicTypes.h" />
     <ClInclude Include="CustomProtocol\CustomProtocolCommand.h" />
     <ClInclude Include="CustomProtocol\CustomProtocolHal.h" />
     <ClInclude Include="Ipc\Constant.h" />

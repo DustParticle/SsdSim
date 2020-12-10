@@ -6,7 +6,7 @@
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 
-#include "HostComm/BasicTypes.h"
+#include "BasicTypes.h"
 
 typedef U32 MessageId;
 
