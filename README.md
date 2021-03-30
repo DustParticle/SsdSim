@@ -1,5 +1,5 @@
 # Motivation
-https://medium.com/solid-state-drives-ideas-knowledge-and-development
+[SSD Firmware Development](https://phandinhlan.medium.com/lets-talk-introduction-19d218b2f3ac)
 
 # Build
 
