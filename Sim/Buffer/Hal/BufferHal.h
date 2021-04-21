@@ -33,11 +33,12 @@ public:
     bool SetSectorInfo(const SectorInfo &sectorInfo);
     SectorInfo GetSectorInfo() const;
     U32 ToByteIndexInTransfer(BufferType type, U32 offset);
+    U32 GetBufferMaxSizeInBytes() const;
 
 private:
     U32 _MaxBufferSizeInSector;
     U32 _CurrentFreeSizeInSector;
-    U32 _CurrentBufferHandle;
+    BufferHandle _CurrentBufferHandle;
     std::unique_ptr<std::map<U32, std::unique_ptr<U8[]>>> _AllocatedBuffers;
     SectorInfo _SectorInfo;
     U32 _ImplicitAllocationSectorCount;

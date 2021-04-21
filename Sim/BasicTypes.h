@@ -30,6 +30,18 @@ struct PrimitiveTemplate
         return old;
     }
 
+    PrimitiveTemplate<T, N> operator+=(T v)
+    {
+        _ += v;
+        return *this;
+    }
+
+    PrimitiveTemplate<T, N> operator+=(PrimitiveTemplate<T, N> v)
+    {
+        _ += v._;
+        return *this;
+    }
+
     T _;
 };
 

@@ -10,9 +10,14 @@ enum BufferType
     Undefined
 };
 
+struct BufferHandle
+{
+    U32 _;
+};
+
 struct Buffer
 {
-    U32 Handle;
+    BufferHandle Handle;
     U32 SizeInSector;
     U32 SizeInByte;
     BufferType Type;

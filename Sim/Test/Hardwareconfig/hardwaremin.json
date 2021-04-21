@@ -7,7 +7,7 @@
     "bytes": 4096
   },
   "BufferHalPreInit": {
-	"kbs": 64
+	"kbs": 2560
   },
   "RomCode": {
 	"path": ".\\RomCode.dll"
