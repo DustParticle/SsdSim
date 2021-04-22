@@ -38,8 +38,8 @@ bool SimpleFtl::SetSectorInfo(const SectorInfo& sectorInfo)
     SimpleFtlTranslation::SetSectorSize(sectorInfo.SectorSizeInBit);
 
     // The buffer size must be larger than maxBlocksPerCommand blocks' size to support read-modify-write
-    constexpr U8 maxBlocksPerCommand = 8;
-    U32 blockSizeInBytes = geometry.PagesPerBlock * geometry.BytesPerPage;
+    constexpr auto maxBlocksPerCommand = 8;
+    auto blockSizeInBytes = geometry.PagesPerBlock * geometry.BytesPerPage;
     assert(_BufferHal->GetBufferMaxSizeInBytes() >= blockSizeInBytes * maxBlocksPerCommand);
     _BlockBuffers = new Buffer[geometry.PagesPerBlock * maxBlocksPerCommand];
     _ProcessingBlocks = new NandHal::NandAddress[maxBlocksPerCommand];
@@ -117,7 +117,7 @@ void SimpleFtl::OnNewCustomProtocolCommand(CustomProtocolCommand* command)
         _BlockBufferCount = 0;
 
         // Write command to nand
-        HandleWriteCommand();
+        OnNewWriteCommand();
     } break;
 
     case CustomProtocolCommand::Code::LoopbackWrite:
@@ -223,94 +223,44 @@ void SimpleFtl::ReadPage(const NandHal::NandAddress& nandAddress, const Buffer& 
     ++_PendingNandCommandCount;
 }
 
-void SimpleFtl::HandleWriteCommand()
+void SimpleFtl::OnNewWriteCommand()
 {
-    // Calculate starting block
-    Buffer buffer;
-    U32 nextLba, remainingSectorCount, startingPage;
-    SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, 1,
-        _ProcessingPage, nextLba, remainingSectorCount);
-    startingPage = _ProcessingPage.Page;
-
-    // Read head pages of the starting block
-    _ProcessingPage.Sector = 0;
-    _ProcessingPage.SectorCount = _SectorsPerPage;
-    for (_ProcessingPage.Page = 0; _ProcessingPage.Page < startingPage; ++_ProcessingPage.Page)
-    {
-        AllocateNextBuffer(buffer);
-        ReadPage(_ProcessingPage, buffer, tSectorOffset{ 0 });
-    }
-
-    // Transfer data from host
-    // First writing page
-    // Read head sectors of the page
-    SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, _RemainingSectorCount,
-        _ProcessingPage, _CurrentLba, _RemainingSectorCount);
-    AllocateNextBuffer(buffer);
-    if (_ProcessingPage.Sector > 0)
-    {
-        // Starting LBA doesn't align to a page. Starting page has head sectors.
-        // Read head sectors of the page
-        NandHal::NandAddress temp = _ProcessingPage;
-        temp.Sector = 0;
-        temp.SectorCount = _ProcessingPage.Sector;
-        ReadPage(temp, buffer, tSectorOffset{ 0 });
-    }
-    // Transfer in sectors of the starting page
-    TransferIn(buffer, tSectorOffset{ _ProcessingPage.Sector }, _ProcessedSectorOffset, _ProcessingPage.SectorCount);
-    _ProcessingBlocks[0] = _ProcessingPage;
-    ++_ProcessingBlockCount;
-
-    // Transfer in the middle pages
-    NandHal::NandAddress previousPage;
-    _ProcessingPage.Sector = 0;
-    _ProcessingPage.SectorCount = _SectorsPerPage;
+    NandHal::NandAddress proccessingPage;
+    U32 blockIndex, bufferIndex;
     while (_RemainingSectorCount > 0)
     {
-        previousPage = _ProcessingPage;
         SimpleFtlTranslation::LbaToNandAddress(_CurrentLba, _RemainingSectorCount,
-            _ProcessingPage, _CurrentLba, _RemainingSectorCount);
-        AllocateNextBuffer(buffer);
-        TransferIn(buffer, tSectorOffset{ _ProcessingPage.Sector }, _ProcessedSectorOffset, _ProcessingPage.SectorCount);
-
-        if (false == IsSameBlock(previousPage, _ProcessingPage))
+            proccessingPage, _CurrentLba, _RemainingSectorCount);
+        
+        if (true == IsNewBlock(proccessingPage))
         {
-            // Move to new block
-            _ProcessingBlocks[_ProcessingBlockCount] = _ProcessingPage;
+            // New block to be written
+            // Read head pages/sectors of this block into buffer
+            blockIndex = _ProcessingBlockCount;
+            _ProcessingBlocks[_ProcessingBlockCount] = proccessingPage;
             ++_ProcessingBlockCount;
+            AllocateBuffers(proccessingPage);
+            ReadHeadPages(proccessingPage, _ProcessingBlockCount - 1);
         }
+        else
+        {
+            blockIndex = GetBlockIndex(proccessingPage);
+        }
+
+        // Transfer data from current lba to page
+        bufferIndex = GetBufferIndex(blockIndex, proccessingPage);
+        TransferIn(_BlockBuffers[bufferIndex], tSectorOffset{ proccessingPage.Sector }, _ProcessedSectorOffset, proccessingPage.SectorCount);
+        _ProcessingBlocks[blockIndex] = proccessingPage;
     }
 
-    U32 tailStartingSector = _ProcessingPage.Sector + _ProcessingPage.SectorCount;
-    if (_RemainingSectorCount == 0 && tailStartingSector < _SectorsPerPage)
+    // Read all tail pages/sectors of the writing blocks
+    for (U32 i = 0; i < _ProcessingBlockCount; ++i)
     {
-        // Ending LBA doesn't align to a page. Ending page has tail sectors.
-        // Read tail sectors of the page
-        _ProcessingPage.Sector = tailStartingSector;
-        _ProcessingPage.SectorCount = _SectorsPerPage - tailStartingSector;
-        ReadPage(_ProcessingPage, buffer, tSectorOffset{ tailStartingSector });
-    }
-
-    // Read tail pages of the ending block
-    ++_ProcessingPage.Page;
-    _ProcessingPage.Sector = 0;
-    _ProcessingPage.SectorCount = _SectorsPerPage;
-    for (; _ProcessingPage.Page < _PagesPerBlock; ++_ProcessingPage.Page)
-    {
-        AllocateNextBuffer(buffer);
-        ReadPage(_ProcessingPage, buffer, tSectorOffset{ 0 });
+        ReadTailPages(_ProcessingBlocks[i], i);
     }
 }
 
-void SimpleFtl::AllocateNextBuffer(Buffer &buffer)
-{
-    bool success = _BufferHal->AllocateBuffer(BufferType::User, _BlockBuffers[_BlockBufferCount]);
-    buffer = _BlockBuffers[_BlockBufferCount];
-    assert(success == true);        // MUST success
-    ++_BlockBufferCount;
-}
-
-void SimpleFtl::HandleNandReadAndTransferCompleted()
+void SimpleFtl::OnNandReadAndTransferCompleted()
 {
     if (0 == _PendingNandCommandCount && 0 == _PendingTransferCommandCount)
     {
@@ -324,7 +274,7 @@ void SimpleFtl::HandleNandReadAndTransferCompleted()
     }
 }
 
-void SimpleFtl::HandleNandEraseCompleted()
+void SimpleFtl::OnNandEraseCompleted()
 {
     if (0 == _PendingNandCommandCount)
     {
@@ -346,11 +296,107 @@ void SimpleFtl::HandleNandEraseCompleted()
     }
 }
 
+void SimpleFtl::AllocateBuffers(const NandHal::NandAddress& writingStartingPage)
+{
+    bool success;
+    for (U32 i = 0; i < _PagesPerBlock; ++i)
+    {
+        success = _BufferHal->AllocateBuffer(BufferType::User, _BlockBuffers[_BlockBufferCount]);
+        assert(success == true);        // MUST success
+        ++_BlockBufferCount;
+    }
+}
+
+void SimpleFtl::ReadHeadPages(const NandHal::NandAddress& writingStartingPage, const U32& blockIndex)
+{
+    NandHal::NandAddress nandAddress = writingStartingPage;
+    U32 bufferIndex;
+
+    // Read head pages of the starting block
+    nandAddress.Page = 0;
+    nandAddress.Sector = 0;
+    nandAddress.SectorCount = _SectorsPerPage;
+    bufferIndex = GetBufferIndex(blockIndex, nandAddress);
+    for (; nandAddress.Page < writingStartingPage.Page; ++nandAddress.Page, ++bufferIndex)
+    {
+        ReadPage(nandAddress, _BlockBuffers[bufferIndex], tSectorOffset{ 0 });
+    }
+
+    // Transfer data from host
+    // First writing page
+    // Read head sectors of the page
+    if (writingStartingPage.Sector > 0)
+    {
+        // Starting LBA doesn't align to a page. Starting page has head sectors.
+        // Read head sectors of the page
+        nandAddress.Sector = 0;
+        nandAddress.SectorCount = writingStartingPage.Sector;
+        ReadPage(nandAddress, _BlockBuffers[bufferIndex], tSectorOffset{ 0 });
+    }
+}
+
+void SimpleFtl::ReadTailPages(const NandHal::NandAddress& writingEndingPage, const U32& blockIndex)
+{
+    NandHal::NandAddress nandAddress = writingEndingPage;
+    U32 bufferIndex = GetBufferIndex(blockIndex, nandAddress);
+
+    U32 tailStartingSector = writingEndingPage.Sector + writingEndingPage.SectorCount;
+    if (tailStartingSector < _SectorsPerPage)
+    {
+        // Ending LBA doesn't align to a page. Ending page has tail sectors.
+        // Read tail sectors of the page
+        nandAddress.Sector = tailStartingSector;
+        nandAddress.SectorCount = _SectorsPerPage - tailStartingSector;
+        ReadPage(nandAddress, _BlockBuffers[bufferIndex], tSectorOffset{ tailStartingSector });
+    }
+
+    // Read tail pages of the writing block
+    ++nandAddress.Page;
+    nandAddress.Sector = 0;
+    nandAddress.SectorCount = _SectorsPerPage;
+    ++bufferIndex;
+    for (; nandAddress.Page < _PagesPerBlock; ++nandAddress.Page, ++bufferIndex)
+    {
+        ReadPage(nandAddress, _BlockBuffers[bufferIndex], tSectorOffset{ 0 });
+    }
+}
+
 bool SimpleFtl::IsSameBlock(const NandHal::NandAddress& nandAddress1, const NandHal::NandAddress& nandAddress2)
 {
     return (nandAddress1.Channel == nandAddress2.Channel)
         && (nandAddress1.Device == nandAddress2.Device)
         && (nandAddress1.Block == nandAddress2.Block);
+}
+
+bool SimpleFtl::IsNewBlock(const NandHal::NandAddress& nandAddress)
+{
+    for (int i = 0; i < _ProcessingBlockCount; ++i)
+    {
+        if (IsSameBlock(nandAddress, _ProcessingBlocks[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+U32 SimpleFtl::GetBlockIndex(const NandHal::NandAddress& nandAddress)
+{
+    for (int i = 0; i < _ProcessingBlockCount; ++i)
+    {
+        if (IsSameBlock(nandAddress, _ProcessingBlocks[i]))
+        {
+            return i;
+        }
+    }
+    assert(false);
+    return -1;
+}
+
+U32 SimpleFtl::GetBufferIndex(const U32& blockIndex, const NandHal::NandAddress& nandAddress)
+{
+    assert(blockIndex * _PagesPerBlock + nandAddress.Page < _BlockBufferCount);
+    return blockIndex * _PagesPerBlock + nandAddress.Page;
 }
 
 void SimpleFtl::TransferIn(const Buffer& buffer, const tSectorOffset& bufferOffset, const tSectorOffset& commandOffset, const tSectorCount& sectorCount)
@@ -415,7 +461,7 @@ void SimpleFtl::OnTransferCommandCompleted(const CustomProtocolHal::TransferComm
     else
     {
         --_PendingTransferCommandCount;
-        HandleNandReadAndTransferCompleted();
+        OnNandReadAndTransferCompleted();
     }
 }
 
@@ -437,12 +483,12 @@ void SimpleFtl::OnNandCommandCompleted(const NandHal::CommandDesc& command)
             || NandHal::CommandDesc::Op::ReadPartial == command.Operation)
         {
             --_PendingNandCommandCount;
-            HandleNandReadAndTransferCompleted();
+            OnNandReadAndTransferCompleted();
         }
         else if (NandHal::CommandDesc::Op::Erase == command.Operation)
         {
             --_PendingNandCommandCount;
-            HandleNandEraseCompleted();
+            OnNandEraseCompleted();
         }
         else if (NandHal::CommandDesc::Op::Write == command.Operation)
         {

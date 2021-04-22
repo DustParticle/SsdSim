@@ -30,15 +30,15 @@ bool BufferHal::AllocateBuffer(BufferType type, const U32 &bufferSizeInSector, B
         return false;
     }
 
-    buffer.Handle._ = _CurrentBufferHandle._;
+    buffer.Handle = _CurrentBufferHandle;
     buffer.Type = type;
     buffer.SizeInSector = bufferSizeInSector;
     buffer.SizeInByte = ToByteIndexInTransfer(type, bufferSizeInSector);
 
-    _AllocatedBuffers->insert(std::pair<U32, std::unique_ptr<U8[]>>(_CurrentBufferHandle._,
+    _AllocatedBuffers->insert(std::pair<U32, std::unique_ptr<U8[]>>(_CurrentBufferHandle,
         std::make_unique<U8[]>(buffer.SizeInByte)));
 
-    ++_CurrentBufferHandle._;
+    ++_CurrentBufferHandle;
     _CurrentFreeSizeInSector -= bufferSizeInSector;
 
     return true;
@@ -55,7 +55,7 @@ void BufferHal::DeallocateBuffer(const Buffer &buffer)
 
     assert(buffer.SizeInSector + _CurrentFreeSizeInSector <= _MaxBufferSizeInSector);
 
-    auto temp = _AllocatedBuffers->find(buffer.Handle._);
+    auto temp = _AllocatedBuffers->find(buffer.Handle);
     assert(_AllocatedBuffers->end() != temp);
     _AllocatedBuffers->erase(temp);
     _CurrentFreeSizeInSector += buffer.SizeInSector;
@@ -65,7 +65,7 @@ U8* BufferHal::ToPointer(const Buffer &buffer)
 {
     scoped_lock<interprocess_mutex> lock(_Mutex);
 
-    auto temp = _AllocatedBuffers->find(buffer.Handle._);
+    auto temp = _AllocatedBuffers->find(buffer.Handle);
     if (temp != _AllocatedBuffers->end())
     {
         return temp->second.get();
@@ -75,7 +75,7 @@ U8* BufferHal::ToPointer(const Buffer &buffer)
 
 void BufferHal::CopyFromBuffer(U8* const dest, const Buffer& buffer, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount)
 {
-    assert(buffer.SizeInSector >= bufferOffset._ + sectorCount._);
+    assert(buffer.SizeInSector >= bufferOffset + sectorCount);
 
     auto byteOffset = ToByteIndexInTransfer(buffer.Type, bufferOffset);
     auto byteCount = ToByteIndexInTransfer(buffer.Type, sectorCount);
@@ -84,7 +84,7 @@ void BufferHal::CopyFromBuffer(U8* const dest, const Buffer& buffer, const tSect
 
 void BufferHal::CopyToBuffer(const U8* const src, const Buffer& buffer, const tSectorOffset& bufferOffset, const tSectorCount& sectorCount)
 {
-    assert(buffer.SizeInSector >= bufferOffset._ + sectorCount._);
+    assert(buffer.SizeInSector >= bufferOffset + sectorCount);
 
     auto byteOffset = ToByteIndexInTransfer(buffer.Type, bufferOffset);
     auto byteCount = ToByteIndexInTransfer(buffer.Type, sectorCount);
@@ -115,5 +115,5 @@ U32 BufferHal::ToByteIndexInTransfer(BufferType type, U32 offset)
 
 U32 BufferHal::GetBufferMaxSizeInBytes() const
 {
-    return _MaxBufferSizeInSector * 512;
+    return _MaxBufferSizeInSector * (1 << _SectorInfo.SectorSizeInBit);
 }

@@ -38,7 +38,7 @@ public:
 private:
     U32 _MaxBufferSizeInSector;
     U32 _CurrentFreeSizeInSector;
-    BufferHandle _CurrentBufferHandle;
+    tBufferHandle _CurrentBufferHandle;
     std::unique_ptr<std::map<U32, std::unique_ptr<U8[]>>> _AllocatedBuffers;
     SectorInfo _SectorInfo;
     U32 _ImplicitAllocationSectorCount;

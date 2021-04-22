@@ -15,9 +15,11 @@ struct BufferHandle
     U32 _;
 };
 
+using tBufferHandle = PrimitiveTemplate<U32, struct BufferHandle>;
+
 struct Buffer
 {
-    BufferHandle Handle;
+    tBufferHandle Handle;
     U32 SizeInSector;
     U32 SizeInByte;
     BufferType Type;
