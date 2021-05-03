@@ -35,6 +35,5 @@ extern "C"
 
     void __declspec(dllexport) __stdcall Shutdown()
     {
-        _SimpleFtl.Shutdown();
     }
 };

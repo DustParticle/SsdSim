@@ -22,6 +22,7 @@ struct Buffer
     tBufferHandle Handle;
     U32 SizeInSector;
     U32 SizeInByte;
+    tSectorOffset SubBufferOffset;
     BufferType Type;
 };
 

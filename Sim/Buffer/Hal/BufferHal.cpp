@@ -32,6 +32,7 @@ bool BufferHal::AllocateBuffer(BufferType type, const U32 &bufferSizeInSector, B
 
     buffer.Handle = _CurrentBufferHandle;
     buffer.Type = type;
+    buffer.SubBufferOffset = 0;
     buffer.SizeInSector = bufferSizeInSector;
     buffer.SizeInByte = ToByteIndexInTransfer(type, bufferSizeInSector);
 
@@ -65,10 +66,12 @@ U8* BufferHal::ToPointer(const Buffer &buffer)
 {
     scoped_lock<interprocess_mutex> lock(_Mutex);
 
+    assert(buffer.SizeInSector > buffer.SubBufferOffset);
+
     auto temp = _AllocatedBuffers->find(buffer.Handle);
     if (temp != _AllocatedBuffers->end())
     {
-        return temp->second.get();
+        return temp->second.get() + ToByteIndexInTransfer(buffer.Type, buffer.SubBufferOffset);
     }
     return nullptr;
 }
