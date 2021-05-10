@@ -45,7 +45,6 @@ public:
         Direction Direction;
         Buffer Buffer;
         tSectorOffset BufferOffset;
-        NandHal::NandAddress NandAddress;
         TransferCommandListener *Listener;
     };
 

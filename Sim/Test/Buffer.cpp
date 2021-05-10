@@ -85,7 +85,7 @@ TEST(BufferHal, Exception)
     Buffer buffer;
     ASSERT_FALSE(bufferHal.AllocateBuffer(BufferType::User, bufferSizeInSector + 1, buffer));     // Request a buffer that larger than BufferHal pool
     EXPECT_DEATH(bufferHal.DeallocateBuffer(buffer), "");                       // The bufferHal will assert
-    ASSERT_EQ(bufferHal.ToPointer(buffer), nullptr);
+    EXPECT_DEATH(bufferHal.ToPointer(buffer), "");                              // The bufferHal will assert
 
     Buffer buffer1, buffer2;
     ASSERT_TRUE(bufferHal.AllocateBuffer(BufferType::User, bufferSizeInSector - 1, buffer1));

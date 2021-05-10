@@ -10,11 +10,19 @@ enum BufferType
     Undefined
 };
 
+struct BufferHandle
+{
+    U32 _;
+};
+
+using tBufferHandle = PrimitiveTemplate<U32, struct BufferHandle>;
+
 struct Buffer
 {
-    U32 Handle;
+    tBufferHandle Handle;
     U32 SizeInSector;
     U32 SizeInByte;
+    tSectorOffset SubBufferOffset;
     BufferType Type;
 };
 

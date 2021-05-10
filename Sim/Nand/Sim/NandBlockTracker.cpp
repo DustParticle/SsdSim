@@ -24,7 +24,8 @@ void NandBlockTracker::WritePage(tPageInBlock page)
     if (page >= _PageWrittenMarker)
     {
         _PageWrittenMarker = page + 1;
-    } else
+    }
+    else
     {
         // Mark the page is corrupted because this is write twice or write backward
         U32 byteIndex = page >> 3;

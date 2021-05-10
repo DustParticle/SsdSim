@@ -37,6 +37,8 @@ private:
         Params EventParams;
     };
 
+    static constexpr U8 MAX_PROCESSED_BLOCKS_PER_COMMAND{ 8 };
+
 public:
     SimpleFtl();
 
@@ -54,12 +56,22 @@ public:
 private:
     void ProcessEvent();
     void ReadNextLbas();
-    void TransferOut(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const tSectorOffset& commandOffset, const tSectorCount& sectorCount);
+    void TransferOut(const Buffer &buffer, const tSectorOffset& bufferOffset, const tSectorOffset& commandOffset, const tSectorCount& sectorCount);
     void ReadPage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer, const tSectorOffset& descSectorIndex);
 
-    void WriteNextLbas();
-    void TransferIn(const Buffer &buffer, const NandHal::NandAddress &nandAddress, const tSectorOffset& commandOffset, const tSectorCount& sectorCount);
-	void WritePage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer);
+    void OnNewWriteCommand();
+    void OnNandReadAndTransferCompleted();
+    void OnNandEraseCompleted();
+    bool IsSameBlock(const NandHal::NandAddress& nandAddress1, const NandHal::NandAddress& nandAddress2);
+    bool IsNewBlock(const NandHal::NandAddress& nandAddress);
+    U32 GetBlockIndex(const NandHal::NandAddress& nandAddress);
+    Buffer GetSubBuffer(const U32& blockIndex, const NandHal::NandAddress& nandAddress);
+
+    void ReadHeadPages(const NandHal::NandAddress& writingStartingPage, const U32& blockIndex);
+    void ReadTailPages(const NandHal::NandAddress& writingEndingPage, const U32& blockIndex);
+    void TransferIn(const Buffer &buffer, const tSectorOffset& bufferOffset, const tSectorOffset& commandOffset, const tSectorCount& sectorCount);
+    void EraseBlock(const NandHal::NandAddress& nandAddress);
+    void WritePage(const NandHal::NandAddress &nandAddress, const Buffer &outBuffer);
 
     bool SetSectorInfo(const SectorInfo &sectorInfo);
 
@@ -75,14 +87,19 @@ private:
     CustomProtocolHal *_CustomProtocolHal;
     U32 _TotalSectors;
     U8 _SectorsPerPage;
+    U8 _SectorsPerSegment;
+    U32 _PagesPerBlock;
+
+    Buffer _ProcessingBlockBuffers[MAX_PROCESSED_BLOCKS_PER_COMMAND];
+    NandHal::NandAddress _ProcessingBlocks[MAX_PROCESSED_BLOCKS_PER_COMMAND];
+    U32 _ProcessingBlockCount;
 
     CustomProtocolCommand *_ProcessingCommand;
+    tSectorOffset _ProcessedSectorOffset;
     U32 _RemainingSectorCount;
-    U32 _ProcessedSectorCount;
     U32 _CurrentLba;
-    U32 _PendingCommandCount;
-
-    U8 _SectorsPerSegment;
+    U32 _PendingTransferCommandCount;
+    U32 _PendingNandCommandCount;
 
     bip::interprocess_mutex *_Mutex;
 
